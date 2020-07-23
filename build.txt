@@ -1,5 +1,5 @@
 author = JereTheJuggler
-version = 1.1
+version = 1.2
 displayName = Weapons of Mass Decoration
 homepage = https://forums.terraria.org/index.php?threads/weapons-of-mass-decoration.64331/
 buildIgnore = *Vanilla_Assets, .vs
