@@ -13,6 +13,7 @@ using WeaponsOfMassDecoration.Items;
 using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
 using Terraria.DataStructures;
+using WeaponsOfMassDecoration.Dusts;
 using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Projectiles {
@@ -92,7 +93,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             backwards *= 6f;
             for(int i = 0; i < numSplatters; i++) {
                 Vector2 vel = backwards.RotatedBy(((coneAngle) * Main.rand.NextFloat()) - (coneAngle / 2));
-                int projId = Projectile.NewProjectile(projectile.Center + vel * 2f, vel, ModContent.ProjectileType<PaintSplatter>(), 0, 0, projectile.owner, 1, ProjectileID.IchorSplash);
+                int projId = Projectile.NewProjectile(projectile.Center + vel * 2f, vel, ProjectileType<PaintSplatter>(), 0, 0, projectile.owner, 1, ProjectileID.IchorSplash);
 				Main.projectile[projId].timeLeft = 30;
                 Main.projectile[projId].alpha = 125;
             }
@@ -121,7 +122,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			//}
 			for(int i = 0; i < 2; i++) { 
                 //int dustId = Dust.NewDust(projectile.Center, 0, 0, 74, 0, 0, 0, getLightColor(), 1);
-                int dustId = Dust.NewDust(projectile.Center-new Vector2(projectile.width/2,projectile.height/2), projectile.width, projectile.height, mod.DustType("LightDust"), 0, 0, 0, WeaponsOfMassDecoration.getColor(this),1);
+                int dustId = Dust.NewDust(projectile.Center-new Vector2(projectile.width/2,projectile.height/2), projectile.width, projectile.height, DustType<LightDust>(), 0, 0, 0, WeaponsOfMassDecoration.getColor(this),1);
                 Dust dust = Main.dust[dustId];
                 dust.noGravity = true;
 				dust.velocity = new Vector2(1, 0).RotatedByRandom(Math.PI * 2);

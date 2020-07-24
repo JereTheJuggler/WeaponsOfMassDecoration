@@ -25,10 +25,10 @@ namespace WeaponsOfMassDecoration.Items {
             item.height = 48;
             item.useTime = 20;
             item.useAnimation = 20;
-            item.useStyle = 1;
+            item.useStyle = ItemUseStyleID.SwingThrow;
             item.knockBack = 5;
             item.value = 10000;
-            item.rare = 2;
+            item.rare = ItemRarityID.Green;
             item.UseSound = SoundID.Item1;
             item.autoReuse = true;
             item.shootSpeed = 15f;

@@ -15,6 +15,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
         public int numSplatters = 6;
         public int splattersFlung = 0;
 
+        public Vector2? lastPaintCoord = null;
+
         public override void SetStaticDefaults() {
             DisplayName.SetDefault("Throwing Paintbrush");
             base.SetStaticDefaults();
@@ -36,12 +38,16 @@ namespace WeaponsOfMassDecoration.Projectiles {
             base.PreAI();
             if(color >= 0) {
                 //projectile.frame = color;
-                Point coords = new Point((int)Math.Floor(projectile.Center.X / 16), (int)Math.Floor(projectile.Center.Y / 16));
-                paintTileAndWall(projectile.Center+new Vector2(0,24).RotatedBy(projectile.rotation+Math.PI));
+                Vector2 coords = projectile.Center + new Vector2(0, 24).RotatedBy(projectile.rotation + Math.PI);
+                paintTileAndWall(coords);
                 if(Math.Abs(projectile.rotation - projectile.oldRot[0]) > Math.PI / 9) {
                     paintTileAndWall(projectile.Center + new Vector2(0, 24).RotatedBy(projectile.rotation + Math.PI + (Math.PI / 9)));
                     paintTileAndWall(projectile.Center + new Vector2(0, 24).RotatedBy(projectile.rotation + Math.PI - (Math.PI / 9)));
                 }
+                if(lastPaintCoord != null) {
+                    paintBetweenPoints((Vector2)lastPaintCoord, coords);
+				}
+                lastPaintCoord = coords;
             }
             return true;
         }

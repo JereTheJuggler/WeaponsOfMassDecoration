@@ -26,7 +26,7 @@ namespace WeaponsOfMassDecoration.Items {
 			item.holdStyle = 0;
 			item.useAnimation = 30;
 			item.RebuildTooltip();
-			item.useStyle = 5;
+			item.useStyle = ItemUseStyleID.HoldingOut;
             item.width = 29;
             item.height = 30;
             item.maxStack = 1;
@@ -37,7 +37,7 @@ namespace WeaponsOfMassDecoration.Items {
 			item.knockBack = 3f;
 			item.autoReuse = true;
             item.value = Item.buyPrice(0, 0, 0, 10);
-            item.rare = 2;
+            item.rare = ItemRarityID.Green;
 			item.useTime = 15;
         }
 
@@ -73,7 +73,6 @@ namespace WeaponsOfMassDecoration.Items {
         }
 		
 		public override bool UseItem(Player player) {
-			//SetDefaults();
 			soundTimer--;
 			if(soundTimer <= 0) {
 				Main.PlaySound(SoundID.Item, player.position);
@@ -132,7 +131,7 @@ namespace WeaponsOfMassDecoration.Items {
             WorldGen.SquareWallFrame(x, y);
             NetMessage.SendTileSquare(-1, x, y, 1);
         }
-    }
+	}
 
     public class SpectrePaintingMultiTool : PaintingMultiTool {
 		public SpectrePaintingMultiTool() : base() {
@@ -141,8 +140,8 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override void SetStaticDefaults() {
-            DisplayName.SetDefault("Spectre Paint Multi-Tool");
-            Tooltip.SetDefault("Paints both blocks and walls!");
+			base.SetStaticDefaults();
+			DisplayName.SetDefault("Spectre Paint Multi-Tool");
         }
 
         public override void AddRecipes() {
@@ -158,7 +157,7 @@ namespace WeaponsOfMassDecoration.Items {
 			base.SetDefaults();
 			
 			item.value = Item.buyPrice(0, 0, 0, 10);
-            item.rare = 2;
+            item.rare = ItemRarityID.Green;
 			item.damage = 70;
 			item.knockBack = 7f;
             item.tileBoost = 3;
@@ -168,7 +167,6 @@ namespace WeaponsOfMassDecoration.Items {
         }
 
 		public override void UseStyle(Player player) {
-			SetDefaults();
 			rotation += .05f;
 			base.UseStyle(player);
 		}

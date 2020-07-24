@@ -20,8 +20,9 @@ namespace WeaponsOfMassDecoration.Items {
         public override void SetDefaults() {
             base.SetDefaults();
             item.CloneDefaults(ItemID.CursedFlames);
+            item.RebuildTooltip();
             item.shoot = ModContent.ProjectileType<Projectiles.TemperaBouncer>();
-            item.rare = 2;
+            item.rare = ItemRarityID.Green;
             item.damage = 60;
             //item.width = 42;
             //item.height = 30;

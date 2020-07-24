@@ -123,7 +123,7 @@ namespace WeaponsOfMassDecoration.Items {
         public override void SetDefaults() {
             item.noMelee = true;
             item.noUseGraphic = true;
-            item.useStyle = 1;
+            item.useStyle = ItemUseStyleID.SwingThrow;
             item.value = Item.buyPrice(0, 0, 0, 10);
             item.maxStack = 999;
         }

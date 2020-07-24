@@ -7,11 +7,12 @@ namespace WeaponsOfMassDecoration.Items {
     class PaintBomb : PaintingItem{
         public override void SetStaticDefaults() {
             DisplayName.SetDefault("Paint Bomb");
-			base.SetStaticDefaults(halfDamageText);
+            // TODO: Insert halfDamageText in base call after making it actually damage enemies
+            base.SetStaticDefaults();
 		}
 
         public override void SetDefaults() {
-            item.useStyle = 1;
+            item.useStyle = ItemUseStyleID.SwingThrow;
             item.shootSpeed = 4.5f;
             item.shoot = ModContent.ProjectileType<Projectiles.PaintBomb>();
             item.width = 18;
@@ -24,7 +25,7 @@ namespace WeaponsOfMassDecoration.Items {
             item.useTime = 25;
             item.useAnimation = 25;
             item.value = Item.buyPrice(0, 0, 50, 0);
-            item.rare = 2;
+            item.rare = ItemRarityID.Green;
             item.autoReuse = false;
         }
 

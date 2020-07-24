@@ -18,7 +18,7 @@ namespace WeaponsOfMassDecoration.Items {
 
         public override void SetDefaults() {
             item.CloneDefaults(ItemID.ThrowingKnife);
-            item.rare = 2;
+            item.rare = ItemRarityID.Green;
 
             item.thrown = true;
             item.shoot = ModContent.ProjectileType<Projectiles.ThrowingPaintbrush>();

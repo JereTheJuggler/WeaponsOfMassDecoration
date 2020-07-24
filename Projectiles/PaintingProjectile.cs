@@ -15,16 +15,10 @@ using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
 using Terraria.DataStructures;
 using static Terraria.ModLoader.ModContent;
+using System.Xml.Schema;
 
 namespace WeaponsOfMassDecoration.Projectiles {
-    public enum PaintMethods {
-        None,
-		RemovePaint,
-        Tiles,
-        Walls,
-		TilesAndWalls,
-		NotSet
-    }
+    
 
     public abstract class PaintingProjectile : ModProjectile {
 
@@ -103,7 +97,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection) {
 			assignPaintColorAndMethod();
-			if(currentPaintIndex < 0)
+			if(currentPaintIndex < 0 || paintMethod == PaintMethods.RemovePaint)
 				damage = (int)Math.Round(damage * .5f);
 		}
 
@@ -136,25 +130,41 @@ namespace WeaponsOfMassDecoration.Projectiles {
         }
 
         public void paintAlongOldVelocity(Vector2 oldVelocity,bool blocks = true,bool walls = true) {
+            if(!(blocks || walls))
+                return;
             if(oldVelocity.Length() > 0 && !(startPosition.X == 0 && startPosition.Y == 0) && (startPosition-projectile.position).Length() > oldVelocity.Length()) {
                 Vector2 unitVector = new Vector2(oldVelocity.X, oldVelocity.Y);
                 unitVector.Normalize();
                 for(int o = 0; o < Math.Ceiling(oldVelocity.Length()); o += 8) {
                     Vector2 currentOffset = projectile.Center - oldVelocity + (unitVector * o);
-                    //make sure it's not painting behind where it started
-                    //if((startPosition.X - projectile.position.X) * (startPosition.X - currentOffset.X) >= 0 &&
-                    //   (startPosition.Y - projectile.position.Y) * (startPosition.Y - currentOffset.Y) >= 0) {
-                        //it's not
-                        if(blocks && walls)
-                            paintTileAndWall(currentOffset);
-                        else if(blocks)
-                            paintTile(currentOffset);
-                        else if(walls)
-                            paintWall(currentOffset);
-                    //}
+                    if(blocks && walls)
+                        paintTileAndWall(currentOffset);
+                    else if(blocks)
+                        paintTile(currentOffset);
+                    else if(walls)
+                        paintWall(currentOffset);
                 }
             }
         }
+        public void paintBetweenPoints(Vector2 start, Vector2 end, bool blocks = true, bool walls = true) {
+            if(!(blocks || walls))
+                return;
+            Vector2 unitVector = end - start;
+            float distance = unitVector.Length();
+            unitVector.Normalize();
+            int iterations = (int)Math.Ceiling(distance / 8f);
+            for(int i=0; i < iterations; i++) {
+                Vector2 offset = start + (unitVector * i * 8);
+                if(blocks && walls) {
+                    paintTileAndWall(offset);
+				} else if(blocks) {
+                    paintTile(offset);
+				} else {
+                    paintWall(offset);
+				}
+			}
+
+		}
 
         public Point convertPositionToTile(Vector2 position) {
             return new Point((int)Math.Floor(position.X / 16f), (int)Math.Floor(position.Y / 16f));
@@ -173,7 +183,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
                         paintMethod = PaintMethods.None;
                         color = -1;
                     } else {
-                        if(p.inventory[i].type != 0 && p.inventory[i].stack > 0) {
+                        if(p.inventory[i].type != ItemID.None && p.inventory[i].stack > 0) {
                             if(color == -2) {
                                 if(PaintIDs.itemIds.Contains(p.inventory[i].type)) {
                                     for(int c = 0; c < PaintIDs.itemIds.Length; c++) {

@@ -8,6 +8,9 @@ using WeaponsOfMassDecoration.NPCs;
 using Terraria;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Terraria.ID;
+using System.Runtime.Remoting.Messaging;
+using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
     public abstract class PaintingItem : ModItem{
@@ -36,7 +39,41 @@ namespace WeaponsOfMassDecoration.Items {
             return null;
         }
 
-		public override void ModifyWeaponDamage(Player player, ref float add, ref float mult, ref float flat){
+        public bool toolAllowsPainting() {
+            return toolAllowsPainting(getOwner());
+		}
+
+        public bool toolAllowsPainting(Player p) {
+            if(p == null)
+                return false;
+            int activeSlot = p.inventory[p.HotbarOffset].type;
+            if(activeSlot == ItemType<PaintingMultiTool>() || activeSlot == ItemType<SpectrePaintingMultiTool>())
+                return true;
+            for(int i = 0; i < p.inventory.Length; i++) {
+				if(p.inventory[i].active) {
+                    int type = p.inventory[i].type;
+                    switch(type) {
+                        case ItemID.PaintScraper:
+                        case ItemID.SpectrePaintScraper:
+                            return false;
+                        case ItemID.PaintRoller:
+                        case ItemID.Paintbrush:
+                        case ItemID.SpectrePaintbrush:
+                        case ItemID.SpectrePaintRoller:
+                            return true;
+					}
+                    if(type == ItemType<PaintingMultiTool>() || type == ItemType<SpectrePaintingMultiTool>())
+                        return true;
+				}
+			}
+            return false;
+		}
+
+        public override void ModifyWeaponDamage(Player player, ref float add, ref float mult, ref float flat) {
+            if(!toolAllowsPainting(player)) {
+                mult *= .5f;
+                return;
+            }    
 			setCurrentPaintIndex(player);
 			if(currentPaintIndex < 0)
 				mult *= .5f;
@@ -79,7 +116,7 @@ namespace WeaponsOfMassDecoration.Items {
                         color = -1;
 						currentPaintIndex = -1;
                     } else {
-                        if(player.inventory[i].type != 0 && player.inventory[i].stack > 0) {
+                        if(player.inventory[i].type != ItemID.None && player.inventory[i].stack > 0) {
                             if(PaintIDs.itemIds.Contains(player.inventory[i].type)) {
                                 for(int c = 0; c < PaintIDs.itemIds.Length; c++) {
                                     if(PaintIDs.itemIds[c] == player.inventory[i].type) {

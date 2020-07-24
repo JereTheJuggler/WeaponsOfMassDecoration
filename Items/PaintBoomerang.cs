@@ -20,25 +20,10 @@ namespace WeaponsOfMassDecoration.Items {
         }
 
         public override void SetDefaults() {
-            // Alter any of these values as you see fit, but you should probably keep useStyle on 1, as well as the noUseGraphic and noMelee bools
             item.CloneDefaults(ItemID.Flamarang);
             item.shootSpeed = 12f;
             item.damage = 10;
             item.maxStack = 3;
-            //item.knockBack = 5f;
-            //item.useStyle = 1;
-            //item.useAnimation = 25;
-            //item.useTime = 25;
-            //item.width = 18;
-            //item.height = 36;
-            //item.maxStack = 1;
-            //item.rare = 2;
-
-            //item.consumable = false;
-            //item.noUseGraphic = true;
-            //item.noMelee = true;
-            //item.autoReuse = false;
-            //item.melee = true;
 
             item.UseSound = SoundID.Item1;
             item.value = Item.sellPrice(silver: 5);
@@ -66,7 +51,6 @@ namespace WeaponsOfMassDecoration.Items {
         }
 
         public override bool Shoot(Player player, ref Vector2 position, ref float speedX, ref float speedY, ref int type, ref int damage, ref float knockBack) {
-            //SetDefaults();
             return base.Shoot(player, ref position, ref speedX, ref speedY, ref type, ref damage, ref knockBack);
         }
     }

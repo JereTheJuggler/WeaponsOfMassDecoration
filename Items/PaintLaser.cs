@@ -20,14 +20,14 @@ namespace WeaponsOfMassDecoration.Items {
         public override void SetDefaults() {
             base.SetDefaults();
             item.shoot = ModContent.ProjectileType<Projectiles.PaintLaser>();
-            item.rare = 2;
+            item.rare = ItemRarityID.Green;
             item.damage = 25;
             item.width = 42;
             item.height = 30;
             item.useTime = 20;
             item.useAnimation = 20;
             item.useAmmo = -1;
-            item.useStyle = 5;
+            item.useStyle = ItemUseStyleID.HoldingOut;
             item.mana = 10;
             item.noMelee = true;
             item.knockBack = 1f;
@@ -60,14 +60,6 @@ namespace WeaponsOfMassDecoration.Items {
             recipe2.AddRecipe();
         }
 
-        public override bool PreDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI) {
-            return base.PreDrawInWorld(spriteBatch, lightColor, alphaColor, ref rotation, ref scale, whoAmI);
-        }
-
-        public override bool UseItem(Player player) {
-            return base.UseItem(player);
-        }
-
         public enum GeneralDirection {
             UpLeft,
             UpRight,
@@ -76,7 +68,6 @@ namespace WeaponsOfMassDecoration.Items {
         }
 
         public override bool Shoot(Player player, ref Vector2 position, ref float speedX, ref float speedY, ref int type, ref int damage, ref float knockBack) {
-            SetDefaults();
             Vector2 dir = new Vector2(speedX, speedY).SafeNormalize(new Vector2(0, 1));
             int maxDistancePerIteration = 16;
             int maxIterations = 600;

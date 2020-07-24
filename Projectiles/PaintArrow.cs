@@ -11,8 +11,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
         public override void SetStaticDefaults() {
             DisplayName.SetDefault("Paint Arrow");     //The English name of the projectile
-            //ProjectileID.Sets.TrailCacheLength[projectile.type] = 5;    //The length of old position to be recorded
-            //ProjectileID.Sets.TrailingMode[projectile.type] = 0;        //The recording mode
         }
 
         public override void SetDefaults() {
@@ -29,14 +27,13 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.ignoreWater = true;          //Does the projectile's speed be influenced by water?
             projectile.tileCollide = true;          //Can the projectile collide with tiles?
             projectile.extraUpdates = 1;            //Set to above 0 if you want the projectile to update multiple time in a frame
-            aiType = ProjectileID.WoodenArrowFriendly;           //Act exactly like default Bullet
+            aiType = ProjectileID.WoodenArrowFriendly;
             Main.projFrames[projectile.type] = 31;
         }
 
         public override bool PreAI() {
             base.PreAI();
             if(color >= 0) {
-                //projectile.frame = color;
                 Point coords = new Point((int)Math.Floor(projectile.Center.X / 16), (int)Math.Floor(projectile.Center.Y / 16));
                 paintTileAndWall(coords.X, coords.Y);
             }
@@ -63,16 +60,12 @@ namespace WeaponsOfMassDecoration.Projectiles {
         }
 
         public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor) {
-            //Redraw the projectile with the color not influenced by light
             Texture2D texture = Main.projectileTexture[projectile.type];
             int frameHeight = (Main.projectileTexture[projectile.type].Height - (2 * (Main.projFrames[projectile.type] - 1))) / Main.projFrames[projectile.type];
             int startY = (frameHeight + 2) * projectile.frame;
-            float xOffset = (projectile.velocity.X < 0 ? 2f : -2f);
+            //float xOffset = (projectile.velocity.X < 0 ? 2f : -2f);
             Rectangle sourceRectangle = new Rectangle(0, startY, texture.Width, frameHeight);
-            //Vector2 origin = new Vector2((texture.Width/2f) * (float)Math.Cos(projectile.rotation+(float)Math.PI/xOffset), (texture.Width/2f) * (float)Math.Sin(projectile.rotation + (float)Math.PI / xOffset));//new Vector2((float)Math.Cos(projectile.rotation), (float)Math.Sin(projectile.rotation)) * (frameHeight/-4f);
-            //origin += (texture.Width/2)*projectile.velocity.SafeNormalize(new Vector2(0, 1));
             Vector2 origin = new Vector2(texture.Width / 2, texture.Width/2);
-            //Vector2 origin = new Vector2(0, 0);
             Color color = projectile.GetAlpha(lightColor);
             Vector2 drawPos = projectile.Center - Main.screenPosition;
             spriteBatch.Draw(texture, drawPos, sourceRectangle, color, projectile.rotation, origin, projectile.scale, SpriteEffects.None, 0f);

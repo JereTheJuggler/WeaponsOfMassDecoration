@@ -20,17 +20,9 @@ namespace WeaponsOfMassDecoration.Items {
             item.width = 10;
             item.height = 12;
             item.value = Item.buyPrice(0, 0, 25, 0);
-            item.rare = 3;
+            item.rare = ItemRarityID.Orange;
             item.maxStack = 999;
             item.consumable = true;
         }
-
-        //public override void AddRecipes() {
-        //    ModRecipe recipe = new ModRecipe(mod);
-        //    recipe.AddIngredient(ItemID.GreenSolution, 9);
-        //    recipe.AddTile(TileID.DyeVat);
-        //    recipe.SetResult(this, 9);
-        //    recipe.AddRecipe();
-        //}
     }
 }

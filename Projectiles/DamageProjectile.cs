@@ -26,8 +26,5 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		public override void OnHitNPC(NPC target, int damage, float knockback, bool crit) {
 			base.OnHitNPC(target, damage, knockback, crit);
 		}
-		public override void ModifyDamageHitbox(ref Rectangle hitbox) {
-			base.ModifyDamageHitbox(ref hitbox);
-		}
 	}
 }

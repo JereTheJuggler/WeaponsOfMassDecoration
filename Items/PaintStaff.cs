@@ -21,14 +21,14 @@ namespace WeaponsOfMassDecoration.Items {
             base.SetDefaults();
             item.CloneDefaults(ItemID.DiamondStaff);
             item.shoot = ModContent.ProjectileType<Projectiles.PaintStaff>();
-            item.rare = 2;
+            item.rare = ItemRarityID.Green;
             item.damage = 20;
             item.width = 42;
             item.height = 30;
             //item.useTime = 35;
             //item.useAnimation = 35;
             item.useAmmo = -1;
-            item.useStyle = 5;
+            item.useStyle = ItemUseStyleID.HoldingOut;
             item.noMelee = true;
             //item.knockBack = 4f;
             item.value = Item.sellPrice(0, 0, 30, 0);

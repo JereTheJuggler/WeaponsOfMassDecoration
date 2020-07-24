@@ -20,6 +20,14 @@ using Terraria.DataStructures;
 using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration {
+	public enum PaintMethods{
+		None,
+		RemovePaint,
+		Tiles,
+		Walls,
+		TilesAndWalls,
+		NotSet
+	}
 	class WeaponsOfMassDecoration : Mod{
 		//colors used for painting the world (and by extension rendering projectiles) will cycle at this speed for custom paints
 		public const float paintCyclingTimeScale = .25f; 
@@ -90,7 +98,7 @@ namespace WeaponsOfMassDecoration {
 			getRenderVars(globalNpc, out byte currentColor, out byte? nextColor, out bool sprayPainted);
 			if(currentColor == 0)
 				return null;
-			return applyShader(npc, currentColor, nextColor, sprayPainted, npcCyclingTimeScale, globalNpc.paintedTime, drawData);
+			return applyShader(npc, currentColor, nextColor, sprayPainted, npcCyclingTimeScale, globalNpc.paintedTime, drawData, 1f);
 		}
 		public static ShaderData applyShader(PaintingProjectile projectile) {
 			getRenderVars(projectile, out byte currentColor, out byte? nextColor, out bool sprayPainted);
@@ -99,13 +107,13 @@ namespace WeaponsOfMassDecoration {
 			return applyShader(projectile.projectile, currentColor, nextColor, false, paintCyclingTimeScale, 0, null);
 		}
 
-		private static ShaderData applyShader(Entity entity, byte currentColor, byte? nextColor, bool sprayPainted, float timeScale, float timeOffset = 0, DrawData? drawData = null) {
+		private static ShaderData applyShader(Entity entity, byte currentColor, byte? nextColor, bool sprayPainted, float timeScale, float timeOffset = 0, DrawData? drawData = null, float opacity = 1f) {
 			if(currentColor == PaintID.Negative) {
-				return applyNegativeShader(entity);
+				return applyNegativeShader(entity).UseOpacity(opacity);
 			} else if(sprayPainted){
-				return applySprayPaintedShader(currentColor, nextColor, timeScale, timeOffset, drawData);
+				return applySprayPaintedShader(currentColor, nextColor, timeScale, timeOffset, drawData).UseOpacity(opacity);
 			} else {
-				return applyPaintedShader(currentColor, nextColor, timeScale, timeOffset);
+				return applyPaintedShader(currentColor, nextColor, timeScale, timeOffset).UseOpacity(opacity);
 			}
 		}
 		private static ArmorShaderData applyNegativeShader(Entity entity) {
@@ -165,7 +173,7 @@ namespace WeaponsOfMassDecoration {
 			customPaint = null;
 
 			for(int i = 0; i < p.inventory.Length; i++) {
-				if(p.inventory[i].type != 0 && p.inventory[i].stack > 0) {
+				if(p.inventory[i].type != ItemID.None && p.inventory[i].stack > 0) {
 					if(PaintIDs.itemIds.Contains(p.inventory[i].type)) {
 						for(int c = 0; c < PaintIDs.itemIds.Length; c++) {
 							if(PaintIDs.itemIds[c] == p.inventory[i].type) {
@@ -272,6 +280,8 @@ namespace WeaponsOfMassDecoration {
 				case NPCID.MartianSaucerCore:
 				case NPCID.MartianSaucerTurret:
 				case NPCID.Poltergeist:
+				case NPCID.Pumpking:
+				case NPCID.PumpkingBlade:
 					return;
 			}
 			if(preventRecursion)

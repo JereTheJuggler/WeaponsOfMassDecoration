@@ -21,7 +21,7 @@ namespace WeaponsOfMassDecoration.Items {
             item.accessory = true;
             item.noMelee = true;
             item.noUseGraphic = true;
-            item.rare = 2;
+            item.rare = ItemRarityID.Green;
         }
 
         public override void AddRecipes() {
