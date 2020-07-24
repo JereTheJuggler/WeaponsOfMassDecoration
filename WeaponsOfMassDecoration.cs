@@ -90,8 +90,6 @@ namespace WeaponsOfMassDecoration {
 			return getShaderData(currentColor, nextColor, false, paintCyclingTimeScale);
 		}
 		
-
-
 		public static ShaderData applyShader(WoMDGlobalNPC globalNpc, NPC npc, DrawData? drawData = null) {
 			if(!globalNpc.painted)
 				return null;
