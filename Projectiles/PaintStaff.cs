@@ -108,6 +108,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             Texture2D texture = Main.projectileTexture[projectile.type];
             int frameHeight = (texture.Height - (2 * (Main.projFrames[projectile.type] - 1))) / Main.projFrames[projectile.type];
             int startY = (frameHeight + 2) * projectile.frame;
+            createLight(projectile.Center, 1f);
             projectile.gfxOffY = texture.Width /2;
             //float xOffset = (projectile.velocity.X < 0 ? 2f : -2f);
             Rectangle sourceRectangle = new Rectangle(0, startY, texture.Width, frameHeight);

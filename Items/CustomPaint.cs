@@ -126,6 +126,8 @@ namespace WeaponsOfMassDecoration.Items {
             item.useStyle = ItemUseStyleID.SwingThrow;
             item.value = Item.buyPrice(0, 0, 0, 10);
             item.maxStack = 999;
+            item.width = 20;
+            item.height = 18;
         }
     }
     public abstract class DeepCustomPaint : CustomPaint {
@@ -197,7 +199,13 @@ namespace WeaponsOfMassDecoration.Items {
         public CustomSprayPaint() {
         }
 
-        public override void AddRecipes() {
+		public override void SetDefaults() {
+			base.SetDefaults();
+            item.width = 16;
+            item.height = 32;
+		}
+
+		public override void AddRecipes() {
             //add recipe using the vanilla paints (ex. 3 flame spray paint = 1 red, orange yellow paint)
             if(paintIds.Length > 0) {
                 ModRecipe recipe = new ModRecipe(mod);
@@ -299,6 +307,12 @@ namespace WeaponsOfMassDecoration.Items {
         }
         public override byte paintMethod {
             get { return PaintMethods.LoopSpray; }
+        }
+
+        public override void SetDefaults() {
+            base.SetDefaults();
+            item.width = 16;
+            item.height = 32;
         }
 
         public override void AddRecipes() {

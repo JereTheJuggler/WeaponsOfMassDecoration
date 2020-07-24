@@ -75,7 +75,7 @@ namespace WeaponsOfMassDecoration {
     }
 
     public class PaintColors {
-        public static Color NoColor { get { return new Color(0,0,0,0); } }
+        public static Color NoColor { get { return Color.White; } }
         public static Color Red { get { return new Color(255,0,0,127); } }
         public static Color Orange { get { return new Color(255,127,0,127); } }
         public static Color Yellow { get { return new Color(255,255,0,127); } }

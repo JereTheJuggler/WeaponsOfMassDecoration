@@ -20,6 +20,8 @@ using static Terraria.ModLoader.ModContent;
 namespace WeaponsOfMassDecoration.Dusts {
     public class LightDust : ModDust{
 
+        public Color trueColor;
+
         public override void SetDefaults() {
             //base.SetDefaults();
         }
@@ -28,7 +30,9 @@ namespace WeaponsOfMassDecoration.Dusts {
 				SetDefaults();
 				dust.alpha = 0;
 				dust.noGravity = true;
-				dust.shader = GameShaders.Armor.GetShaderFromItemId(ItemID.SilverDye).UseColor(Color.White).UseSaturation(1f);
+                trueColor = dust.color;
+                dust.noLight = true;
+				//dust.shader = GameShaders.Armor.GetShaderFromItemId(ItemID.SilverDye).UseColor(Color.White).UseSaturation(1f);
 				//dust.scale = 1f;
 				//dust.position += new Vector2(Main.rand.NextFloat(-4f, 4f), Main.rand.NextFloat(-4f, 4f));
 				dust.customData = new float[] { Main.rand.NextFloat(-.2f, .2f) };
@@ -38,13 +42,25 @@ namespace WeaponsOfMassDecoration.Dusts {
             dust.rotation += ((float[])dust.customData)[0];
             return true;
         }
-        public override bool Update(Dust dust) {
+
+		public override Color? GetAlpha(Dust dust, Color lightColor) {
+            //float scale = ((lightColor.R + lightColor.G + lightColor.B) / 3f) / 255f;
+            dust.color = trueColor.MultiplyRGB(lightColor);
+            //return newColor;
+            //return lightColor;
+            //Color c = dust.GetColor(Color.White);
+            //return c;
+            return Color.White;
+            //return new Color(lightColor.R, lightColor.G, lightColor.B, 25);
+		}
+
+		public override bool Update(Dust dust) {
             float rotSpeed = ((float[])dust.customData)[0];
             dust.rotation += rotSpeed;
             dust.alpha += 1;
             dust.scale -= .03f;
             //dust.customData = new float[] { rotSpeed + Main.rand.NextFloat(-.5f, .5f) };
-            if(dust.alpha >= 255 || dust.scale <= 0)
+            if(/*dust.alpha >= 255 ||*/ dust.scale <= 0)
                 dust.active = false;
             return false;
         }

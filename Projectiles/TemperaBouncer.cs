@@ -120,7 +120,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			//}else {
 			//    projectile.velocity *= 1.01f;
 			//}
-			for(int i = 0; i < 2; i++) { 
+			for(int i = 0; i < 1; i++) { 
                 //int dustId = Dust.NewDust(projectile.Center, 0, 0, 74, 0, 0, 0, getLightColor(), 1);
                 int dustId = Dust.NewDust(projectile.Center-new Vector2(projectile.width/2,projectile.height/2), projectile.width, projectile.height, DustType<LightDust>(), 0, 0, 0, WeaponsOfMassDecoration.getColor(this),1);
                 Dust dust = Main.dust[dustId];
@@ -148,7 +148,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 				spriteBatch.End();
 				spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
 				
-				createLight(projectile.Center, .5f);
+				createLight(projectile.Center, 1f);
 
 				projectile.scale = 1.3f;
 
@@ -170,12 +170,12 @@ namespace WeaponsOfMassDecoration.Projectiles {
 					float oldRotation = projectile.oldRot[i];
 					float opacity = projectile.Opacity - (projectile.Opacity / 4) * (i + 1); //projectile.Opacity - ((projectile.Opacity / 3) * (float)(i + 1f));
 					float scale = projectile.scale * (1f - (.1f * (i + 1f)));
-					float lightness = (1f - (.2f * (i + 1f)));
+					float lightness = (1f - (.1f * (i + 1f)));
 					Color c = new Color(lightness, lightness, lightness, opacity).MultiplyRGB(lightColor);
 					if(data != null)
 						data.UseOpacity(opacity).Apply();
 
-					spriteBatch.Draw(texture, oldPosition, sourceRectangle, c, projectile.rotation, origin, scale, SpriteEffects.None, 0);
+					spriteBatch.Draw(texture, oldPosition, sourceRectangle, c, oldRotation, origin, scale, SpriteEffects.None, 0);
 					
 					spriteBatch.End();
 					spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.

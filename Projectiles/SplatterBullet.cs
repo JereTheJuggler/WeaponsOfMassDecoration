@@ -46,9 +46,9 @@ namespace WeaponsOfMassDecoration.Projectiles {
         public override bool PreAI() {
             base.PreAI();
             rot += .2f;
-            if(color >= 0) {
+            /*if(color >= 0) {
                 paintAlongOldVelocity(projectile.oldVelocity);
-            }
+            }*/
             return true;
         }
 

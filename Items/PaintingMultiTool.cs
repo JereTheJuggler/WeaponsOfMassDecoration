@@ -51,9 +51,9 @@ namespace WeaponsOfMassDecoration.Items {
 		public override void UseItemHitbox(Player player, ref Rectangle hitbox, ref bool noHitbox) {
 			hitbox = new Rectangle(
 				(int)Math.Round(player.itemLocation.X) - hitboxExtension,
-				(int)Math.Round(player.itemLocation.Y) - hitboxExtension,
+				(int)Math.Round(player.itemLocation.Y) - (hitboxExtension / 2),
 				player.itemWidth + hitboxExtension * 2,
-				player.itemHeight + hitboxExtension * 2
+				player.itemHeight + hitboxExtension
 			);
 		}
 
@@ -163,7 +163,7 @@ namespace WeaponsOfMassDecoration.Items {
             item.tileBoost = 3;
 			item.useTime = 3;
 			item.useAnimation = 7;
-			hitboxExtension = 12;
+			hitboxExtension = 6;
         }
 
 		public override void UseStyle(Player player) {

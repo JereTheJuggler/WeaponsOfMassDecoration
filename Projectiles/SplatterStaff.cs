@@ -85,6 +85,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
         public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor) {
             //Redraw the projectile with the color not influenced by light
             projectile.alpha = 0;
+            createLight(projectile.Center, .15f);
             Texture2D texture = Main.projectileTexture[projectile.type];
             int frameHeight = (Main.projectileTexture[projectile.type].Height - (2 * (Main.projFrames[projectile.type] - 1))) / Main.projFrames[projectile.type];
             int startY = (frameHeight + 2) * projectile.frame;
@@ -101,6 +102,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
         public override void Kill(int timeLeft) {
             splatter(projectile.Center, 128, 8, true, true);
+            createLight(projectile.Center, 1f);
             Main.PlaySound(SoundID.Item14, projectile.position);
             //smoke dust
             for(int i = 0; i < 15; i++) {

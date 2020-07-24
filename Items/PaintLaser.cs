@@ -11,6 +11,9 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace WeaponsOfMassDecoration.Items {
     class PaintLaser : PaintingItem{
+
+        //please don't look at this... there's probably a much better way to do it.
+
         public override void SetStaticDefaults() {
             DisplayName.SetDefault("Paint Laser");
             Item.staff[ModContent.ItemType<PaintLaser>()] = true;
@@ -241,8 +244,11 @@ namespace WeaponsOfMassDecoration.Items {
                                     hitTile = true;
                                     //Main.tile[checkTilePos.X, checkTilePos.Y].type = TileID.Copper;
                                     reflectAgainstY(ref dir);
-                                    nextPos = (new LineEquation(xCoord)).getIntercepts(motion.equation)[0];
-                                    currentTilePos = checkTilePos;
+                                    List<Vector2> interceptList = (new LineEquation(xCoord)).getIntercepts(motion.equation);
+                                    if(interceptList.Count > 0) {
+                                        nextPos = interceptList[0];
+                                        currentTilePos = checkTilePos;
+                                    }
                                     break;
                                 }
                                 LineSegment extraSide;
