@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria.ID;
 using System.Runtime.Remoting.Messaging;
 using static Terraria.ModLoader.ModContent;
+using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.Items {
     public abstract class PaintingItem : ModItem{
@@ -29,123 +30,81 @@ namespace WeaponsOfMassDecoration.Items {
 
         public int numFrames = 31;
 
-        public int color;
-        public int currentPaintIndex;
-
         public Player getOwner() {
-            if(item.owner >= 0 && item.owner < Main.player.Length) {
-                return Main.player[item.owner];
-            }
-            return null;
-        }
-
-        public bool toolAllowsPainting() {
-            return toolAllowsPainting(getOwner());
+            return getPlayer(item.owner);
 		}
 
-        public bool toolAllowsPainting(Player p) {
-            if(p == null)
-                return false;
-            int activeSlot = p.inventory[p.HotbarOffset].type;
-            if(activeSlot == ItemType<PaintingMultiTool>() || activeSlot == ItemType<SpectrePaintingMultiTool>())
-                return true;
-            for(int i = 0; i < p.inventory.Length; i++) {
-				if(p.inventory[i].active) {
-                    int type = p.inventory[i].type;
-                    switch(type) {
-                        case ItemID.PaintScraper:
-                        case ItemID.SpectrePaintScraper:
-                            return false;
-                        case ItemID.PaintRoller:
-                        case ItemID.Paintbrush:
-                        case ItemID.SpectrePaintbrush:
-                        case ItemID.SpectrePaintRoller:
-                            return true;
-					}
-                    if(type == ItemType<PaintingMultiTool>() || type == ItemType<SpectrePaintingMultiTool>())
-                        return true;
-				}
-			}
-            return false;
-		}
-
-        public override void ModifyWeaponDamage(Player player, ref float add, ref float mult, ref float flat) {
-            if(!toolAllowsPainting(player)) {
+		public override void ModifyWeaponDamage(Player player, ref float add, ref float mult, ref float flat) {
+            WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
+			if(p.canPaint()) {
                 mult *= .5f;
-                return;
-            }    
-			setCurrentPaintIndex(player);
-			if(currentPaintIndex < 0)
-				mult *= .5f;
-		}
-
-		public override void OnHitNPC(Player player, NPC target, int damage, float knockBack, bool crit) {
-			WoMDGlobalNPC npc = target.GetGlobalNPC<WoMDGlobalNPC>();
-			if(npc != null) {
-				setCurrentPaintIndex(player);
-				if(currentPaintIndex >= 0) {
-					if(player.inventory[currentPaintIndex].modItem is CustomPaint) {
-						WeaponsOfMassDecoration.applyPaintedToNPC(target, -1, (CustomPaint)player.inventory[currentPaintIndex].modItem);
-					} else {
-						for(int i = 0; i < PaintIDs.itemIds.Length; i++) {
-							if(player.inventory[currentPaintIndex].type == PaintIDs.itemIds[i]) {
-								WeaponsOfMassDecoration.applyPaintedToNPC(target, (byte)i, null);
-								break;
-							}
-						}
-					}
-				} else {
-					npc.customPaint = null;
-					npc.paintColor = -1;
-					npc.paintedTime = 0;
-				}
+			} else if(p.getPaintMethod() ==  PaintMethods.RemovePaint){
+                mult *= .5f;
 			}
 		}
 
-		public void setCurrentPaintIndex() {
-            Player player = getOwner();
-            setCurrentPaintIndex(player);
-        }
-
-        public void setCurrentPaintIndex(Player player) {
-            color = -2;
-			currentPaintIndex = -1;
-            try {
-                for(int i = 0; i <= player.inventory.Length && color == -2; i++) {
-                    if(i == player.inventory.Length) {
-                        color = -1;
-						currentPaintIndex = -1;
+		public override void OnHitNPC(Player p, NPC target, int damage, float knockBack, bool crit) {
+            WoMDGlobalNPC npc = target.GetGlobalNPC<WoMDGlobalNPC>();
+            if(npc != null && p != null && item.owner == Main.myPlayer) {
+                WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
+                PaintMethods method = player.getPaintMethod();
+                if(method != PaintMethods.None) {
+                    if(method == PaintMethods.RemovePaint) {
+                        npc.painted = false;
                     } else {
-                        if(player.inventory[i].type != ItemID.None && player.inventory[i].stack > 0) {
-                            if(PaintIDs.itemIds.Contains(player.inventory[i].type)) {
-                                for(int c = 0; c < PaintIDs.itemIds.Length; c++) {
-                                    if(PaintIDs.itemIds[c] == player.inventory[i].type) {
-                                        color = c;
-                                        break;
-                                    }
-                                }
-                            } else if(player.inventory[i].modItem is CustomPaint) {
-                                color = PaintIDs.Custom;
-                            }
-                            if(color != -2)
-                                currentPaintIndex = i;
-                        }
+                        player.getPaintVars(out int paintColor, out CustomPaint customPaint);
+                        applyPaintedToNPC(target, paintColor, customPaint);
                     }
                 }
-            } catch {
-                currentPaintIndex = -1;
             }
         }
 
-        public bool shouldConsumePaint() {
+        /// <summary>
+        /// Used to paint blocks and walls. blocksAllowed and wallsAllowed can be used to disable painting blocks and walls regardless of the player's current painting method.
+        /// </summary>
+        /// <param name="x">Tile x coordinate</param>
+        /// <param name="y">Tile y coordinate</param>
+        /// <param name="blocksAllowed">Can be used to disable painting blocks regardless of the player's current painting method</param>
+        /// <param name="wallsAllowed">Can be used to disable painting walls regardless of the player's current painting method</param>
+        public void paint(int x, int y, bool blocksAllowed = true, bool wallsAllowed = true) {
+            if(!(blocksAllowed || wallsAllowed))
+                return;
+            if(x < 0 || x >= Main.maxTilesX || y < 0 || y >= Main.maxTilesY)
+                return;
             Player p = getOwner();
-            for(int i = 0; i < p.armor.Length / 2; i++) {
-                if(p.armor[i].type == ModContent.ItemType<ArtistPalette>())
-                    return false;
+            if(item.owner == Main.myPlayer && p != null) {
+                WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
+                PaintMethods method = player.getPaintMethod();
+                if(method == PaintMethods.None || (player.currentPaintIndex == -1 && method != PaintMethods.RemovePaint))
+                    return;
+                bool updated = false;
+                Tile t = Main.tile[x, y];
+                byte targetColor;
+                if(method == PaintMethods.RemovePaint) {
+                    targetColor = 0;
+                } else {
+                    player.getPaintVars(out int paintColor, out CustomPaint customPaint);
+                    targetColor = getPaintingColorId(paintColor, customPaint, false);
+                }
+                if(t.color() != targetColor) {
+                    t.color(targetColor);
+                    updated = true;
+                }
+                if(t.wallColor() != targetColor) {
+                    t.wallColor(targetColor);
+                    updated = true;
+                }
+                if(updated) {
+                    player.consumePaint();
+                    sendTileFrame(x, y);
+                }
             }
-            if(p.inventory[currentPaintIndex].modItem is CustomPaint)
-                return Main.rand.NextFloat(0, 1) <= ((CustomPaint)p.inventory[currentPaintIndex].modItem).consumptionChance;
-            return true;
+        }
+
+        public void sendTileFrame(int x, int y) {
+            WorldGen.SquareTileFrame(x, y);
+            WorldGen.SquareWallFrame(x, y);
+            NetMessage.SendTileSquare(-1, x, y, 1);
         }
     }
 }

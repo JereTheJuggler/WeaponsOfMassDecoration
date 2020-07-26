@@ -9,13 +9,18 @@ using System.Diagnostics;
 namespace WeaponsOfMassDecoration.Projectiles {
     public class Paintball : PaintingProjectile {
         
+        public Paintball() {
+            trailLength = 5;
+            trailMode = 0;
+		}
+
         public override void SetStaticDefaults() {
+            base.SetStaticDefaults();
             DisplayName.SetDefault("Paintball");     //The English name of the projectile
-            ProjectileID.Sets.TrailCacheLength[projectile.type] = 5;
-            ProjectileID.Sets.TrailingMode[projectile.type] = 0;
         }
 
         public override void SetDefaults() {
+            base.SetDefaults();
             projectile.width = 8;               //The width of projectile hitbox
             projectile.height = 8;              //The height of projectile hitbox
             projectile.aiStyle = 1;             //The ai style of the projectile, please reference the source code of Terraria
@@ -29,49 +34,33 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.tileCollide = true;          //Can the projectile collide with tiles?
             projectile.extraUpdates = 1;            //Set to above 0 if you want the projectile to update multiple time in a frame
             aiType = ProjectileID.Bullet;           //Act exactly like default Bullet
-            Main.projFrames[projectile.type] = 31;
-            light = .5f;
+            projectile.light = .5f;
         }
 
         public override bool PreAI() {
             base.PreAI();
-            if(color >= 0) {
+            if(canPaint()) {
                 paintAlongOldVelocity(projectile.oldVelocity);
             }
             return true;
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity) {
-            if(color >= 0) {
-                paintTileAndWall();
+            if(canPaint()) {
+                paint();
                 oldVelocity.Normalize();
                 Vector2 center = projectile.Center.ToWorldCoordinates(0, 0);
-                center = new Vector2(center.X / 16, center.Y / 16);
+                center = new Vector2(center.X / 16f, center.Y / 16f);
                 for(int i = 0; i < 64; i++) {
-                    Point coords = new Point((int)Math.Floor((center.X + (oldVelocity.X * i))/16), (int)Math.Floor((center.Y + (oldVelocity.Y * i))/16));
+                    Point coords = new Point((int)Math.Floor((center.X + (oldVelocity.X * i))/16f), (int)Math.Floor((center.Y + (oldVelocity.Y * i))/16f));
                     if(coords.X > 0 && coords.Y > 0 && coords.X < Main.maxTilesX && coords.Y < Main.maxTilesY && WorldGen.SolidOrSlopedTile(coords.X, coords.Y)) {
-                        paintTileAndWall(coords.X, coords.Y);
+                        paint(coords.X, coords.Y);
                         break;
                     }
                 }
             }
             Main.PlaySound(SoundID.Dig,projectile.Center);
             projectile.Kill();
-            return false;
-        }
-
-        public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor) {
-            createLight(projectile.Center, light);
-            Texture2D texture = Main.projectileTexture[projectile.type];
-            int frameHeight = (texture.Height - (2 * (Main.projFrames[projectile.type]-1))) / Main.projFrames[projectile.type];
-            int startY = (frameHeight+2) * projectile.frame;
-            Rectangle sourceRectangle = new Rectangle(0, startY, texture.Width, frameHeight);
-            Vector2 origin = new Vector2(texture.Width/2, texture.Width / 2);
-            for(int k = 0; k < projectile.oldPos.Length; k++) {
-                Vector2 drawPos = projectile.oldPos[k]-Main.screenPosition+(origin/2);
-                Color color = projectile.GetAlpha(lightColor) * ((float)(projectile.oldPos.Length - k) / (float)projectile.oldPos.Length);
-                spriteBatch.Draw(texture, drawPos, sourceRectangle, color, projectile.rotation, origin, projectile.scale, SpriteEffects.None, 0f);
-            }
             return false;
         }
     }

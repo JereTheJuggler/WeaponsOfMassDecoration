@@ -9,6 +9,8 @@ using Terraria;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.ID;
+using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
+using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Projectiles {
     class SplatterStaff : PaintingProjectile{
@@ -16,12 +18,12 @@ namespace WeaponsOfMassDecoration.Projectiles {
         public float distance = -1;
 
         public override void SetStaticDefaults() {
+            base.SetStaticDefaults();
             DisplayName.SetDefault("Paint Bolt");     //The English name of the projectile
-            //ProjectileID.Sets.TrailCacheLength[projectile.type] = 5;    //The length of old position to be recorded
-            //ProjectileID.Sets.TrailingMode[projectile.type] = 0;        //The recording mode
         }
 
         public override void SetDefaults() {
+            base.SetDefaults();
             mousePosition = Main.MouseWorld.ToTileCoordinates();
             //projectile.velocity.Normalize();
             //projectile.velocity *= 5;
@@ -38,8 +40,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.tileCollide = false;          //Can the projectile collide with tiles?
             //projectile.extraUpdates = 1;            //Set to above 0 if you want the projectile to update multiple time in a frame
             aiType = ProjectileID.DiamondBolt;           //Act exactly like default Bullet
-            Main.projFrames[projectile.type] = 31;
-            light = 1f;
+            projectile.light = 1f;
             //projectile.Opacity = 0f;
         }
 
@@ -70,34 +71,16 @@ namespace WeaponsOfMassDecoration.Projectiles {
         public override void AI() {
             for(int i = 0; i < 2; i++) {
 				Vector2 speed = new Vector2(2, 0).RotatedByRandom(Math.PI * 2);
-                int dustId = Dust.NewDust(projectile.Center, 0, 0, mod.DustType("LightDust"), speed.X, speed.Y , 0, WeaponsOfMassDecoration.getColor(this), 1);
-				Dust dust = Main.dust[dustId];
-                dust.noGravity = true;
-                dust.fadeIn = 1.5f;
-                //dust.alpha = 125;
+                Dust dust = getDust(Dust.NewDust(projectile.Center, 0, 0, mod.DustType("LightDust"), speed.X, speed.Y , 0, getColor(this), 1));
+                if(dust != null) {
+                    dust.noGravity = true;
+                    dust.fadeIn = 1.5f;
+                }
             }
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity) {
             return true;
-        }
-
-        public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor) {
-            //Redraw the projectile with the color not influenced by light
-            projectile.alpha = 0;
-            createLight(projectile.Center, .15f);
-            Texture2D texture = Main.projectileTexture[projectile.type];
-            int frameHeight = (Main.projectileTexture[projectile.type].Height - (2 * (Main.projFrames[projectile.type] - 1))) / Main.projFrames[projectile.type];
-            int startY = (frameHeight + 2) * projectile.frame;
-            projectile.gfxOffY = frameHeight / 2;
-            //float xOffset = (projectile.velocity.X < 0 ? 2f : -2f);
-            Rectangle sourceRectangle = new Rectangle(0, startY, texture.Width, frameHeight);
-            //Vector2 origin = new Vector2((texture.Width / 2f) * (float)Math.Cos(projectile.rotation + (float)Math.PI / xOffset), (texture.Width / 2f) * (float)Math.Sin(projectile.rotation + (float)Math.PI / xOffset));//new Vector2((float)Math.Cos(projectile.rotation), (float)Math.Sin(projectile.rotation)) * (frameHeight/-4f);
-            Vector2 origin = sourceRectangle.Size()/2f;//new Vector2(texture.Width / 2 - 1, projectile.gfxOffY);
-            Color color = projectile.GetAlpha(lightColor);
-            Vector2 drawPos = projectile.Center - Main.screenPosition;
-            spriteBatch.Draw(texture, drawPos, sourceRectangle, color, projectile.rotation, origin, projectile.scale, SpriteEffects.None, 0f);
-            return false;
         }
 
         public override void Kill(int timeLeft) {
@@ -106,8 +89,9 @@ namespace WeaponsOfMassDecoration.Projectiles {
             Main.PlaySound(SoundID.Item14, projectile.position);
             //smoke dust
             for(int i = 0; i < 15; i++) {
-                int dustIndex = Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, 31, 0f, 0f, 100, WeaponsOfMassDecoration.getColor(this), 2f);
-                Main.dust[dustIndex].velocity *= 1.4f;
+                Dust d = getDust(Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, 31, 0f, 0f, 100, getColor(this), 2f));
+                if(d != null)
+                    d.velocity *= 1.4f;
             }
         }
     }

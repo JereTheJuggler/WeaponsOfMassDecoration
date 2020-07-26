@@ -10,10 +10,12 @@ namespace WeaponsOfMassDecoration.Projectiles {
     public class PaintArrow : PaintingProjectile {
 
         public override void SetStaticDefaults() {
+            base.SetStaticDefaults();
             DisplayName.SetDefault("Paint Arrow");     //The English name of the projectile
         }
 
         public override void SetDefaults() {
+            base.SetDefaults();
             projectile.width = 10;               //The width of projectile hitbox
             projectile.height = 10;              //The height of projectile hitbox
             projectile.aiStyle = 1;             //The ai style of the projectile, please reference the source code of Terraria
@@ -28,47 +30,33 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.tileCollide = true;          //Can the projectile collide with tiles?
             projectile.extraUpdates = 1;            //Set to above 0 if you want the projectile to update multiple time in a frame
             aiType = ProjectileID.WoodenArrowFriendly;
-            Main.projFrames[projectile.type] = 31;
         }
 
         public override bool PreAI() {
             base.PreAI();
-            if(color >= 0) {
-                Point coords = new Point((int)Math.Floor(projectile.Center.X / 16), (int)Math.Floor(projectile.Center.Y / 16));
-                paintTileAndWall(coords.X, coords.Y);
+            if(canPaint()) {
+                Point coords = new Point((int)Math.Floor(projectile.Center.X / 16f), (int)Math.Floor(projectile.Center.Y / 16f));
+                paint(coords.X, coords.Y);
             }
             return true;
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity) {
-            if(color >= 0) {
+            if(canPaint()) {
                 bool madeContact = false;
                 for(float i = 1f; i < 8f; i += .5f) {
                     Vector2 coords = projectile.position + oldVelocity * i;
-                    Point tile = new Point((int)Math.Floor(coords.X / 16), (int)Math.Floor(coords.Y / 16));
+                    Point tile = new Point((int)Math.Floor(coords.X / 16f), (int)Math.Floor(coords.Y / 16f));
                     if(tile.X > 0 && tile.Y > 0 && tile.X < Main.maxTilesX && tile.Y < Main.maxTilesY) {
                         if(WorldGen.SolidOrSlopedTile(tile.X, tile.Y) || madeContact) {
                             madeContact = true;
-                            paintTileAndWall(tile.X, tile.Y);
+                            paint(tile.X, tile.Y);
                         }
                     }
                 }
             }
             Main.PlaySound(SoundID.Dig);
             projectile.Kill();
-            return false;
-        }
-
-        public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor) {
-            Texture2D texture = Main.projectileTexture[projectile.type];
-            int frameHeight = (Main.projectileTexture[projectile.type].Height - (2 * (Main.projFrames[projectile.type] - 1))) / Main.projFrames[projectile.type];
-            int startY = (frameHeight + 2) * projectile.frame;
-            //float xOffset = (projectile.velocity.X < 0 ? 2f : -2f);
-            Rectangle sourceRectangle = new Rectangle(0, startY, texture.Width, frameHeight);
-            Vector2 origin = new Vector2(texture.Width / 2, texture.Width/2);
-            Color color = projectile.GetAlpha(lightColor);
-            Vector2 drawPos = projectile.Center - Main.screenPosition;
-            spriteBatch.Draw(texture, drawPos, sourceRectangle, color, projectile.rotation, origin, projectile.scale, SpriteEffects.None, 0f);
             return false;
         }
     }

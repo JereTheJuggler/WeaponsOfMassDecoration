@@ -7,6 +7,8 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
 using Microsoft.Xna.Framework;
+using static Terraria.ModLoader.ModContent;
+using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.Items {
     class PaintBoomerang : PaintingItem{
@@ -27,7 +29,7 @@ namespace WeaponsOfMassDecoration.Items {
 
             item.UseSound = SoundID.Item1;
             item.value = Item.sellPrice(silver: 5);
-            item.shoot = ModContent.ProjectileType<Projectiles.PaintBoomerang>();
+            item.shoot = ProjectileType<Projectiles.PaintBoomerang>();
         }
 
         public override void AddRecipes() {

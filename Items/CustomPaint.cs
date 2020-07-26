@@ -8,12 +8,12 @@ using Terraria;
 using Terraria.ID;
 
 namespace WeaponsOfMassDecoration.Items {
-    public class PaintMethods {
-        public const byte Loop = 0;
-        public const byte Reverse = 1;
-        public const byte Spray = 2;
-        public const byte LoopSpray = 2;
-        public const byte ReverseSpray = 3;
+    public enum CycleTypes {
+        Loop,
+        Reverse,
+        Spray,
+        LoopSpray,
+        ReverseSpray
     }
 
     public abstract class CustomPaint : PaintingItem {
@@ -21,7 +21,7 @@ namespace WeaponsOfMassDecoration.Items {
         public abstract int[] paintIds {
             get;
         }
-        public abstract byte paintMethod {
+        public abstract CycleTypes paintMethod {
             get;
         }
         public abstract string colorName {
@@ -36,19 +36,19 @@ namespace WeaponsOfMassDecoration.Items {
                 return 0;
             int index = 0;
 			if(!forceColor) {
-				if(paintMethod == PaintMethods.ReverseSpray || paintMethod == PaintMethods.LoopSpray) {
+				if(paintMethod == CycleTypes.ReverseSpray || paintMethod == CycleTypes.LoopSpray) {
 					if(Main.rand.NextFloat(3f) < 2) {
 						return 0;
 					}
 				}
 			}
             switch(paintMethod) {
-                case PaintMethods.Loop:
-                case PaintMethods.LoopSpray:
+                case CycleTypes.Loop:
+                case CycleTypes.LoopSpray:
                     index = (int)Math.Floor((Main.GlobalTime - timeDelta) / timeScale) % paintIds.Length;
                     break;
-                case PaintMethods.Reverse:
-                case PaintMethods.ReverseSpray:
+                case CycleTypes.Reverse:
+                case CycleTypes.ReverseSpray:
                     index = (int)Math.Floor((Main.GlobalTime - timeDelta) / timeScale) % (paintIds.Length*2 - 2);
                     if(index >= paintIds.Length)
                         index = paintIds.Length * 2 - 2 - index;
@@ -61,19 +61,19 @@ namespace WeaponsOfMassDecoration.Items {
 				return 0;
 			int index = 0;
 			if(!forceColor) {
-				if(paintMethod == PaintMethods.ReverseSpray || paintMethod == PaintMethods.LoopSpray) {
+				if(paintMethod == CycleTypes.ReverseSpray || paintMethod == CycleTypes.LoopSpray) {
 					if(Main.rand.NextFloat(3f) < 2) {
 						return 0;
 					}
 				}
 			}
 			switch(paintMethod) {
-				case PaintMethods.Loop:
-				case PaintMethods.LoopSpray:
+				case CycleTypes.Loop:
+				case CycleTypes.LoopSpray:
 					index = (int)(Math.Floor((Main.GlobalTime - timeDelta) / timeScale)+1) % paintIds.Length;
 					break;
-				case PaintMethods.Reverse:
-				case PaintMethods.ReverseSpray:
+				case CycleTypes.Reverse:
+				case CycleTypes.ReverseSpray:
 					index = (int)(Math.Floor((Main.GlobalTime - timeDelta) / timeScale)+1) % (paintIds.Length * 2 - 2);
 					if(index >= paintIds.Length)
 						index = paintIds.Length * 2 - 2 - index;
@@ -134,7 +134,7 @@ namespace WeaponsOfMassDecoration.Items {
         public abstract CustomPaint basePaint {
             get;
         }
-        public override byte paintMethod {
+        public override CycleTypes paintMethod {
             get {
                 return basePaint.paintMethod;
             }
@@ -183,8 +183,8 @@ namespace WeaponsOfMassDecoration.Items {
         public abstract CustomPaint basePaint {
             get;
         }
-        public override byte paintMethod {
-            get { return PaintMethods.ReverseSpray; }
+        public override CycleTypes paintMethod {
+            get { return CycleTypes.ReverseSpray; }
         }
         public override int[] paintIds {
             get { return basePaint.paintIds; }
@@ -305,8 +305,8 @@ namespace WeaponsOfMassDecoration.Items {
         public override string displayName {
             get { return colorName + " Spray Paint"; }
         }
-        public override byte paintMethod {
-            get { return PaintMethods.LoopSpray; }
+        public override CycleTypes paintMethod {
+            get { return CycleTypes.LoopSpray; }
         }
 
         public override void SetDefaults() {
@@ -392,8 +392,8 @@ namespace WeaponsOfMassDecoration.Items {
                 };
             }
         }
-        public override byte paintMethod {
-            get { return PaintMethods.Loop; }
+        public override CycleTypes paintMethod {
+            get { return CycleTypes.Loop; }
         }
         public override string colorName {
             get { return "Rainbow"; }
@@ -448,8 +448,8 @@ namespace WeaponsOfMassDecoration.Items {
         public override CustomPaint basePaint {
             get { return new RainbowPaint(); }
         }
-        public override byte paintMethod {
-            get { return PaintMethods.LoopSpray; }
+        public override CycleTypes paintMethod {
+            get { return CycleTypes.LoopSpray; }
         }
     }
     public class DeepRainbowSprayPaint : DeepCustomSprayPaint {
@@ -459,8 +459,8 @@ namespace WeaponsOfMassDecoration.Items {
         public override DeepCustomPaint baseDeepPaint {
             get { return new DeepRainbowPaint(); }
         }
-        public override byte paintMethod {
-            get { return PaintMethods.LoopSpray; }
+        public override CycleTypes paintMethod {
+            get { return CycleTypes.LoopSpray; }
         }
     }
 
@@ -474,8 +474,8 @@ namespace WeaponsOfMassDecoration.Items {
                 };
             }
         }
-        public override byte paintMethod {
-            get { return PaintMethods.Reverse; }
+        public override CycleTypes paintMethod {
+            get { return CycleTypes.Reverse; }
         }
         public override string colorName {
             get { return "Flame"; }
@@ -536,8 +536,8 @@ namespace WeaponsOfMassDecoration.Items {
                 };
             }
         }
-        public override byte paintMethod {
-            get { return PaintMethods.Reverse; }
+        public override CycleTypes paintMethod {
+            get { return CycleTypes.Reverse; }
         }
         public override string colorName {
             get { return "Green Flame"; }
@@ -589,8 +589,8 @@ namespace WeaponsOfMassDecoration.Items {
                 };
             }
         }
-        public override byte paintMethod {
-            get { return PaintMethods.Reverse; }
+        public override CycleTypes paintMethod {
+            get { return CycleTypes.Reverse; }
         }
         public override string colorName {
             get { return "Blue Flame"; }
@@ -642,8 +642,8 @@ namespace WeaponsOfMassDecoration.Items {
                 };
             }
         }
-        public override byte paintMethod {
-            get { return PaintMethods.Reverse; }
+        public override CycleTypes paintMethod {
+            get { return CycleTypes.Reverse; }
         }
         public override string colorName {
             get { return "Yellow Gradient"; }
@@ -695,8 +695,8 @@ namespace WeaponsOfMassDecoration.Items {
                 }; 
             }
         }
-        public override byte paintMethod {
-            get { return PaintMethods.Reverse; }
+        public override CycleTypes paintMethod {
+            get { return CycleTypes.Reverse; }
         }
         public override string colorName {
             get { return "Cyan Gradient"; }
@@ -748,8 +748,8 @@ namespace WeaponsOfMassDecoration.Items {
                 };
             }
         }
-        public override byte paintMethod {
-            get { return PaintMethods.Reverse; }
+        public override CycleTypes paintMethod {
+            get { return CycleTypes.Reverse; }
         }
         public override string colorName {
             get { return "Violet Gradient"; }
@@ -802,8 +802,8 @@ namespace WeaponsOfMassDecoration.Items {
                 };
             }
         }
-        public override byte paintMethod {
-            get { return PaintMethods.Reverse; }
+        public override CycleTypes paintMethod {
+            get { return CycleTypes.Reverse; }
         }
         public override string colorName {
             get { return "Grayscale"; }

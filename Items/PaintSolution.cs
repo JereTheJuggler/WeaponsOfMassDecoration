@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
     class PaintSolution : PaintingItem{
@@ -15,7 +16,7 @@ namespace WeaponsOfMassDecoration.Items {
         }
 
         public override void SetDefaults() {
-            item.shoot = ModContent.ProjectileType<Projectiles.PaintSolution>() - ProjectileID.PureSpray;
+            item.shoot = ProjectileType<Projectiles.PaintSolution>() - ProjectileID.PureSpray;
             item.ammo = AmmoID.Solution;
             item.width = 10;
             item.height = 12;

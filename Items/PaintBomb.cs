@@ -2,6 +2,8 @@
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
+using static Terraria.ModLoader.ModContent;
+using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.Items {
     class PaintBomb : PaintingItem{
@@ -14,7 +16,7 @@ namespace WeaponsOfMassDecoration.Items {
         public override void SetDefaults() {
             item.useStyle = ItemUseStyleID.SwingThrow;
             item.shootSpeed = 4.5f;
-            item.shoot = ModContent.ProjectileType<Projectiles.PaintBomb>();
+            item.shoot = ProjectileType<Projectiles.PaintBomb>();
             item.width = 18;
             item.height = 18;
             item.maxStack = 99;
@@ -28,13 +30,5 @@ namespace WeaponsOfMassDecoration.Items {
             item.rare = ItemRarityID.Green;
             item.autoReuse = false;
         }
-
-        //public override void AddRecipes() {
-        //    ModRecipe recipe = new ModRecipe(mod);
-        //    recipe.AddIngredient(ItemID.Bomb, 9);
-        //    recipe.AddTile(TileID.DyeVat);
-        //    recipe.SetResult(this, 9);
-        //    recipe.AddRecipe();
-        //}
     }
 }

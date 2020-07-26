@@ -8,19 +8,20 @@ using Terraria.ModLoader;
 using Terraria.ID;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
     class PaintStaff : PaintingItem{
         public override void SetStaticDefaults() {
             DisplayName.SetDefault("Paint Staff");
-            Item.staff[ModContent.ItemType<PaintStaff>()] = true;
+            Item.staff[ItemType<PaintStaff>()] = true;
 			base.SetStaticDefaults(halfDamageText);
 		}
 
         public override void SetDefaults() {
             base.SetDefaults();
             item.CloneDefaults(ItemID.DiamondStaff);
-            item.shoot = ModContent.ProjectileType<Projectiles.PaintStaff>();
+            item.shoot = ProjectileType<Projectiles.PaintStaff>();
             item.rare = ItemRarityID.Green;
             item.damage = 20;
             item.width = 42;

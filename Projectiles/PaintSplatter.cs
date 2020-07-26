@@ -14,12 +14,12 @@ namespace WeaponsOfMassDecoration.Projectiles {
         public int startingTimeLeft = 25;
 
         public override void SetStaticDefaults() {
+            base.SetStaticDefaults();
             DisplayName.SetDefault("Paint Splatter");     //The English name of the projectile
-            //ProjectileID.Sets.TrailCacheLength[projectile.type] = 5;    //The length of old position to be recorded
-            //ProjectileID.Sets.TrailingMode[projectile.type] = 0;        //The recording mode
         }
 
         public override void SetDefaults() {
+            base.SetDefaults();
             //projectile.velocity.Normalize();
             //projectile.velocity *= 5;
             //projectile.CloneDefaults(ProjectileID.DiamondBolt);
@@ -37,56 +37,39 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.tileCollide = true;          //Can the projectile collide with tiles?
             //projectile.extraUpdates = 1;            //Set to above 0 if you want the projectile to update multiple time in a frame
             aiType = ProjectileID.MagicDagger;           //Act exactly like default Bullet
-            Main.projFrames[projectile.type] = 31;
             projectile.damage = 1;
             //projectile.Opacity = 0f;
         }
 
         public override bool PreAI() {
             base.PreAI();
-            if(color >= 0) {
-                //projectile.frame = color;
+            if(canPaint()) {
                 Point coords = new Point((int)Math.Floor(projectile.Center.X / 16), (int)Math.Floor(projectile.Center.Y / 16));
-                paintTileAndWall(coords.X, coords.Y);
+                paint(coords.X, coords.Y);
             }
             return true;
         }
 
-        public override bool OnTileCollide(Vector2 oldVelocity) {
-            if(color >= 0) {
-                paintTileAndWall();
+		public override void PostAI() {
+            projectile.rotation = projectile.velocity.ToRotation() + (float)Math.PI/2f;
+			base.PostAI();
+		}
+
+		public override bool OnTileCollide(Vector2 oldVelocity) {
+            if(canPaint()) {
+                paint();
                 oldVelocity.Normalize();
                 Vector2 center = projectile.Center.ToWorldCoordinates(0, 0);
                 center = new Vector2(center.X / 16, center.Y / 16);
                 for(int i = 0; i < 64; i++) {
                     Point coords = new Point((int)Math.Floor((center.X + (oldVelocity.X * i)) / 16), (int)Math.Floor((center.Y + (oldVelocity.Y * i)) / 16));
                     if(coords.X > 0 && coords.Y > 0 && coords.X < Main.maxTilesX && coords.Y < Main.maxTilesY && WorldGen.SolidOrSlopedTile(coords.X, coords.Y)) {
-                        paintTileAndWall(coords.X, coords.Y);
+                        paint(coords.X, coords.Y);
                         break;
                     }
                 }
             }
             projectile.Kill();
-            return false;
-        }
-
-        public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor) {
-            //Redraw the projectile with the color not influenced by light
-            Texture2D texture = Main.projectileTexture[projectile.type];
-            int frameHeight = (texture.Height - (2 * (Main.projFrames[projectile.type] - 1))) / Main.projFrames[projectile.type];
-            int startY = (frameHeight + 2) * projectile.frame;
-            if(projectile.timeLeft <= 15) {
-                projectile.alpha = 255 - 10 * projectile.timeLeft;
-            }
-            projectile.rotation = projectile.velocity.ToRotation()+(float)(Math.PI/2f);
-            projectile.gfxOffY = 19;
-            //float xOffset = (projectile.velocity.X < 0 ? 2f : -2f);
-            Rectangle sourceRectangle = new Rectangle(0, startY, texture.Width, frameHeight);
-            //Vector2 origin = new Vector2((texture.Width / 2f) * (float)Math.Cos(projectile.rotation + (float)Math.PI / xOffset), (texture.Width / 2f) * (float)Math.Sin(projectile.rotation + (float)Math.PI / xOffset));//new Vector2((float)Math.Cos(projectile.rotation), (float)Math.Sin(projectile.rotation)) * (frameHeight/-4f);
-            Vector2 origin = new Vector2(texture.Width/2,texture.Width/2);
-            Color color = projectile.GetAlpha(lightColor);
-            Vector2 drawPos = projectile.Center - Main.screenPosition;
-            spriteBatch.Draw(texture, drawPos, sourceRectangle, color, projectile.rotation, origin, projectile.scale, SpriteEffects.None, 0f);
             return false;
         }
     }

@@ -7,6 +7,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
 using Microsoft.Xna.Framework;
+using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
 	class InfinitePaintShuriken : PaintShuriken {
@@ -24,7 +25,7 @@ namespace WeaponsOfMassDecoration.Items {
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(ModContent.ItemType<PaintShuriken>(), 999);
+			recipe.AddIngredient(ItemType<PaintShuriken>(), 999);
 			recipe.AddTile(TileID.DyeVat);
 			recipe.SetResult(this, 1);
 			recipe.AddRecipe();

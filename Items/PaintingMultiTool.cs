@@ -84,40 +84,8 @@ namespace WeaponsOfMassDecoration.Items {
             int yOffset = mousePosition.Y - playerPos.Y;
             if(yOffset < 0)
                 yOffset--;
-            color = -2;
             if(isInRange(player,xOffset,yOffset)) {
-				setCurrentPaintIndex(player);
-                if(currentPaintIndex < 0) {
-                    return true;
-                }
-				int paintColor = -1;
-				CustomPaint customPaint = null;
-				if(player.inventory[currentPaintIndex].modItem is CustomPaint) {
-					customPaint = (CustomPaint)player.inventory[currentPaintIndex].modItem.Clone();
-				} else {
-					for(int c = 0; c < PaintIDs.itemIds.Length; c++) {
-						if(player.inventory[currentPaintIndex].type == PaintIDs.itemIds[c])
-							paintColor = (byte)c;
-					}
-				}
-				bool updated = false;
-
-				byte trueColor = WeaponsOfMassDecoration.getCurrentColorID(true,paintColor,customPaint,WeaponsOfMassDecoration.paintCyclingTimeScale);
-                if(Main.tile[mousePosition.X,mousePosition.Y].color() != trueColor) {
-                    if(WorldGen.paintTile(mousePosition.X, mousePosition.Y, trueColor)) {
-                        updated = true;
-                    }
-                }
-                if(Main.tile[mousePosition.X, mousePosition.Y].wallColor() != trueColor) {
-                    if(WorldGen.paintWall(mousePosition.X, mousePosition.Y, trueColor)) {
-                        updated = true;
-                    }
-                }
-                if(updated) {
-                    if(currentPaintIndex != -1 && shouldConsumePaint())
-                        player.inventory[currentPaintIndex].stack--;
-                    sendTileFrame(mousePosition.X, mousePosition.Y);
-                }
+				paint(mousePosition.X, mousePosition.Y);
             }
             return true;
         }
@@ -126,11 +94,6 @@ namespace WeaponsOfMassDecoration.Items {
             return Math.Abs(xOffset) <= player.lastTileRangeX + item.tileBoost && Math.Abs(yOffset) <= player.lastTileRangeY + item.tileBoost;
         }
 
-        public void sendTileFrame(int x, int y) {
-            WorldGen.SquareTileFrame(x, y);
-            WorldGen.SquareWallFrame(x, y);
-            NetMessage.SendTileSquare(-1, x, y, 1);
-        }
 	}
 
     public class SpectrePaintingMultiTool : PaintingMultiTool {

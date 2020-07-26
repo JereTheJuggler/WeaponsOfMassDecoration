@@ -2,6 +2,7 @@
 using Terraria.ModLoader;
 using System;
 using Terraria;
+using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
 	public class EndlessSplatterBulletPouch : SplatterBullet {
@@ -19,7 +20,7 @@ namespace WeaponsOfMassDecoration.Items {
 
 		public override void AddRecipes(){
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(ModContent.ItemType<SplatterBullet>(), 999 * 4);
+			recipe.AddIngredient(ItemType<SplatterBullet>(), 999 * 4);
 			recipe.AddTile(TileID.CrystalBall);
 			recipe.SetResult(this,1);
 			recipe.AddRecipe();

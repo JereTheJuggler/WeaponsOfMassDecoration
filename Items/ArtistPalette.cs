@@ -8,6 +8,8 @@ using Terraria;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.ID;
+using static Terraria.ModLoader.ModContent;
+using WeaponsOfMassDecoration.NPCs;
 
 namespace WeaponsOfMassDecoration.Items {
     class ArtistPalette : ModItem{
@@ -26,11 +28,16 @@ namespace WeaponsOfMassDecoration.Items {
 
         public override void AddRecipes() {
             ModRecipe recipe = new ModRecipe(mod);
-            recipe.AddIngredient(ModContent.ItemType<DeepRainbowPaint>(), 999);
+            recipe.AddIngredient(ItemType<DeepRainbowPaint>(), 999);
             recipe.AddIngredient(ItemID.Pearlwood,15);
             recipe.AddTile(TileID.DyeVat);
             recipe.SetResult(this);
             recipe.AddRecipe();
         }
-    }
+
+		public override void UpdateAccessory(Player player, bool hideVisual) {
+			base.UpdateAccessory(player, hideVisual);
+            player.GetModPlayer<WoMDPlayer>().accPalette = true;
+		}
+	}
 }

@@ -9,7 +9,7 @@ using Terraria.ID;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace WeaponsOfMassDecoration.Items {
+namespace WeaponsOfMassDecoration.Items{
     class PaintLaser : PaintingItem{
 
         //please don't look at this... there's probably a much better way to do it.
@@ -17,8 +17,8 @@ namespace WeaponsOfMassDecoration.Items {
         public override void SetStaticDefaults() {
             DisplayName.SetDefault("Paint Laser");
             Item.staff[ModContent.ItemType<PaintLaser>()] = true;
-			base.SetStaticDefaults(halfDamageText);
-		}
+            base.SetStaticDefaults(halfDamageText);
+        }
 
         public override void SetDefaults() {
             base.SetDefaults();
@@ -44,8 +44,8 @@ namespace WeaponsOfMassDecoration.Items {
         public override void AddRecipes() {
             ModRecipe recipe = new ModRecipe(mod);
             recipe.AddIngredient(ItemID.AmethystStaff);
-			recipe.AddRecipeGroup("WoMD:hmBar1", 5);
-			recipe.AddIngredient(ItemID.Paintbrush);
+            recipe.AddRecipeGroup("WoMD:hmBar1", 5);
+            recipe.AddIngredient(ItemID.Paintbrush);
             recipe.AddIngredient(ItemID.PaintRoller);
             recipe.AddIngredient(ItemID.PaintScraper);
             recipe.AddTile(TileID.DyeVat);
@@ -54,8 +54,8 @@ namespace WeaponsOfMassDecoration.Items {
 
             ModRecipe recipe2 = new ModRecipe(mod);
             recipe2.AddIngredient(ItemID.TopazStaff);
-			recipe.AddRecipeGroup("WoMD:hmBar1", 5);
-			recipe2.AddIngredient(ItemID.Paintbrush);
+            recipe.AddRecipeGroup("WoMD:hmBar1", 5);
+            recipe2.AddIngredient(ItemID.Paintbrush);
             recipe2.AddIngredient(ItemID.PaintRoller);
             recipe2.AddIngredient(ItemID.PaintScraper);
             recipe2.AddTile(TileID.DyeVat);
@@ -63,7 +63,7 @@ namespace WeaponsOfMassDecoration.Items {
             recipe2.AddRecipe();
         }
 
-        public enum GeneralDirection {
+        public enum GeneralDirection{
             UpLeft,
             UpRight,
             DownLeft,
@@ -71,6 +71,26 @@ namespace WeaponsOfMassDecoration.Items {
         }
 
         public override bool Shoot(Player player, ref Vector2 position, ref float speedX, ref float speedY, ref int type, ref int damage, ref float knockBack) {
+            /*Vector2 dir = new Vector2(speedX, speedY).SafeNormalize(new Vector2(0, 1));
+            List<Vector2> endPoints = new List<Vector2>();
+            int maxIterations = 600;
+            int maxDistanceBetweenSpawns = 16;
+            int maxTotalDistance = 1200;
+            float currentDistance = 0;
+            int distancePerIteration = 8;
+            Vector2 currentPosition = position * 1;
+            endPoints.Add(position);
+            for(int i=0;i<=maxIterations && currentDistance < maxTotalDistance - 1; i++) {
+                Point currentTilePosition = currentPosition.ToTileCoordinates();
+                Point nextTilePosition = (currentPosition + (dir * distancePerIteration)).ToTileCoordinates();
+                if(!WorldGen.InWorld(nextTilePosition.X, nextTilePosition.Y, 10))
+                    break;
+                Tile nextTile = Main.tile[nextTilePosition]
+			}
+            endPoints.Add(currentPosition);
+
+            return false;
+        }*/
             Vector2 dir = new Vector2(speedX, speedY).SafeNormalize(new Vector2(0, 1));
             int maxDistancePerIteration = 16;
             int maxIterations = 600;
@@ -102,7 +122,7 @@ namespace WeaponsOfMassDecoration.Items {
                 bool hitTile = false;
                 Tile currentTile = Main.tile[currentTilePos.X, currentTilePos.Y];
                 Tile tileDown = Main.tile[currentTilePos.X, currentTilePos.Y + 1];
-                
+
                 while(true) {
                     float xCoord = 0;
                     switch(genDir) {
@@ -137,7 +157,7 @@ namespace WeaponsOfMassDecoration.Items {
                     if(Math.Abs(relativeSlope) <= .05) {
                         if(WorldGen.TileEmpty(currentTilePos.X, currentTilePos.Y)) {
                             //WorldGen.PlaceTile(currentTilePos.X, currentTilePos.Y, TileID.Bubble, true, true);
-                        }else if(WorldGen.SolidOrSlopedTile(currentTilePos.X, currentTilePos.Y)) {
+                        } else if(WorldGen.SolidOrSlopedTile(currentTilePos.X, currentTilePos.Y)) {
                             //Main.tile[currentTilePos.X, currentTilePos.Y].type = TileID.AmethystGemspark;
                         }
                         //motion will hit the corner, if it can travel far enough
@@ -174,15 +194,14 @@ namespace WeaponsOfMassDecoration.Items {
                         //take care of corner between 2 similar sloped blocks first
                         if((genDir != GeneralDirection.DownRight && upRight.slope == 3 && downLeft.slope == 3) ||
                            (genDir != GeneralDirection.UpLeft && upRight.slope == 2 && downLeft.slope == 3)) {
-                            /* tiles look like this
-                             *     /]
-                             *   /]
-                             * or like this
-                             *     [/
-                             *   [/
-                            */
+                            // tiles look like this
+                            //     /]
+                            //   /]
+                            // or like this
+                            //     [/
+                            //   [/
+                            //
                             hitTile = true;
-                            //Main.tile[checkTilePos.X, checkTilePos.Y].type = TileID.Dirt;
                             nextPos = new Vector2(xCoord, yCoord);
                             reflectAgainstYEqualsNegativeX(ref dir);
                             currentTilePos = checkTilePos;
@@ -190,13 +209,13 @@ namespace WeaponsOfMassDecoration.Items {
                         }
                         if((genDir != GeneralDirection.DownLeft && upLeft.slope == 4 && downRight.slope == 4) ||
                            (genDir != GeneralDirection.UpRight && upLeft.slope == 1 && downRight.slope == 1)) {
-                            /* tiles look like this
-                             *   \] 
-                             *     \]
-                             * or like this
-                             *   [\
-                             *     [\
-                            */
+                            // tiles look like this
+                            //   \] 
+                            //     \]
+                            // or like this
+                            //   [\
+                            //     [\
+                            //
                             hitTile = true;
                             //Main.tile[checkTilePos.X, checkTilePos.Y].type = TileID.Stone;
                             nextPos = new Vector2(xCoord, yCoord);
@@ -224,7 +243,7 @@ namespace WeaponsOfMassDecoration.Items {
                                 break;
                             }
                             if(genDir == GeneralDirection.UpLeft || genDir == GeneralDirection.UpRight) {
-                                checkTilePos = new Point(currentTilePos.X,currentTilePos.Y-1);
+                                checkTilePos = new Point(currentTilePos.X, currentTilePos.Y - 1);
                             } else {
                                 checkTilePos = new Point(currentTilePos.X, currentTilePos.Y + 1);
                             }
@@ -299,7 +318,6 @@ namespace WeaponsOfMassDecoration.Items {
                                     if((new int[] { 0, 1, 2, 5 }).Contains(tileDef.slope)) {
                                         hitTile = true;
                                         //Main.tile[checkTilePos.X, checkTilePos.Y].type = TileID.RedBrick;
-                                        checkTile.type = TileID.Dirt;
                                         reflectAgainstX(ref dir);
                                         nextPos = (new LineEquation(0, yCoord)).getIntercepts(motion.equation)[0];
                                         currentTilePos = checkTilePos;
@@ -307,9 +325,10 @@ namespace WeaponsOfMassDecoration.Items {
                                     }
                                     LineSegment slopedSide;
                                     if(tileDef.slope == 3) { // [/
-                                        slopedSide = new LineSegment(tileRect.bottomLeft, tileRect.topRight);
+                                        slopedSide = new LineSegment(tileRect.topRight, tileRect.bottomLeft);
                                     } else { // \]
                                         slopedSide = new LineSegment(tileRect.topLeft, tileRect.bottomRight);
+                                        //slopedSide = new LineSegment(tileRect.topLeft, tileRect.bottomRight);
                                     }
                                     List<Vector2> intercepts = slopedSide.getIntercepts(motion);
                                     if(intercepts.Count > 0) {
@@ -361,16 +380,16 @@ namespace WeaponsOfMassDecoration.Items {
                     //if the loop has not been escaped then a tile has not been hit and not all tiles along the projectile's motion have been checked
                     currentTilePos = checkTilePos;
                     //currentTilePos = new Point((int) Math.Floor(nextPos.X / 16f),(int) Math.Floor(nextPos.Y / 16f));
-				}
+                }
                 Vector2 previousPoint = endPoints[endPoints.Count - 1];
                 endPoints.Add(nextPos);
-                currentDistance += (float) Math.Sqrt(Math.Pow(nextPos.X - previousPoint.X, 2) + Math.Pow(nextPos.Y - previousPoint.Y, 2));
+                currentDistance += (float)Math.Sqrt(Math.Pow(nextPos.X - previousPoint.X, 2) + Math.Pow(nextPos.Y - previousPoint.Y, 2));
                 if(i == maxIterations) {
                     i = maxIterations;
                 }
                 position = nextPos;
             }
-            for(int p=0;p<endPoints.Count - 1; p++) {
+            for(int p = 0; p < endPoints.Count - 1; p++) {
                 Vector2 currentPos = endPoints[p];
                 Vector2 nextPos = endPoints[p + 1];
                 Vector2 disp = nextPos - currentPos;
@@ -379,11 +398,11 @@ namespace WeaponsOfMassDecoration.Items {
                 Vector2 spawnOffset = disp / totalSpawns;
                 for(int i = 1; i <= totalSpawns; i++) {
                     Vector2 previousPos = currentPos + spawnOffset * (i - 1);
-                    int projId = Projectile.NewProjectile(currentPos + spawnOffset*i, new Vector2(0,0), ModContent.ProjectileType<Projectiles.PaintLaser>(), damage, 0f, player.whoAmI, previousPos.X, previousPos.Y);
+                    int projId = Projectile.NewProjectile(currentPos + spawnOffset * i, new Vector2(0, 0), ModContent.ProjectileType<Projectiles.PaintLaser>(), damage, 0f, player.whoAmI, previousPos.X, previousPos.Y);
                 }
             }
 
-            
+
             return false;
         }/*
             SetDefaults();
@@ -393,6 +412,7 @@ namespace WeaponsOfMassDecoration.Items {
             int iterationsBetweenSpawns = 3;
             int iterationsToNextSpawn = iterationsBetweenSpawns;
             maxDistance = 4;
+            position += dir * 64;
             Vector2 lastSpawnPosition = position;
             for(int proj = 0;proj <= maxIterations; proj++) {
                 bool spawnProjectile = iterationsToNextSpawn == 0;
@@ -529,7 +549,7 @@ namespace WeaponsOfMassDecoration.Items {
                 if(proj == maxIterations)
                     spawnProjectile = true;
                 if(spawnProjectile) {
-                    int projId = Projectile.NewProjectile(nextPos,dir, mod.ProjectileType<Projectiles.PaintLaser>(), damage, 0f, player.whoAmI, lastSpawnPosition.X,lastSpawnPosition.Y);
+                    int projId = Projectile.NewProjectile(nextPos,dir, ModContent.ProjectileType<Projectiles.PaintLaser>(), damage, 0f, player.whoAmI, lastSpawnPosition.X,lastSpawnPosition.Y);
                     lastSpawnPosition = nextPos;
                     iterationsToNextSpawn = iterationsBetweenSpawns;
                 } else {
@@ -538,7 +558,7 @@ namespace WeaponsOfMassDecoration.Items {
                 position = nextPos;
             }
             return false;
-        }*/
+        }//*/
 
         public void reflectAgainstY(ref Vector2 dir) {
             dir = new Vector2(-1 * dir.X, dir.Y);
@@ -565,11 +585,11 @@ namespace WeaponsOfMassDecoration.Items {
         public TileRect(Point tilePos) {
             setCorners(tilePos.X * 16, tilePos.Y * 16);
         }
-        public TileRect(int tileX,int tileY) {
+        public TileRect(int tileX, int tileY) {
             setCorners(tileX * 16, tileY * 16);
         }
 
-        private void setCorners(int x,int y) {
+        private void setCorners(int x, int y) {
             topLeft = new Point(x, y);
             topRight = new Point(x + 15, y);
             middleLeft = new Point(x, y + 8);
@@ -579,7 +599,7 @@ namespace WeaponsOfMassDecoration.Items {
         }
     }
 
-    public class TileBorder {
+    public class TileBorder{
         public List<LineSegment> segments;
         public Tile tile;
         public Vector2 topLeftCorner;
@@ -595,7 +615,7 @@ namespace WeaponsOfMassDecoration.Items {
         public Vector2 paddedMiddleLeftCorner;
         public Vector2 paddedMiddleRightCorner;
 
-        public TileBorder(int x,int y) {
+        public TileBorder(int x, int y) {
             segments = new List<LineSegment>();
             tile = Main.tile[x, y];
             topLeftCorner = new Vector2(x * 16, y * 16);
@@ -658,13 +678,13 @@ namespace WeaponsOfMassDecoration.Items {
             for(int s = 0; s < segments.Count; s++) {
                 List<Vector2> newIntercept = segments[s].getIntercepts(segment);
                 if(newIntercept.Count > 0)
-                    intercepts.Add(new LineIntercept(segments[s],newIntercept[0]));
+                    intercepts.Add(new LineIntercept(segments[s], newIntercept[0]));
             }
             return intercepts;
         }
     }
 
-    public class LineSegment {
+    public class LineSegment{
         public Vector2 point1;
         public Vector2 point2;
 
@@ -681,7 +701,7 @@ namespace WeaponsOfMassDecoration.Items {
             point2 = new Vector2((float)Math.Round(x2, 5), (float)Math.Round(y2, 5));
             if(x1 <= x2) {
                 minX = point1.X;
-                maxX = point2.X;                
+                maxX = point2.X;
             } else {
                 minX = point2.X;
                 maxX = point1.X;
@@ -695,7 +715,7 @@ namespace WeaponsOfMassDecoration.Items {
             }
             equation = new LineEquation(this);
         }
-        public LineSegment(Vector2 point1,Vector2 point2) {
+        public LineSegment(Vector2 point1, Vector2 point2) {
             this.point1 = point1;
             this.point2 = point2;
             if(point1.X <= point2.X) {
@@ -714,7 +734,7 @@ namespace WeaponsOfMassDecoration.Items {
             }
             equation = new LineEquation(this);
         }
-        public LineSegment(Point point1,Point point2) {
+        public LineSegment(Point point1, Point point2) {
             this.point1 = point1.ToVector2();
             this.point2 = point2.ToVector2();
             if(point1.X <= point2.X) {
@@ -745,23 +765,23 @@ namespace WeaponsOfMassDecoration.Items {
         }
     }
 
-    public class LineIntercept {
+    public class LineIntercept{
         public Vector2 point;
         public LineSegment segment;
 
-        public LineIntercept(LineSegment segment,Vector2 point) {
+        public LineIntercept(LineSegment segment, Vector2 point) {
             this.segment = segment;
             this.point = point;
         }
     }
 
-    public class LineEquation {
+    public class LineEquation{
         public float slope;
         public float yIntercept;
         public float x;
         public bool vertical;
 
-        public LineEquation(float slope,float yIntercept) {
+        public LineEquation(float slope, float yIntercept) {
             this.slope = slope;
             this.yIntercept = yIntercept;
             vertical = false;
@@ -778,10 +798,10 @@ namespace WeaponsOfMassDecoration.Items {
             } else {
                 vertical = false;
                 //m = (y1-y2) / (x1-x2)
-                slope = (float)Math.Round((segment.point1.Y - segment.point2.Y) / (segment.point1.X - segment.point2.X),5);
+                slope = (float)Math.Round((segment.point1.Y - segment.point2.Y) / (segment.point1.X - segment.point2.X), 5);
                 //y = mx + b
                 //b = y - mx
-                yIntercept = (float)Math.Round(segment.point1.Y - slope * segment.point1.X,5);
+                yIntercept = (float)Math.Round(segment.point1.Y - slope * segment.point1.X, 5);
             }
         }
 
@@ -794,7 +814,7 @@ namespace WeaponsOfMassDecoration.Items {
             if(vertical) {
                 //this is vertical. other eq is not. get y from other eq where x = this eq's x
                 intercepts.Add(new Vector2(x, equation.slope * x + equation.yIntercept));
-            }else if(equation.vertical) {
+            } else if(equation.vertical) {
                 //other eq is vertical. this is not. get y from this eq where x = other eq's x
                 intercepts.Add(new Vector2(equation.x, slope * equation.x + yIntercept));
             } else {
@@ -822,7 +842,7 @@ namespace WeaponsOfMassDecoration.Items {
         public Tile tile;
         public int slope; //-1 slope will specify an inactive tile and 5 will specify a half block, to spare having to reference 2 additional properties.
 
-        public TileDef(int tileX,int tileY) {
+        public TileDef(int tileX, int tileY) {
             init(new Point(tileX, tileY));
         }
         public TileDef(Point coords) {

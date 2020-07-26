@@ -2,6 +2,7 @@
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
+using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
     class PaintDynamite : PaintingItem {
@@ -13,7 +14,7 @@ namespace WeaponsOfMassDecoration.Items {
         public override void SetDefaults() {
             item.useStyle = ItemUseStyleID.SwingThrow;
             item.shootSpeed = 4.5f;
-            item.shoot = ModContent.ProjectileType<Projectiles.PaintDynamite>();
+            item.shoot = ProjectileType<Projectiles.PaintDynamite>();
             item.width = 8;
             item.height = 8;
             item.maxStack = 99;

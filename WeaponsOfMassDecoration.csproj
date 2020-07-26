@@ -16,6 +16,9 @@
     <None Remove="Items\Vanilla_Assets\**" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="Items\Unused\SmallPaintRocket.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <None Remove="Projectiles\HackAndSplashBlob - Old.png" />
     <None Remove="Projectiles\LargePaintRocket.png" />
     <None Remove="Projectiles\PaintSpell.png" />

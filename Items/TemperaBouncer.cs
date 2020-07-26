@@ -8,6 +8,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
     class TemperaBouncer : PaintingItem {
@@ -21,7 +22,7 @@ namespace WeaponsOfMassDecoration.Items {
             base.SetDefaults();
             item.CloneDefaults(ItemID.CursedFlames);
             item.RebuildTooltip();
-            item.shoot = ModContent.ProjectileType<Projectiles.TemperaBouncer>();
+            item.shoot = ProjectileType<Projectiles.TemperaBouncer>();
             item.rare = ItemRarityID.Green;
             item.damage = 60;
             //item.width = 42;
@@ -50,12 +51,6 @@ namespace WeaponsOfMassDecoration.Items {
             recipe.AddTile(TileID.Bookcases);
             recipe.SetResult(this);
             recipe.AddRecipe();
-        }
-
-        public override bool Shoot(Player player, ref Vector2 position, ref float speedX, ref float speedY, ref int type, ref int damage, ref float knockBack) {
-            SetDefaults();
-            return base.Shoot(player, ref position, ref speedX, ref speedY, ref type, ref damage, ref knockBack);
-            //return true;
         }
     }
 }

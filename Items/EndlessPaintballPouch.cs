@@ -2,6 +2,7 @@
 using Terraria.ModLoader;
 using System;
 using Terraria;
+using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
 	public class EndlessPaintballPouch : Paintball {
@@ -20,7 +21,7 @@ namespace WeaponsOfMassDecoration.Items {
 
 		public override void AddRecipes(){
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(ModContent.ItemType<Paintball>(), 999 * 4);
+			recipe.AddIngredient(ItemType<Paintball>(), 999 * 4);
 			recipe.AddTile(TileID.CrystalBall);
 			recipe.SetResult(this,1);
 			recipe.AddRecipe();

@@ -2,27 +2,27 @@ sampler uImage0 : register(s0);
 sampler uImage1 : register(s1);
 sampler uImage2;
 sampler uImage3;
-float3 uColor;
-float uOpacity;
-float3 uSecondaryColor;
-float uTime;
-float2 uScreenResolution;
-float2 uScreenPosition;
-float2 uTargetPosition;
-float2 uImageOffset;
-float uIntensity;
-float uProgress;
-float2 uDirection;
-float uSaturation;
-float4 uSourceRect;
-float2 uZoom;
-float2 uImageSize1;
-float2 uImageSize2;
-float2 uImageSize3;
+int3 uColor;
+int uOpacity;
+int3 uSecondaryColor;
+int uTime;
+int2 uScreenResolution;
+int2 uScreenPosition;
+int2 uTargetPosition;
+int2 uImageOffset;
+int uIntensity;
+int uProgress;
+int2 uDirection;
+int uSaturation;
+int4 uSourceRect;
+int2 uZoom;
+int2 uImageSize1;
+int2 uImageSize2;
+int2 uImageSize3;
 
-float4 paintedColor(float4 sampleColor : COLOR0, float2 coords : TEXCOORD0) : COLOR0{
-	float4 color = tex2D(uImage0,coords);
-	float lum = (color.r + color.g + color.b)/3;
+int4 paintedColor(int4 sampleColor : COLOR0, int2 coords : TEXCOORD0) : COLOR0{
+	int4 color = tex2D(uImage0,coords);
+	int lum = (color.r + color.g + color.b)/3;
 	color.rgb = lum * uColor;
 	return color * sampleColor * uOpacity;
 }

@@ -23,8 +23,5 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			projectile.tileCollide = false;
 			projectile.ignoreWater = true;
 		}
-		public override void OnHitNPC(NPC target, int damage, float knockback, bool crit) {
-			base.OnHitNPC(target, damage, knockback, crit);
-		}
 	}
 }

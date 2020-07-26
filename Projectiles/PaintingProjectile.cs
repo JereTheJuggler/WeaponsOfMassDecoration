@@ -15,90 +15,121 @@ using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
 using Terraria.DataStructures;
 using static Terraria.ModLoader.ModContent;
-using System.Xml.Schema;
+using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.Projectiles {
-    
-
     public abstract class PaintingProjectile : ModProjectile {
 
-		public bool explodesOnDeath = false;
-		public float explosionRadius = 5f;
+		protected bool explodesOnDeath = false;
+		protected float explosionRadius = 32f;
 
-		public bool dropsOnDeath = false;
-		public int dropCount = 5;
-		public float dropCone = (float)(Math.PI / 2f);
+		protected bool dropsOnDeath = false;
+		protected int dropCount = 5;
+		protected float dropCone = (float)(Math.PI / 2f);
+        protected float dropVelocity = 5f;
 
-		public bool usesShader = false;
+        protected int trailLength = 0;
+        protected int trailMode = 0;
 
-        public int color = -2;
-        public int numFrames = 31;
-        public PaintMethods paintMethod = PaintMethods.NotSet;
-        public int currentPaintIndex = -1;
+        protected Vector2 drawOriginOffset = new Vector2(0,0);
+
+		protected bool usesShader = false;
+
         public List<Point> paintedTiles = new List<Point>();
         public double lastUpdateCheck = 0;
         public Vector2 startPosition = new Vector2(0,0);
         public float paintConsumptionChance = 1f;
-        public float light = 0;
-        public int animationFrames = 1;
-		
+
+        public bool manualRotation = false;
+        public float rotation = 0;
+
+        public float oldRotation = 0;
+
+        public bool hasGraphics = true;
+
+        protected int yFrameCount = 31;
+        protected int xFrameCount = 1;
+
+        public int animationFrameDuration = 0;
+
+        public int animationFrame = 0;
+        public int colorFrame = 0;
+
 		protected bool resetBatchInPost = false;
 
 		public PaintingProjectile() : base() { }
 
-        public override bool PreAI() {
-            //if(projectile.owner == Main.myPlayer) {
-                if(color == -2 || paintMethod == PaintMethods.NotSet || Main.GlobalTime - lastUpdateCheck >= .25) {
-                    assignPaintColorAndMethod();
-                    lastUpdateCheck = Main.GlobalTime;
-                }
-                if(startPosition.X == 0 && startPosition.Y == 0)
-                    startPosition = projectile.position;
-			//}
-			if(!usesShader) {
-				projectile.frame = WeaponsOfMassDecoration.getCurrentColorID(this, true);
-			}
-
-			//projectile.position = projectile.position + (new Vector2(1, 0).RotatedBy(Math.PI / 2) * (maxDistanceFromCenter * Math.Sin(time)));
-
-			return true;
+		public override void SetStaticDefaults() {
+			base.SetStaticDefaults();
+            Main.projFrames[projectile.type] = yFrameCount * xFrameCount;
+            ProjectileID.Sets.TrailCacheLength[projectile.type] = trailLength;
+            if(trailLength > 0) {
+                ProjectileID.Sets.TrailingMode[projectile.type] = trailMode;
+            }
         }
-		
+
+		public override void SetDefaults() {
+			base.SetDefaults();
+		}
+
+		#region getters / value conversion
 		public Player getOwner() {
-            return Main.player[projectile.owner];
+            return getPlayer(projectile.owner);
         }
 
+        public WoMDPlayer getModPlayer() {
+            Player p = getOwner();
+            if(p == null)
+                return null;
+            return p.GetModPlayer<WoMDPlayer>();
+		}
+
+        public bool canPaint() {
+            if(projectile.owner != Main.myPlayer)
+                return false;
+            WoMDPlayer player = getModPlayer();
+            if(player == null)
+                return false;
+            return player.canPaint();
+		}
+
+        public Point convertPositionToTile(Vector2 position) {
+            return new Point((int)Math.Floor(position.X / 16f), (int)Math.Floor(position.Y / 16f));
+        }
+        public Point convertPositionToTile(Point position) {
+            return new Point((int)Math.Floor(position.X / 16f), (int)Math.Floor(position.Y / 16f));
+        }
+        #endregion
+
+        #region tile/npc interaction
         public override void OnHitNPC(NPC target, int damage, float knockback, bool crit) {
 			WoMDGlobalNPC npc = target.GetGlobalNPC<WoMDGlobalNPC>();
-			if(npc != null) {
-				Player p = getOwner();
-				if(currentPaintIndex >= 0 && p != null) {
-					if(currentPaintIndex >= 0) {
-						if(p.inventory[currentPaintIndex].modItem is CustomPaint) {
-							WeaponsOfMassDecoration.applyPaintedToNPC(target, -1, (CustomPaint)p.inventory[currentPaintIndex].modItem);
-						} else {
-							for(int i = 0; i < PaintIDs.itemIds.Length; i++) {
-								if(p.inventory[currentPaintIndex].type == PaintIDs.itemIds[i]) {
-									WeaponsOfMassDecoration.applyPaintedToNPC(target, (byte)i, null);
-									break;
-								}
-							}
-						}
-					}
-				} else {
-					npc.customPaint = null;
-					npc.paintColor = -1;
-					npc.paintedTime = 0;
-				}
-			}
+            Player p = getOwner();
+            if(npc != null && p != null && projectile.owner == Main.myPlayer) {
+                WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
+                PaintMethods method = player.getPaintMethod();
+                if(method != PaintMethods.None) {
+                    if(method == PaintMethods.RemovePaint) {
+                        npc.painted = false;
+                    } else {
+                        player.getPaintVars(out int paintColor, out CustomPaint customPaint);
+                        applyPaintedToNPC(target, paintColor, customPaint);
+                    }
+                }
+            }
 			if(projectile.penetrate == 1)
 				onKillOnNPC(target);
         }
 
 		public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection) {
-			assignPaintColorAndMethod();
-			if(currentPaintIndex < 0 || paintMethod == PaintMethods.RemovePaint)
-				damage = (int)Math.Round(damage * .5f);
+            Player p = getOwner();
+            if(p != null && projectile.owner == Main.myPlayer) {
+                WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
+                PaintMethods method = player.getPaintMethod();
+                if(method == PaintMethods.None || method == PaintMethods.RemovePaint || player.currentPaintIndex < 0) {
+                    damage = (int)Math.Round(damage * .5f);
+                }
+			}
 		}
 
 		public virtual void onKillOnNPC(NPC target) {
@@ -106,7 +137,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 		
         public override void OnHitPvp(Player target, int damage, bool crit) {
-            base.OnHitPvp(target, damage, crit);
+            /*base.OnHitPvp(target, damage, crit);
             target.AddBuff(BuffType<Buffs.Painted>(), 600);
             Player p = getOwner();
             if(currentPaintIndex >= 0 && p != null) {
@@ -126,23 +157,212 @@ namespace WeaponsOfMassDecoration.Projectiles {
             } else {
                 //target.GetGlobalNPC<NPCs.WoMDGlobalNPC>(mod).customPaint = null;
                 //target.GetGlobalNPC<NPCs.WoMDGlobalNPC>(mod).paintColor = -1;
+            }*/
+        }
+        #endregion
+
+        /// <summary>
+        /// Creates drops of paint
+        /// </summary>
+        /// <param name="count"></param>
+        /// <param name="position"></param>
+        /// <param name="direction"></param>
+        /// <param name="spreadAngle"></param>
+        /// <param name="speed"></param>
+        /// <param name="timeLeft"></param>
+        public void createDrops(int count, Vector2 position, Vector2 direction, float spreadAngle, float speed = 1f, int timeLeft = 30) {
+            direction.Normalize();
+            for(int i = 0; i < count; i++) {
+                Vector2 vel = direction.RotatedBy((spreadAngle * Main.rand.NextFloat()) - (spreadAngle / 2));
+                Projectile p = getProjectile(Projectile.NewProjectile(position + vel * 2f, vel * speed, ProjectileType<PaintSplatter>(), 0, 0, projectile.owner, 1, ProjectileID.IchorSplash));
+                if(p != null) {
+                    p.timeLeft = timeLeft;
+                    p.alpha = 125;
+                }
             }
         }
 
-        public void paintAlongOldVelocity(Vector2 oldVelocity,bool blocks = true,bool walls = true) {
+        public override bool PreKill(int timeLeft) {
+            if(dropsOnDeath)
+                createDrops(dropCount, projectile.Center, projectile.oldVelocity * -1, dropCone, dropVelocity);
+            if(explodesOnDeath)
+                explode(projectile.Center, explosionRadius);
+            return base.PreKill(timeLeft);
+        }
+
+		#region ai
+		public override bool PreAI() {
+            oldRotation = projectile.rotation;
+            if(startPosition.X == 0 && startPosition.Y == 0)
+                startPosition = projectile.position;
+            return true;
+        }
+
+        public override void AI() {
+            base.AI();
+        }
+
+        public override void PostAI() {
+            base.PostAI();
+            if(manualRotation)
+                projectile.rotation = rotation;
+            if(trailLength > 1) {
+                for(int i = trailLength - 1; i > 0; i--)
+                    projectile.oldRot[i] = projectile.oldRot[i - 1];
+            }
+            if(trailLength > 0) {
+                projectile.oldRot[0] = projectile.rotation;
+            }
+            if(xFrameCount > 1 && (animationFrameDuration == 0 || projectile.timeLeft % animationFrameDuration == 0))
+                nextFrame();
+        }
+        #endregion
+
+        #region rendering
+        /// <summary>
+        /// Updates the colorFrame property
+        /// </summary>
+        public void updateColorFrame() {
+            WoMDPlayer player = getModPlayer();
+            if(Main.myPlayer == projectile.owner && player != null) {
+                player.getPaintVars(out int paintColor, out CustomPaint customPaint);
+                colorFrame = getCurrentColorID(true, paintColor, customPaint, paintCyclingTimeScale);
+			}
+		}
+
+        /// <summary>
+        /// Advances the animation frame, wrapping back to frame 0 if necessary
+        /// </summary>
+        public void nextFrame() {
+            if(xFrameCount == 1)
+                return;
+            animationFrame++;
+            if(animationFrame >= xFrameCount)
+                animationFrame = 0;
+		}
+
+        /// <summary>
+        /// Gets a source rectangle for the texture provided
+        /// </summary>
+        /// <param name="texture"></param>
+        /// <returns></returns>
+        public Rectangle getSourceRectangle(Texture2D texture) {
+            int frameHeight = (texture.Height - (2 * (yFrameCount - 1))) / yFrameCount;
+            int yFrame = (colorFrame > yFrameCount - 1? yFrameCount - 1: colorFrame);
+            int startY = yFrame * (frameHeight + 2);
+            int frameWidth = (texture.Width - (2 * (xFrameCount - 1))) / xFrameCount;
+            int startX = animationFrame * (frameWidth + 2);
+            return new Rectangle(startX, startY, frameWidth, frameHeight);
+        }
+
+        public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor) {
+            if(!hasGraphics) {
+                createLight();
+                return false;
+            }
+            if(!usesShader) {
+                updateColorFrame();
+
+                Color projLight = createLight();
+
+                Texture2D texture = Main.projectileTexture[projectile.type];
+                Rectangle sourceRectangle = getSourceRectangle(texture);
+                Vector2 origin = (sourceRectangle.Size() / 2) + drawOriginOffset;
+                float scale = projectile.scale;
+                for(int i = trailLength; i >= 0; i--) {
+                    if(i == 1)
+                        continue;
+
+                    Vector2 projectilePos = (i == 0 ? projectile.Center : projectile.oldPos[i - 1] + (new Vector2(projectile.width / 2f, projectile.height / 2f) * projectile.scale));
+                    Vector2 drawPos = projectilePos - Main.screenPosition + new Vector2(0f, projectile.gfxOffY);
+
+                    float rotation = (i == 0 ? projectile.rotation : projectile.oldRot[i - 1]);
+
+                    float opacity = projectile.Opacity - (projectile.Opacity / (trailLength + 1)) * i;
+                    float lightness = 1f - (.75f / (trailLength + 1)) * i;
+
+                    Color color;
+                    if(i == 0) {
+                        color = new Color(clamp(lightColor.R + projLight.R,0,255), clamp(lightColor.G + projLight.G, 0, 255), clamp(lightColor.B + projLight.B, 0, 255),lightColor.A);
+					} else {
+                        color = lightColor;
+					}
+                    color.A = (byte)Math.Round(opacity * 255);
+                    color = Color.Multiply(color, lightness);
+
+                    spriteBatch.Draw(texture, drawPos, sourceRectangle, color, rotation, origin, scale, SpriteEffects.None, 0f);
+                }
+			} else {
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
+
+                Color projLight = createLight();
+
+                resetBatchInPost = true;
+
+                Texture2D texture = Main.projectileTexture[projectile.type];
+                Rectangle sourceRectangle = getSourceRectangle(texture);
+                Vector2 origin = (sourceRectangle.Size() / 2) + drawOriginOffset;
+                float scale = projectile.scale;
+
+                MiscShaderData data = (MiscShaderData)applyShader(this);
+
+                for(int i = trailLength; i >= 0; i--) {
+                    if(i == 1)
+                        continue;
+
+                    Vector2 projectilePos = (i == 0 ? projectile.Center : projectile.oldPos[i - 1] + (new Vector2(projectile.width / 2f, projectile.height / 2f)));
+                    Vector2 drawPos = projectilePos - Main.screenPosition + new Vector2(0f, projectile.gfxOffY);
+
+                    float rotation = (i == 0 ? projectile.rotation : projectile.oldRot[i - 1]);
+
+                    float opacity = projectile.Opacity - (projectile.Opacity / (trailLength + 1)) * i;
+                    float lightness = 1f - (.5f / (trailLength + 1)) * i;
+                    /*
+                    Color color;
+                    if(i == 0) {
+                        color = new Color(clamp(lightColor.R + projLight.R, 0, 255), clamp(lightColor.G + projLight.G, 0, 255), clamp(lightColor.B + projLight.B, 0, 255), lightColor.A);
+                    } else {
+                        color = lightColor;
+                    }
+                    color.A = (byte)Math.Round(opacity * 255);
+                    color = Color.Multiply(color, lightness);
+                    */
+
+                    if(data != null)
+                        data.UseOpacity(opacity).Apply();
+
+                    spriteBatch.Draw(texture, drawPos, sourceRectangle, new Color(lightness,lightness,lightness,1f), rotation, origin, scale, SpriteEffects.None, 0f);
+
+                    if(i > 0) {
+                        spriteBatch.End();
+                        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
+                    }
+                }
+            }
+            return false;
+        }
+        public override void PostDraw(SpriteBatch spriteBatch, Color lightColor) {
+            if(resetBatchInPost) {
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
+            }
+			if(!hasGraphics) {
+                createLight();
+			}
+        }
+        #endregion
+
+        #region painting
+
+        public void paintAlongOldVelocity(Vector2 oldVelocity, bool blocks = true, bool walls = true) {
             if(!(blocks || walls))
                 return;
-            if(oldVelocity.Length() > 0 && !(startPosition.X == 0 && startPosition.Y == 0) && (startPosition-projectile.position).Length() > oldVelocity.Length()) {
+            if(oldVelocity.Length() > 0 && !(startPosition.X == 0 && startPosition.Y == 0) && (startPosition - projectile.position).Length() > oldVelocity.Length()) {
                 Vector2 unitVector = new Vector2(oldVelocity.X, oldVelocity.Y);
                 unitVector.Normalize();
                 for(int o = 0; o < Math.Ceiling(oldVelocity.Length()); o += 8) {
-                    Vector2 currentOffset = projectile.Center - oldVelocity + (unitVector * o);
-                    if(blocks && walls)
-                        paintTileAndWall(currentOffset);
-                    else if(blocks)
-                        paintTile(currentOffset);
-                    else if(walls)
-                        paintWall(currentOffset);
+                    paint(projectile.Center - oldVelocity + (unitVector * o), blocks, walls);
                 }
             }
         }
@@ -153,142 +373,38 @@ namespace WeaponsOfMassDecoration.Projectiles {
             float distance = unitVector.Length();
             unitVector.Normalize();
             int iterations = (int)Math.Ceiling(distance / 8f);
-            for(int i=0; i < iterations; i++) {
-                Vector2 offset = start + (unitVector * i * 8);
-                if(blocks && walls) {
-                    paintTileAndWall(offset);
-				} else if(blocks) {
-                    paintTile(offset);
-				} else {
-                    paintWall(offset);
-				}
-			}
-
-		}
-
-        public Point convertPositionToTile(Vector2 position) {
-            return new Point((int)Math.Floor(position.X / 16f), (int)Math.Floor(position.Y / 16f));
-        }
-        public Point convertPositionToTile(Point position) {
-            return new Point((int)Math.Floor(position.X / 16f), (int)Math.Floor(position.Y / 16f));
-        }
-
-        public void assignPaintColorAndMethod() {
-            try {
-                Player p = getOwner();
-                color = -2;
-                paintMethod = PaintMethods.NotSet;
-                for(int i = 0; i <= p.inventory.Length && (color == -2 || paintMethod == PaintMethods.NotSet); i++) {
-                    if(i == p.inventory.Length) {
-                        paintMethod = PaintMethods.None;
-                        color = -1;
-                    } else {
-                        if(p.inventory[i].type != ItemID.None && p.inventory[i].stack > 0) {
-                            if(color == -2) {
-                                if(PaintIDs.itemIds.Contains(p.inventory[i].type)) {
-                                    for(int c = 0; c < PaintIDs.itemIds.Length; c++) {
-                                        if(PaintIDs.itemIds[c] == p.inventory[i].type) {
-                                            color = c;
-                                            break;
-                                        }
-                                    }
-                                } else if(p.inventory[i].modItem is CustomPaint) {
-                                    color = PaintIDs.Custom;
-                                }
-                                if(color != -2)
-                                    currentPaintIndex = i;
-                            }
-                            if(paintMethod == PaintMethods.NotSet) {
-                                if(p.inventory[i].type == ItemID.Paintbrush || p.inventory[i].type == ItemID.SpectrePaintbrush) {
-                                    paintMethod = PaintMethods.Tiles;
-                                }else if(p.inventory[i].type == ItemID.PaintRoller || p.inventory[i].type == ItemID.SpectrePaintRoller) {
-                                    paintMethod = PaintMethods.Walls;
-                                }else if(p.inventory[i].type == ItemID.PaintScraper || p.inventory[i].type == ItemID.SpectrePaintScraper) {
-                                    paintMethod = PaintMethods.RemovePaint;
-                                    color = 0;
-                                }else if(p.inventory[i].type == ModContent.ItemType<PaintingMultiTool>() || p.inventory[i].type == ModContent.ItemType<SpectrePaintingMultiTool>()) {
-                                    paintMethod = PaintMethods.TilesAndWalls;
-                                }
-                            }
-                        }
-                    }
-                }
-                if(color == -2) {
-                    color = -1;
-                    currentPaintIndex = -1;
-                }
-                if(paintMethod == PaintMethods.NotSet)
-                    paintMethod = PaintMethods.None;
-                if(paintMethod == PaintMethods.RemovePaint) {
-                    currentPaintIndex = -1;
-                }
-            } catch {
-                color = -1;
-                paintMethod = PaintMethods.None;
+            for(int i = 0; i < iterations; i++) {
+                paint(start + (unitVector * i * 8), blocks, walls);
             }
-        }
-		
-        public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor) {
-            Texture2D texture = Main.projectileTexture[projectile.type];
-            int frameHeight = Main.projectileTexture[projectile.type].Height / Main.projFrames[projectile.type];
-            int startY = frameHeight * projectile.frame;
-            Rectangle sourceRectangle = new Rectangle(0, startY, texture.Width, frameHeight);
-            Vector2 origin = sourceRectangle.Size() / 2f;
-            Main.spriteBatch.Draw(texture,
-                projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY),
-                sourceRectangle, projectile.GetAlpha(lightColor), projectile.rotation, origin,projectile.scale,SpriteEffects.None,0f);
-            return false;
+
         }
 
-		public override bool PreKill(int timeLeft) {
-			if(dropsOnDeath)
-				createDrops(dropCount, projectile.Center, projectile.velocity * -1, dropCone, 5f);
-			if(explodesOnDeath)
-				explode(projectile.Center, explosionRadius);
-			return base.PreKill(timeLeft);
-		}
-
-		public void createDrops(int count,Vector2 position, Vector2 direction, float spreadAngle, float speed = 1f, int timeLeft = 30) {
-			direction.Normalize();
-			for(int i = 0; i < count; i++) {
-				Vector2 vel = direction.RotatedBy((spreadAngle * Main.rand.NextFloat()) - (spreadAngle / 2));
-				int projId = Projectile.NewProjectile(position + vel * 2f, vel * speed, ProjectileType<PaintSplatter>(), 0, 0, projectile.owner, 1, ProjectileID.IchorSplash);
-				Main.projectile[projId].timeLeft = timeLeft;
-				Main.projectile[projId].alpha = 125;
-			}
-		}
-		
+        /// <summary>
+        /// Creates a circle of paint
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <param name="radius"></param>
+        /// <param name="blocks"></param>
+        /// <param name="walls"></param>
         public void explode(Vector2 pos,float radius,bool blocks = true,bool walls = true) {
             for(int currentLevel = 0; currentLevel < Math.Ceiling(radius / 16f); currentLevel++) {
                 if(currentLevel == 0) {
-                    if(blocks && walls)
-                        paintTileAndWall(pos);
-                    else if(blocks)
-                        paintTile(pos);
-                    else if(walls)
-                        paintWall(pos);
+                    paint(pos,blocks,walls);
                 }else {
                     for(int i = 0; i <= currentLevel * 2; i++) {
-                        float xOffset = 0;// (float)Math.Cos(dir * (Math.PI / 2f)) * currentLevel - (float)Math.Sin(dir * (Math.PI / 2f)) * (i <= currentLevel + 1 ? 0 : i - currentLevel - 1);
-                        float yOffset = 0;// (i <= currentLevel ? i : currentLevel + 1) * (float)Math.Sin((float)dir * (Math.PI / 2f));
+                        float xOffset;
+                        float yOffset;
                         if(i <= currentLevel) {
-                            xOffset = currentLevel;// * (float)Math.Cos(dir * (Math.PI / 2f));
-                            yOffset = i;// * (float)Math.Sin(dir * (Math.PI / 2f));
+                            xOffset = currentLevel;
+                            yOffset = i;
                         }else {
-                            xOffset = (currentLevel*2 - i + 1);// * (float)Math.Cos(dir * (Math.PI / 2f));
-                            yOffset = (currentLevel + 1);// * (float)Math.Sin(dir * (Math.PI / 2f));
+                            xOffset = (currentLevel*2 - i + 1);
+                            yOffset = (currentLevel + 1);
                         }
                         Vector2 offsetVector = new Vector2(xOffset * 16f, yOffset * 16f);
                         if(offsetVector.Length() <= radius) {
                             for(int dir = 0; dir < 4; dir++) {
-                                //Vector2 offsetVector = new Vector2(xOffset * 16f, yOffset * 16f).RotatedBy(dir * (Math.PI / 2));
-                                Vector2 currentPos = pos + offsetVector.RotatedBy(dir * (Math.PI/2));
-                                if(blocks && walls)
-                                    paintTileAndWall(currentPos);
-                                else if(blocks)
-                                    paintTile(currentPos);
-                                else if(walls)
-                                    paintWall(currentPos);
+                                paint(pos + offsetVector.RotatedBy(dir * (Math.PI/2)),blocks,walls);
                             }
                         }
                     }
@@ -296,6 +412,14 @@ namespace WeaponsOfMassDecoration.Projectiles {
             }
         }
 
+        /// <summary>
+        /// Creates a splatter of paint
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <param name="radius"></param>
+        /// <param name="spokes"></param>
+        /// <param name="blocks"></param>
+        /// <param name="walls"></param>
         public void splatter(Vector2 pos,float radius,int spokes = 5,bool blocks = true,bool walls = true) {
             explode(pos, 48f, blocks, walls);
             float angle = Main.rand.NextFloat((float)Math.PI);
@@ -313,158 +437,111 @@ namespace WeaponsOfMassDecoration.Projectiles {
                             (int)Math.Round(pos.X + Math.Cos(angles[s]) * offset),
                             (int)Math.Round(pos.Y + Math.Sin(angles[s]) * offset)
                         );
-                        Point tilePoint = convertPositionToTile(newPos);
-                        if(blocks && walls) {
-                            paintTileAndWall(tilePoint);
-                        } else if(blocks) {
-                            paintTile(tilePoint);
-                        } else if(walls) {
-                            paintWall(tilePoint);
-                        }
+                        paint(convertPositionToTile(newPos),blocks,walls);
                     }
                 }
             }
         }
 
-        public void paintTileAndWall(Vector2 p) {
-            paintTileAndWall(convertPositionToTile(p));
-        }
-        public void paintTile(Vector2 p) {
-            paintTile(convertPositionToTile(p));
-        }
-        public void paintWall(Vector2 p) {
-            paintTile(convertPositionToTile(p));
-        }
+        /// <summary>
+        /// Used to paint blocks and walls. blocksAllowed and wallsAllowed can be used to disable painting blocks and walls regardless of the player's current painting method.
+        /// </summary>
+        /// <param name="coordinates">The position of the tile to paint. Expects values using world coordinates</param>
+        /// <param name="blocksAllowed">Can be used to disable painting blocks regardless of the player's current painting method</param>
+        /// <param name="wallsAllowed">Can be used to disable painting walls regardless of the player's current painting method</param>
+        public void paint(Vector2 coordinates, bool blocksAllowed = true, bool wallsAllowed = true) { paint(convertPositionToTile(coordinates),blocksAllowed,wallsAllowed); }
 
-        public void paintTileAndWall(int c = -1) {
-            paintTileAndWall(convertPositionToTile(projectile.Center));
-        }
-        public void paintTile(int c = -1) {
-            paintTile(convertPositionToTile(projectile.Center));
-        }
-        public void paintWall(int c = -1) {
-            paintWall(convertPositionToTile(projectile.Center));
-        }
+        /// <summary>
+        /// Used to paint blocks and walls. Paints the tile at projectile.Center. blocksAllowed and wallsAllowed can be used to disable painting blocks and walls regardless of the player's current painting method.
+        /// </summary>
+        /// <param name="blocksAllowed">Can be used to disable painting blocks regardless of the player's current painting method</param>
+        /// <param name="wallsAllowed">Can be used to disable painting walls regardless of the player's current painting method</param>
+        public void paint(bool blocksAllowed = true, bool wallsAllowed = true) { paint(convertPositionToTile(projectile.Center),blocksAllowed,wallsAllowed); }
 
-        public void paintTileAndWall(Point p) { paintTileAndWall(p.X, p.Y); }
-        public void paintTile(Point p) { paintTile(p.X, p.Y); }
-        public void paintWall(Point p) { paintWall(p.X, p.Y); }
+        /// <summary>
+        /// Used to paint blocks and walls. blocksAllowed and wallsAllowed can be used to disable painting blocks and walls regardless of the player's current painting method.
+        /// </summary>
+        /// <param name="coordinates">The position of the tile to paint. Expects values using tile coordinates</param>
+        /// <param name="blocksAllowed">Can be used to disable painting blocks regardless of the player's current painting method</param>
+        /// <param name="wallsAllowed">Can be used to disable painting walls regardless of the player's current painting method</param>
+        public void paint(Point coordinates, bool blocksAllowed = true, bool wallsAllowed = true) { paint(coordinates.X, coordinates.Y, blocksAllowed, wallsAllowed); }
 
-        public void paintTileAndWall(int x,int y) {
-            if(projectile.owner == Main.myPlayer) {
+        /// <summary>
+        /// Used to paint blocks and walls. blocksAllowed and wallsAllowed can be used to disable painting blocks and walls regardless of the player's current painting method.
+        /// </summary>
+        /// <param name="x">Tile x coordinate</param>
+        /// <param name="y">Tile y coordinate</param>
+        /// <param name="blocksAllowed">Can be used to disable painting blocks regardless of the player's current painting method</param>
+        /// <param name="wallsAllowed">Can be used to disable painting walls regardless of the player's current painting method</param>
+        public void paint(int x,int y,bool blocksAllowed = true, bool wallsAllowed = true) {
+            if(!(blocksAllowed || wallsAllowed))
+                return;
+            if(x < 0 || x >= Main.maxTilesX || y < 0 || y >= Main.maxTilesY)
+                return;
+            Player p = getOwner();
+            if(projectile.owner == Main.myPlayer && p != null) {
+                WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
+                PaintMethods method = player.getPaintMethod();
+                if(method == PaintMethods.None || (player.currentPaintIndex == -1 && method != PaintMethods.RemovePaint))
+                    return;
                 if(!paintedTiles.Contains(new Point(x, y))) {
                     bool updated = false;
-                    assignPaintColorAndMethod();
-                    if((paintMethod == PaintMethods.RemovePaint || paintMethod == PaintMethods.Tiles || paintMethod == PaintMethods.TilesAndWalls)
-                            && color >= 0 && x >= 0 && x < Main.maxTilesX && y >= 0 && y < Main.maxTilesY) {
-                        byte trueColor = WeaponsOfMassDecoration.getCurrentColorID(this, false);
-                        if(trueColor == 0 && paintMethod != PaintMethods.RemovePaint) {
-                            updated = true;
-                        } else {
-                            if(Main.tile[x, y].color() != trueColor) {
-                                if(WorldGen.paintTile(x, y, trueColor)) {
-                                    updated = true;
-                                }
-                            }
-                        }
+                    Tile t = Main.tile[x, y];
+                    byte targetColor;
+                    if(method == PaintMethods.RemovePaint) {
+                        targetColor = 0;
+					} else {
+                        player.getPaintVars(out int paintColor, out CustomPaint customPaint);
+                        targetColor = getPaintingColorId(paintColor, customPaint, false);
+                        if(method == PaintMethods.Tiles) {
+                            wallsAllowed = false;
+						} else if(method == PaintMethods.Walls){
+                            blocksAllowed = false;
+						}
                     }
-                    if(currentPaintIndex != -1 && getOwner().inventory[currentPaintIndex].stack <= 0)
-                        assignPaintColorAndMethod();
-                    if((paintMethod == PaintMethods.RemovePaint || paintMethod == PaintMethods.Walls || paintMethod == PaintMethods.TilesAndWalls)
-                            && color >= 0 && x >= 0 && x < Main.maxTilesX && y >= 0 && y < Main.maxTilesY) {
-                        byte trueColor = WeaponsOfMassDecoration.getCurrentColorID(this, false);
-                        if(trueColor == 0 && paintMethod != PaintMethods.RemovePaint) {
-                            updated = true;
-                        } else {
-                            if(Main.tile[x, y].wallColor() != trueColor) {
-                                if(WorldGen.paintWall(x, y, trueColor)) {
-                                    updated = true;
-                                }
-                            }
-                        }
+                    if(blocksAllowed && t.active() && t.color() != targetColor && (targetColor != 0 || method == PaintMethods.RemovePaint)) {
+                        t.color(targetColor);
+                        updated = true;
+                    }
+                    if(wallsAllowed && t.wall > 0 && t.wallColor() != targetColor && (targetColor != 0 || method == PaintMethods.RemovePaint)) {
+                        t.wallColor(targetColor);
+                        updated = true;
                     }
                     paintedTiles.Add(new Point(x, y));
                     if(updated) {
-                        if(currentPaintIndex != -1 && shouldConsumePaint() && color != 0)
-                            getOwner().inventory[currentPaintIndex].stack--;
+                        player.consumePaint();
                         sendTileFrame(x, y);
                     }
                 }
             }
         }
-        public void paintTile(int x,int y) {
-            if(projectile.owner == Main.myPlayer) {
-                if(!paintedTiles.Contains(new Point(x, y))) {
-                    assignPaintColorAndMethod();
-                    if((paintMethod == PaintMethods.RemovePaint || paintMethod == PaintMethods.Tiles || paintMethod == PaintMethods.TilesAndWalls)
-                            && color >= 0 && x >= 0 && x < Main.maxTilesX && y >= 0 && y < Main.maxTilesY) {
-                        byte trueColor = WeaponsOfMassDecoration.getCurrentColorID(this, false);
-                        if(trueColor != 0 || paintMethod == PaintMethods.RemovePaint) {
-                            if(Main.tile[x, y].color() != trueColor) {
-                                if(WorldGen.paintTile(x, y, trueColor)) {
-                                    sendTileFrame(x, y);
-                                    if(currentPaintIndex != -1 && shouldConsumePaint())
-                                        getOwner().inventory[currentPaintIndex].stack--;
-                                }
-                            }
-                        }
-                    }
-                    paintedTiles.Add(new Point(x, y));
-                }
-            }
-        }
-        public void paintWall(int x, int y) {
-            if(projectile.owner == Main.myPlayer) {
-                if(!paintedTiles.Contains(new Point(x, y))) {
-                    assignPaintColorAndMethod();
-                    if((paintMethod == PaintMethods.RemovePaint || paintMethod == PaintMethods.Walls || paintMethod == PaintMethods.TilesAndWalls)
-                            && color >= 0 && x >= 0 && x < Main.maxTilesX && y >= 0 && y < Main.maxTilesY) {
-                        byte trueColor = WeaponsOfMassDecoration.getCurrentColorID(this, false);
-                        if(trueColor != 0 || paintMethod == PaintMethods.RemovePaint) {
-                            if(Main.tile[x, y].wallColor() != trueColor) {
-                                if(WorldGen.paintWall(x, y, trueColor)) {
-                                    sendTileFrame(x, y);
-                                    if(currentPaintIndex != -1 && shouldConsumePaint())
-                                        getOwner().inventory[currentPaintIndex].stack--;
-                                }
-                            }
-                        }
-                    }
-                    paintedTiles.Add(new Point(x, y));
-                }
-            }
-        }
-
-        public bool shouldConsumePaint() {
-            Player p = getOwner();
-            for(int i = 0; i < p.armor.Length/2; i++) {
-                if(p.armor[i].type == ModContent.ItemType<Items.ArtistPalette>())
-                    return false;
-            }
-            if(Main.rand.NextFloat() <= paintConsumptionChance) {
-                if(p.inventory[currentPaintIndex].modItem is Items.CustomPaint)
-                    return Main.rand.NextFloat(0, 1) <= ((Items.CustomPaint)p.inventory[currentPaintIndex].modItem).consumptionChance;
-                return true;
-            }
-            return false;
-        }
 
         public void sendTileFrame(int x,int y) {
-            WorldGen.SquareTileFrame(x, y);
-            WorldGen.SquareWallFrame(x, y);
+            //WorldGen.SquareTileFrame(x, y);
+            //WorldGen.SquareWallFrame(x, y);
             NetMessage.SendTileSquare(-1, x, y, 1);
         }
+		#endregion
 
-        public void createLight(Vector2 pos,float brightness) {
-			Color c = WeaponsOfMassDecoration.getColor(this);
-            Lighting.AddLight(pos, (c.R / 255f) * brightness, (c.G / 255f) * brightness, (c.B / 255f) * brightness);
-        }
-
-		public override void PostDraw(SpriteBatch spriteBatch, Color lightColor) {
-			if(resetBatchInPost) {
-				spriteBatch.End();
-				spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
-			}
+		#region lights
+		/// <summary>
+		/// Creates a light with the projectile's color. Uses the center of the projectile for position and projectile.light for brightness
+		/// </summary>
+		public Color createLight() {
+            return createLight(projectile.Center, projectile.light);
 		}
-	}
+
+        /// <summary>
+        /// Creates a light with the projectile's color
+        /// </summary>
+        /// <param name="pos">The position for the light. Expects values using world coordinates</param>
+        /// <param name="brightness">The brightness of the light. Expects 0 to 1f</param>
+        public Color createLight(Vector2 pos,float brightness) {
+			Color c = getColor(this);
+            Color adjustedColor = new Color((c.R / 255f) * brightness, (c.G / 255f) * brightness, (c.B / 255f) * brightness);
+            Lighting.AddLight(pos, adjustedColor.ToVector3());
+            return adjustedColor;
+        }
+        #endregion
+    }
 }

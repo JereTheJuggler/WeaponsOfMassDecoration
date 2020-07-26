@@ -13,6 +13,8 @@ using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
 using Terraria.DataStructures;
 using static Terraria.ModLoader.ModContent;
+using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
+using System.Security.AccessControl;
 
 namespace WeaponsOfMassDecoration.NPCs {
     class WoMDGlobalNPC : GlobalNPC{
@@ -37,17 +39,6 @@ namespace WeaponsOfMassDecoration.NPCs {
 			}
 		}
 
-		/*public override void DrawEffects(NPC npc, ref Color drawColor) {
-            if(painted && (paintColor > 0 || customPaint != null)) {
-                byte trueColor = 0;
-                if(customPaint != null)
-                    trueColor = customPaint.getColor();
-                else
-                    trueColor = (byte)paintColor;
-                drawColor = PaintColors.colors[trueColor];
-            }
-        }*/
-
 		private bool resetBatchInPost;
 		
 		public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Color drawColor) {
@@ -57,10 +48,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 				spriteBatch.End();
 				spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
 
-				WeaponsOfMassDecoration.applyShader(this, npc, new DrawData(Main.npcTexture[npc.type], npc.position, npc.frame, Color.White));
-
-				//ShaderData shader = WeaponsOfMassDecoration.getShaderData(this);
-				//WeaponsOfMassDecoration.applyShader(npc, shader);//, new DrawData(Main.npcTexture[npc.type], npc.position, npc.frame, Color.White));
+				applyShader(this, npc, new DrawData(Main.npcTexture[npc.type], npc.position, npc.frame, Color.White));
 			}
 			return true;
 		}
@@ -76,33 +64,33 @@ namespace WeaponsOfMassDecoration.NPCs {
 		public override void SetupShop(int type, Chest shop, ref int nextSlot) {
             switch(type) {
                 case NPCID.Steampunker:
-                    shop.item[nextSlot].SetDefaults(ModContent.ItemType<Items.PaintSolution>());
+                    shop.item[nextSlot].SetDefaults(ItemType<Items.PaintSolution>());
                     nextSlot++;
                     break;
                 case NPCID.Merchant:
                     if(shouldSellPaintingStuff()) {
-                        shop.item[nextSlot].SetDefaults(ModContent.ItemType<Items.PaintArrow>());
+                        shop.item[nextSlot].SetDefaults(ItemType<Items.PaintArrow>());
                         nextSlot++;
 
-                        shop.item[nextSlot].SetDefaults(ModContent.ItemType<Items.ThrowingPaintbrush>());
+                        shop.item[nextSlot].SetDefaults(ItemType<Items.ThrowingPaintbrush>());
                         nextSlot++;
 
-                        shop.item[nextSlot].SetDefaults(ModContent.ItemType<Items.PaintShuriken>());
+                        shop.item[nextSlot].SetDefaults(ItemType<Items.PaintShuriken>());
                         nextSlot++;
                     }
                     break;
                 case NPCID.Demolitionist:
                     if(shouldSellPaintingStuff()) {
-                        shop.item[nextSlot].SetDefaults(ModContent.ItemType<Items.PaintBomb>());
+                        shop.item[nextSlot].SetDefaults(ItemType<Items.PaintBomb>());
                         nextSlot++;
 
-                        shop.item[nextSlot].SetDefaults(ModContent.ItemType<Items.PaintDynamite>());
+                        shop.item[nextSlot].SetDefaults(ItemType<Items.PaintDynamite>());
                         nextSlot++;
                     }
                     break;
                 case NPCID.ArmsDealer:
                     if(shouldSellPaintingStuff()) {
-                        shop.item[nextSlot].SetDefaults(ModContent.ItemType<Items.Paintball>());
+                        shop.item[nextSlot].SetDefaults(ItemType<Items.Paintball>());
                         nextSlot++;
                     }
                     break;
@@ -111,14 +99,34 @@ namespace WeaponsOfMassDecoration.NPCs {
             }
         }
 
+        /// <summary>
+        /// A generic test to check if an npc should sell painting items. Will return true if the painter has moved in, or if the player is currently carrying any paint related items
+        /// </summary>
+        /// <returns></returns>
         public bool shouldSellPaintingStuff() {
             if(NPC.AnyNPCs(NPCID.Painter))
                 return true;
-            Item[] inv = Main.player[Main.myPlayer].inventory;
+            Player p = getPlayer(Main.myPlayer);
+            if(p == null)
+                return false;
+            Item[] inv = p.inventory;
             for(int c = 0; c < inv.Length; c++) {
                 Item i = inv[c];
-                if(i.modItem is PaintingItem)
-                    return true;
+                if(i.active && i.stack > 0) {
+                    if(i.modItem is PaintingItem)
+                        return true;
+                    switch(i.type) {
+                        case ItemID.Paintbrush:
+                        case ItemID.PaintRoller:
+                        case ItemID.PaintScraper:
+                        case ItemID.SpectrePaintbrush:
+                        case ItemID.SpectrePaintRoller:
+                        case ItemID.SpectrePaintScraper:
+                            return true;
+                    }
+                    if(PaintIDs.itemIds.Contains(i.type))
+                        return true;
+                }
             }
             return false;
         }

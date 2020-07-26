@@ -8,6 +8,7 @@ using Terraria;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.ID;
+using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
     class ThrowingPaintbrush : PaintingItem{
@@ -21,7 +22,7 @@ namespace WeaponsOfMassDecoration.Items {
             item.rare = ItemRarityID.Green;
 
             item.thrown = true;
-            item.shoot = ModContent.ProjectileType<Projectiles.ThrowingPaintbrush>();
+            item.shoot = ProjectileType<Projectiles.ThrowingPaintbrush>();
         }
     }
 }

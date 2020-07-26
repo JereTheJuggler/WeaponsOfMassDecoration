@@ -62,34 +62,130 @@ namespace WeaponsOfMassDecoration {
 				ItemID.PalladiumBar
 			});
 			RecipeGroup.RegisterGroup("WoMD:hmBar1", hmBarGroup1);
+
+			RecipeGroup basePaintGroup = new RecipeGroup(() => Language.GetTextValue("LegacyMisc.37") + " Base Paint", new int[]{
+				ItemID.RedPaint,
+				ItemID.OrangePaint,
+				ItemID.YellowPaint,
+				ItemID.LimePaint,
+				ItemID.GreenPaint,
+				ItemID.TealPaint,
+				ItemID.CyanPaint,
+				ItemID.BluePaint,
+				ItemID.PurplePaint,
+				ItemID.VioletPaint,
+				ItemID.PinkPaint
+			});
+			RecipeGroup.RegisterGroup("WoMD:basePaints", basePaintGroup);
+
+			RecipeGroup deepPaintGroup = new RecipeGroup(() => Language.GetTextValue("LegacyMisc.37") + " Deep Paint", new int[]{
+				ItemID.DeepRedPaint,
+				ItemID.DeepOrangePaint,
+				ItemID.DeepYellowPaint,
+				ItemID.DeepLimePaint,
+				ItemID.DeepGreenPaint,
+				ItemID.DeepTealPaint,
+				ItemID.DeepCyanPaint,
+				ItemID.DeepBluePaint,
+				ItemID.DeepPurplePaint,
+				ItemID.DeepVioletPaint,
+				ItemID.DeepPinkPaint
+			});
+			RecipeGroup.RegisterGroup("WoMD:deepPaints", deepPaintGroup);
+
+			RecipeGroup goldSwordGroup = new RecipeGroup(() => Language.GetTextValue("LegacyMisc.37") + " Gold Broadsword", new int[]{
+				ItemID.GoldBroadsword,
+				ItemID.PlatinumBroadsword
+			});
+			RecipeGroup.RegisterGroup("WoMD:goldSword", goldSwordGroup);
 		}
 
-		public static void applyShader(Entity entity, ShaderData shader, DrawData? drawData = null, float opacity = 1) {
-			if(shader == null)
-				return;
-			if(shader is ArmorShaderData) {
-				((ArmorShaderData)shader).UseOpacity(opacity).Apply(entity, drawData);
-			} else if(shader is MiscShaderData){
-				((MiscShaderData)shader).UseOpacity(opacity).Apply(drawData);
+		#region getting from arrays
+		/// <summary>
+		/// Safely gets a Dust object from Main.dust. If the provided index is out of range, null will be returned
+		/// </summary>
+		/// <param name="index">The index of the dust in Main.dust</param>
+		/// <returns></returns>
+		public static Dust getDust(int index) {
+			if(index < 0 || index >= Main.dust.Length - 1)
+				return null;
+			return Main.dust[index];
+		}
+
+		/// <summary>
+		/// Safely gets a Projectile object from Main.projectile. If the provided index is out of range, null will be returned
+		/// </summary>
+		/// <param name="index">The index of the projectile in Main.projectile</param>
+		/// <returns></returns>
+		public static Projectile getProjectile(int index) {
+			if(index < 0 || index >= Main.projectile.Length - 1)
+				return null;
+			return Main.projectile[index];
+		}
+
+		/// <summary>
+		/// Safely gets a Player object from Main.player. If the provided index is out of range, null will be returned
+		/// </summary>
+		/// <param name="index">The index of the player in Main.player</param>
+		/// <returns></returns>
+		public static Player getPlayer(int index) {
+			if(index < 0 || index >= Main.player.Length - 1)
+				return null;
+			return Main.player[index];
+		}
+
+		/// <summary>
+		/// Safely gets a NPC object from Main.npc. If the provided index is out of range, null will be returned
+		/// </summary>
+		/// <param name="index">The index of the npc in Main.npc</param>
+		/// <returns></returns>
+		public static NPC getNPC(int index) {
+			if(index < 0 || index >= Main.npc.Length - 1)
+				return null;
+			return Main.npc[index];
+		}
+		#endregion
+
+		/// <summary>
+		/// Checks if the provided item is either a vanilla paint, or a CustomPaint
+		/// </summary>
+		/// <param name="item"></param>
+		/// <returns></returns>
+		public static bool isPaint(Item item) {
+			if(item.modItem is CustomPaint)
+				return true;
+			if(PaintIDs.itemIds.Contains(item.type))
+				return true;
+			return false;
+		}
+		/// <summary>
+		/// Checks if the provided item is either a vanilla painting tool, or a PaintingMultiTool
+		/// </summary>
+		/// <param name="item"></param>
+		/// <returns></returns>
+		public static bool isPaintingTool(Item item) {
+			if(item.modItem is PaintingMultiTool)
+				return true;
+			switch(item.type) {
+				case ItemID.Paintbrush:
+				case ItemID.PaintRoller:
+				case ItemID.PaintScraper:
+				case ItemID.SpectrePaintbrush:
+				case ItemID.SpectrePaintRoller:
+				case ItemID.SpectrePaintScraper:
+					return true;
 			}
+			return false;
 		}
 
-		public static ShaderData getShaderData(WoMDGlobalNPC npc) {
-			if(!npc.painted)
-				return null;
-			getRenderVars(npc, out byte currentColor, out byte? nextColor, out bool sprayPainted);
-			if(currentColor == 0)
-				return null;
-			return getShaderData(currentColor, nextColor, sprayPainted, npcCyclingTimeScale, npc.paintedTime);
-		}
-		public static ShaderData getShaderData(PaintingProjectile projectile) {
-			getRenderVars(projectile, out byte currentColor, out byte? nextColor, out bool sprayPainted);
-			if(currentColor == 0)
-				return null;
-			//spray painted doesn't apply for projectiles
-			return getShaderData(currentColor, nextColor, false, paintCyclingTimeScale);
-		}
-		
+		#region shaders
+		/// <summary>
+		/// Applies a shader for the provided WoMDGlobalNPC, based on its painted, paintColor, customPaint, and paintedTime properties.
+		/// </summary>
+		/// <param name="globalNpc"></param>
+		/// <param name="npc"></param>
+		/// <param name="drawData"></param>
+		/// <returns></returns>
 		public static ShaderData applyShader(WoMDGlobalNPC globalNpc, NPC npc, DrawData? drawData = null) {
 			if(!globalNpc.painted)
 				return null;
@@ -98,8 +194,13 @@ namespace WeaponsOfMassDecoration {
 				return null;
 			return applyShader(npc, currentColor, nextColor, sprayPainted, npcCyclingTimeScale, globalNpc.paintedTime, drawData, 1f);
 		}
+		/// <summary>
+		/// Applies a shader for the provided PaintingProjectile
+		/// </summary>
+		/// <param name="projectile"></param>
+		/// <returns></returns>
 		public static ShaderData applyShader(PaintingProjectile projectile) {
-			getRenderVars(projectile, out byte currentColor, out byte? nextColor, out bool sprayPainted);
+			getRenderVars(projectile, out byte currentColor, out byte? nextColor);
 			if(currentColor == 0)
 				return null;
 			return applyShader(projectile.projectile, currentColor, nextColor, false, paintCyclingTimeScale, 0, null);
@@ -130,90 +231,18 @@ namespace WeaponsOfMassDecoration {
 			return data;
 		}
 
-		public static Color getColor(WoMDGlobalNPC npc) {
-			if(!npc.painted)
-				return Color.White;
-			getCurrentAndNextColorIDs(npc.paintColor, npc.customPaint, out byte currentColor, out byte? nextColor, npcCyclingTimeScale, npc.paintedTime);
-			return getColor(currentColor, nextColor, npcCyclingTimeScale, npc.paintedTime);
-		}
+		/// <summary>
+		/// Gets the color for the provided PaintingProjectile, based on properties from the projectile's owner
+		/// </summary>
+		/// <param name="projectile"></param>
+		/// <returns></returns>
 		public static Color getColor(PaintingProjectile projectile) {
-			getPaintColorAndCustomPaintFromProjectile(projectile, out int paintColor, out CustomPaint customPaint);
+			WoMDPlayer player = projectile.getModPlayer();
+			if(player == null)
+				return Color.White;
+			player.getPaintVars(out int paintColor, out CustomPaint customPaint);
 			getCurrentAndNextColorIDs(paintColor, customPaint, out byte currentColor, out byte? nextColor, paintCyclingTimeScale);
 			return getColor(currentColor, nextColor, paintCyclingTimeScale);
-		}
-
-		public static void getRenderVars(WoMDGlobalNPC npc, out byte currentColor, out byte? nextColor, out bool sprayPainted) {
-			if(!npc.painted) {
-				currentColor = 0;
-				nextColor = null;
-				sprayPainted = false;
-			} else {
-				getRenderVars(npc.paintColor, npc.customPaint, out currentColor, out nextColor, out sprayPainted, npcCyclingTimeScale, npc.paintedTime);
-			}
-		}
-		public static void getRenderVars(PaintingProjectile projectile,out byte currentColor, out byte? nextColor, out bool sprayPainted) {
-			getPaintColorAndCustomPaintFromProjectile(projectile, out int paintColor, out CustomPaint customPaint);
-			getRenderVars(paintColor, customPaint,out currentColor,out nextColor,out sprayPainted, paintCyclingTimeScale, 0);
-		}
-		
-		public static byte getCurrentColorID(WoMDGlobalNPC npc, bool forceColor = true) {
-			if(!npc.painted)
-				return 0;
-			return getCurrentColorID(forceColor, npc.paintColor, npc.customPaint, npcCyclingTimeScale, npc.paintedTime);
-		}
-		public static byte getCurrentColorID(PaintingProjectile projectile, bool forceColor = true) {
-			getPaintColorAndCustomPaintFromProjectile(projectile, out int paintColor, out CustomPaint customPaint);
-			return getCurrentColorID(forceColor, paintColor, customPaint, paintCyclingTimeScale, 0);
-		}
-
-		public static void getPaintColorAndCustomPaintFromPlayer(Player p, out int paintColor, out CustomPaint customPaint) {
-			paintColor = -1;
-			customPaint = null;
-
-			for(int i = 0; i < p.inventory.Length; i++) {
-				if(p.inventory[i].type != ItemID.None && p.inventory[i].stack > 0) {
-					if(PaintIDs.itemIds.Contains(p.inventory[i].type)) {
-						for(int c = 0; c < PaintIDs.itemIds.Length; c++) {
-							if(PaintIDs.itemIds[c] == p.inventory[i].type) {
-								paintColor = c;
-								return;
-							}
-						}
-					} else if(p.inventory[i].modItem is CustomPaint){
-						customPaint = (CustomPaint)p.inventory[i].modItem.Clone();
-						return;
-					}
-				}
-			}
-		}
-
-		private static void getPaintColorAndCustomPaintFromProjectile(PaintingProjectile projectile, out int paintColor, out CustomPaint customPaint) {
-			paintColor = 0;
-			customPaint = null;
-			if(projectile.currentPaintIndex == -1)
-				return;
-
-			Player owner = projectile.getOwner();
-			Item item = owner.inventory[projectile.currentPaintIndex];
-			ModItem modItem = item.modItem;
-			if(modItem is CustomPaint) {
-				customPaint = (CustomPaint)modItem;
-			} else {
-				for(int i = 0; i < PaintIDs.itemIds.Length; i++) {
-					if(item.type == PaintIDs.itemIds[i])
-						paintColor = (byte)i;
-				}
-			}
-		}
-
-		private static ShaderData getShaderData(byte currentColor, byte? nextColor, bool sprayPainted, float timeScale, float timeOffset = 0) {
-			if(currentColor == PaintID.Negative) {
-				return GameShaders.Armor.GetShaderFromItemId(ItemID.NegativeDye);
-			} else if(sprayPainted) {
-				return GameShaders.Misc["SprayPainted"].UseColor(getColor(currentColor, nextColor, timeScale, timeOffset));
-			} else {
-				return GameShaders.Misc["Painted"].UseColor(getColor(currentColor, nextColor, timeScale, timeOffset));
-			}
 		}
 		private static Color getColor(byte currentColor, byte? nextColor, float timeScale, float timeOffset = 0) {
 			Color color = PaintColors.colors[currentColor];
@@ -225,6 +254,51 @@ namespace WeaponsOfMassDecoration {
 
 			return color;
 		}
+
+		/// <summary>
+		/// Gets rendering vars for the provided npc, based on its painted, paintColor, customPaint, and paintedTime properties. This is called within applyShader
+		/// </summary>
+		/// <param name="npc">The npc to get rendering vars for</param>
+		/// <param name="currentColor">The PaintID for the current color of the paint applied to the npc</param>
+		/// <param name="nextColor">The PaintID for the next color of the paint applied to the npc, if the paint applied cycles between multiple colors</param>
+		/// <param name="sprayPainted">Whether the npc was hit with spray paint</param>
+		public static void getRenderVars(WoMDGlobalNPC npc, out byte currentColor, out byte? nextColor, out bool sprayPainted) {
+			if(!npc.painted) {
+				currentColor = 0;
+				nextColor = null;
+				sprayPainted = false;
+			} else {
+				getRenderVars(npc.paintColor, npc.customPaint, out currentColor, out nextColor, out sprayPainted, npcCyclingTimeScale, npc.paintedTime);
+			}
+		}
+		/// <summary>
+		/// Gets rendering vars for the provided npc, based on the currentPaintIndex of its owner. This is called within applyShader
+		/// </summary>
+		/// <param name="projectile">The projectile to get rendering vars for</param>
+		/// <param name="currentColor">The PaintID for the current color of the paint applied to the projectile</param>
+		/// <param name="nextColor">The PaintID for the next color of the paint applied to the projectile, if the paint applied cycles between multiple colors</param>
+		public static void getRenderVars(PaintingProjectile projectile,out byte currentColor, out byte? nextColor) {
+			WoMDPlayer player = projectile.getModPlayer();
+			if(player == null) {
+				currentColor = 0;
+				nextColor = null;
+			} else {
+				player.getPaintVars(out int paintColor, out CustomPaint customPaint);
+				getRenderVars(paintColor, customPaint, out currentColor, out nextColor, out _, paintCyclingTimeScale, 0);
+			}
+		}
+
+		/// <summary>
+		/// Gets the PaintID provided a paintColor and customPaint. forceColor can be provided to force a color to be returned for spray paints. Uses the paintCyclingTimeScale for custom paints that cycle through multiple colors
+		/// </summary>
+		/// <param name="paintColor">The PaintID of the paint being used. Should be -1 when using a CustomPaint</param>
+		/// <param name="customPaint">The CustomPaint of the paint being used. Should be null when using a vanilla paint</param>
+		/// <param name="forceColor">Whether color should be forced for spray paints</param>
+		/// <returns></returns>
+		public static byte getPaintingColorId(int paintColor, CustomPaint customPaint, bool forceColor = true) {
+			return getCurrentColorID(forceColor, paintColor, customPaint, paintCyclingTimeScale);
+		}
+
 		private static void getRenderVars(int paintColor, CustomPaint customPaint, out byte currentColor, out byte? nextColor, out bool sprayPainted, float timeScale, float timeOffset = 0) {
 			getCurrentAndNextColorIDs(paintColor, customPaint, out currentColor, out nextColor, timeScale, timeOffset);
 			sprayPainted = (customPaint != null && (customPaint is CustomSprayPaint || customPaint is VanillaSprayPaint));
@@ -246,7 +320,16 @@ namespace WeaponsOfMassDecoration {
 				return (byte)paintColor;
 			}
 		}
+		#endregion
 
+		/// <summary>
+		/// Applies the painted buff to the provided npc, based on the paintColor and customPaint provided
+		/// </summary>
+		/// <param name="npc">The npc to apply the buff to</param>
+		/// <param name="paintColor">The PaintID to use for painting the npc. Should be -1 when using a CustomPaint</param>
+		/// <param name="customPaint">The CustomPaint to use for painting the npc. Should be null when using a vanilla paint</param>
+		/// <param name="handledNpcs">Should not be provided</param>
+		/// <param name="preventRecursion">Should not be provided</param>
 		public static void applyPaintedToNPC(NPC npc, int paintColor, CustomPaint customPaint, List<NPC> handledNpcs = null, bool preventRecursion = false) {
 			switch(npc.type) {
 				case NPCID.CultistDragonBody1:
@@ -389,6 +472,51 @@ namespace WeaponsOfMassDecoration {
 			if(id >= 0 && id < Main.npc.Length)
 				return Main.npc[(int)id];
 			return null;
+		}
+
+		/// <summary>
+		/// Clamps a value between a min and max value
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="min"></param>
+		/// <param name="max"></param>
+		/// <returns></returns>
+		public static float clamp(float value, float min, float max) {
+			if(value < min)
+				return min;
+			if(value > max)
+				return max;
+			return value;
+		}
+
+		/// <summary>
+		/// Clamps a value between a min and max value
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="min"></param>
+		/// <param name="max"></param>
+		/// <returns></returns>
+		public static int clamp(int value, int min, int max) {
+			if(value < min)
+				return min;
+			if(value > max)
+				return max;
+			return value;
+		}
+
+		/// <summary>
+		/// Clamps a value between a min and max value
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="min"></param>
+		/// <param name="max"></param>
+		/// <returns></returns>
+		public static double clamp(double value, double min, double max) {
+			if(value < min)
+				return min;
+			if(value > max)
+				return max;
+			return value;
 		}
 
 	}

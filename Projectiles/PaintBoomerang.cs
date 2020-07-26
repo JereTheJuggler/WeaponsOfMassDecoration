@@ -12,11 +12,12 @@ using Microsoft.Xna.Framework.Graphics;
 namespace WeaponsOfMassDecoration.Projectiles {
     class PaintBoomerang : PaintingProjectile{
         public override void SetStaticDefaults() {
-            DisplayName.SetDefault("Paint Boomerang");
             base.SetStaticDefaults();
+            DisplayName.SetDefault("Paint Boomerang");
         }
 
         public override void SetDefaults() {
+            base.SetDefaults();
             projectile.CloneDefaults(ProjectileID.Flamarang);
             projectile.width = 20;
             projectile.height = 20;
@@ -24,45 +25,29 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.friendly = true; // 8 for paint flower
             projectile.melee = true;    // 13 for harPAINT
             projectile.penetrate = -1;  // 21 for water bolt
-            light = .5f;
+            projectile.light = .5f;
+            projectile.gfxOffY = 19;
 
             aiType = ProjectileID.WoodenBoomerang;
-            Main.projFrames[projectile.type] = 31;
         }
 
         public override bool PreAI() {
             base.PreAI();
-            if(color >= 0) {
+            if(canPaint()) {
                 //projectile.frame = color;
-                paintTileAndWall(new Vector2(projectile.Center.X + 8,projectile.Center.Y + 8));
-                paintTileAndWall(new Vector2(projectile.Center.X + 8, projectile.Center.Y - 8));
-                paintTileAndWall(new Vector2(projectile.Center.X - 8, projectile.Center.Y + 8));
-                paintTileAndWall(new Vector2(projectile.Center.X - 8, projectile.Center.Y - 8));
+                paint(new Vector2(projectile.Center.X + 8,projectile.Center.Y + 8));
+                paint(new Vector2(projectile.Center.X + 8, projectile.Center.Y - 8));
+                paint(new Vector2(projectile.Center.X - 8, projectile.Center.Y + 8));
+                paint(new Vector2(projectile.Center.X - 8, projectile.Center.Y - 8));
                 paintedTiles = new List<Point>();
             }
             return true;
         }
         public override bool OnTileCollide(Vector2 oldVelocity) {
-            if(color >= 0) {
+            if(canPaint()) {
                 explode(projectile.Center, 45, true, true);
             }
             return true;
-        }
-
-        public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor) {
-            //Redraw the projectile with the color not influenced by light
-            Texture2D texture = Main.projectileTexture[projectile.type];
-            int frameHeight = (Main.projectileTexture[projectile.type].Height - (2 * (Main.projFrames[projectile.type] - 1))) / Main.projFrames[projectile.type];
-            int startY = (frameHeight + 2) * projectile.frame;
-            projectile.gfxOffY = 19;
-            //float xOffset = (projectile.velocity.X < 0 ? 2f : -2f);
-            Rectangle sourceRectangle = new Rectangle(0, startY, texture.Width, frameHeight);
-            //Vector2 origin = new Vector2((texture.Width / 2f) * (float)Math.Cos(projectile.rotation + (float)Math.PI / xOffset), (texture.Width / 2f) * (float)Math.Sin(projectile.rotation + (float)Math.PI / xOffset));//new Vector2((float)Math.Cos(projectile.rotation), (float)Math.Sin(projectile.rotation)) * (frameHeight/-4f);
-            Vector2 origin = new Vector2(texture.Width / 2 - 1, projectile.gfxOffY);
-            Color color = projectile.GetAlpha(lightColor);
-            Vector2 drawPos = projectile.Center - Main.screenPosition;
-            spriteBatch.Draw(texture, drawPos, sourceRectangle, color, projectile.rotation, origin, projectile.scale, SpriteEffects.None, 0f);
-            return false;
         }
     }
 }
