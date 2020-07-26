@@ -478,50 +478,17 @@ namespace WeaponsOfMassDecoration.Projectiles {
                 return;
             if(x < 0 || x >= Main.maxTilesX || y < 0 || y >= Main.maxTilesY)
                 return;
-            Player p = getOwner();
-            if(projectile.owner == Main.myPlayer && p != null) {
-                WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
-                PaintMethods method = player.getPaintMethod();
-                if(method == PaintMethods.None || (player.currentPaintIndex == -1 && method != PaintMethods.RemovePaint))
-                    return;
-                if(!paintedTiles.Contains(new Point(x, y))) {
-                    bool updated = false;
-                    Tile t = Main.tile[x, y];
-                    byte targetColor;
-                    if(method == PaintMethods.RemovePaint) {
-                        targetColor = 0;
-					} else {
-                        player.getPaintVars(out int paintColor, out CustomPaint customPaint);
-                        targetColor = getPaintingColorId(paintColor, customPaint, false);
-                        if(method == PaintMethods.Tiles) {
-                            wallsAllowed = false;
-						} else if(method == PaintMethods.Walls){
-                            blocksAllowed = false;
-						}
-                    }
-                    if(blocksAllowed && t.active() && t.color() != targetColor && (targetColor != 0 || method == PaintMethods.RemovePaint)) {
-                        t.color(targetColor);
-                        updated = true;
-                    }
-                    if(wallsAllowed && t.wall > 0 && t.wallColor() != targetColor && (targetColor != 0 || method == PaintMethods.RemovePaint)) {
-                        t.wallColor(targetColor);
-                        updated = true;
-                    }
-                    paintedTiles.Add(new Point(x, y));
-                    if(updated) {
-                        player.consumePaint();
-                        sendTileFrame(x, y);
-                    }
+            if(!paintedTiles.Contains(new Point(x, y))) {
+                Player p = getOwner();
+                if(projectile.owner == Main.myPlayer && p != null) {
+                    WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
+					if(player.paint(x, y, blocksAllowed, wallsAllowed)) {
+                        paintedTiles.Add(new Point(x, y));
+					}
                 }
             }
         }
-
-        public void sendTileFrame(int x,int y) {
-            //WorldGen.SquareTileFrame(x, y);
-            //WorldGen.SquareWallFrame(x, y);
-            NetMessage.SendTileSquare(-1, x, y, 1);
-        }
-		#endregion
+        #endregion
 
 		#region lights
 		/// <summary>

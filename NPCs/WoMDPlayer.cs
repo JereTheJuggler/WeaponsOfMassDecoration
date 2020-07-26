@@ -9,6 +9,7 @@ using Terraria.ID;
 using Microsoft.Xna.Framework;
 using WeaponsOfMassDecoration.Items;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
+using System.Runtime.Remoting;
 
 namespace WeaponsOfMassDecoration.NPCs {
     public class WoMDPlayer : ModPlayer{
@@ -21,6 +22,12 @@ namespace WeaponsOfMassDecoration.NPCs {
         public CustomPaint buffPaintedCustomPaint;
 
         public bool accPalette = false;
+
+        public float mountUnicornTime = 0;
+        public float lastFartTime = 0;
+        public int fartAnimationFrame = -1;
+        public Point fartPosition = new Point(0,0);
+        public int fartDirection = 1;
 
         public override void ResetEffects() {
             buffPainted = false;
@@ -35,12 +42,56 @@ namespace WeaponsOfMassDecoration.NPCs {
             updateIndexes();
 		}
 
-        /// <summary>
-        /// Looks through the player's inventory to reset the currentPaintIndex and currentPaintingToolIndex
-        /// </summary>
-        /// <param name="updatePaint">Set to false to prevent updating the currentPaintIndex</param>
-        /// <param name="updateTool">Set to false to prevent updating the currentPaintingToolIndex</param>
-        public void updateIndexes(bool updatePaint = true, bool updateTool = true) {
+		public override void PostUpdateBuffs() {
+			base.PostUpdateBuffs();
+			if(player.HasBuff(BuffID.UnicornMount)){
+                if(mountUnicornTime == 0)
+                    mountUnicornTime = Main.GlobalTime;
+                if(fartAnimationFrame == -1 && Main.GlobalTime - lastFartTime > 10 && Main.GlobalTime - mountUnicornTime > 10) {
+                    if(Main.rand.NextFloat() <= .3f) {
+                        fartAnimationFrame = 0;
+                        lastFartTime = Main.GlobalTime;
+                        fartDirection = player.direction * -1;
+                        fartPosition = (player.position + new Vector2(32 * fartDirection, 48)).ToTileCoordinates();
+                        Main.PlaySound(SoundID.Item16, player.position);
+                        for(int i = 0; i < 6; i++) {
+                            Dust d = Dust.NewDustPerfect(fartPosition.ToWorldCoordinates() + new Vector2(8, 8), 22, new Vector2(fartDirection * 3f, 0).RotatedBy(Main.rand.NextFloat((float)(Math.PI / -6f), (float)(Math.PI / 6f))) * 3f, 0, default, 1f);
+                            d.noGravity = true;
+                            d.fadeIn = 1.5f;
+                        }
+                    }
+                }
+            } else {
+                mountUnicornTime = 0;
+			}
+            if(fartAnimationFrame >= 0 && fartAnimationFrame <= 3 && Main.rand.NextFloat() < .5f) {
+                Dust d = Dust.NewDustPerfect(fartPosition.ToWorldCoordinates() + new Vector2(8, 8), 22, new Vector2(fartDirection * 3f, 0).RotatedBy(Main.rand.NextFloat((float)(Math.PI / -6f), (float)(Math.PI / 6f))) * 3f, 0, default, 1f);
+                d.noGravity = true;
+                d.fadeIn = 1.5f;
+            }
+            if(fartAnimationFrame >= 0 && Main.GlobalTime - lastFartTime > (.05f * fartAnimationFrame)) {
+                int[] heights = new int[] { 1, 3, 3, 5, 5, 7 };
+                byte[] colors = new byte[] { PaintID.DeepRed, PaintID.DeepOrange, PaintID.DeepYellow, PaintID.DeepGreen, PaintID.DeepBlue, PaintID.DeepPurple };
+                int height = heights[fartAnimationFrame];
+                for(int i = 0; i < height; i++) {
+                    Point coords = new Point(
+                        fartPosition.X + (fartAnimationFrame * fartDirection), 
+                        fartPosition.Y + (((height - 1) / -2) + i)
+                    );
+                    paintDirect(coords.X, coords.Y, colors[fartAnimationFrame], PaintMethods.TilesAndWalls, true, true, true);
+				}
+                fartAnimationFrame++;
+                if(fartAnimationFrame >= heights.Length)
+                    fartAnimationFrame = -1;
+			}
+		}
+
+		/// <summary>
+		/// Looks through the player's inventory to reset the currentPaintIndex and currentPaintingToolIndex
+		/// </summary>
+		/// <param name="updatePaint">Set to false to prevent updating the currentPaintIndex</param>
+		/// <param name="updateTool">Set to false to prevent updating the currentPaintingToolIndex</param>
+		public void updateIndexes(bool updatePaint = true, bool updateTool = true) {
             if(updatePaint)
                 currentPaintIndex = -1;
             if(updateTool)
@@ -64,13 +115,18 @@ namespace WeaponsOfMassDecoration.NPCs {
         public void getPaintVars(out int paintColor, out CustomPaint customPaint) {
             paintColor = -1;
             customPaint = null;
+            PaintMethods method = getPaintMethod();
+            if(method == PaintMethods.None || method == PaintMethods.RemovePaint) {
+                paintColor = 0;
+                return;
+            }
             if(currentPaintIndex >= 0) {
                 Item item = player.inventory[currentPaintIndex];
                 if(item.modItem is CustomPaint)
                     customPaint = (CustomPaint)item.modItem;
                 else
                     paintColor = Array.IndexOf(PaintIDs.itemIds, item.type);
-			}
+            }
 		}
 
         /// <summary>
@@ -126,5 +182,65 @@ namespace WeaponsOfMassDecoration.NPCs {
 				}
 			}
 		}
+
+        /// <summary>
+        /// Used to paint blocks and walls. blocksAllowed and wallsAllowed can be used to disable painting blocks and walls regardless of the player's current painting method.
+        /// </summary>
+        /// <param name="x">Tile x coordinate</param>
+        /// <param name="y">Tile y coordinate</param>
+        /// <param name="blocksAllowed">Can be used to disable painting blocks regardless of the current painting method</param>
+        /// <param name="wallsAllowed">Can be used to disable painting walls regardless of the current painting method</param>
+        public bool paint(int x, int y, bool blocksAllowed = true, bool wallsAllowed = true, bool dontConsumePaint = false) {
+            if(Main.netMode == NetmodeID.Server)
+                return false;
+            if(!(blocksAllowed || wallsAllowed))
+                return false;
+            if(x < 0 || x >= Main.maxTilesX || y < 0 || y >= Main.maxTilesY)
+                return false;
+            PaintMethods method = getPaintMethod();
+            if(method == PaintMethods.None || (currentPaintIndex == -1 && method != PaintMethods.RemovePaint))
+                return false;
+            byte targetColor;
+            if(method == PaintMethods.RemovePaint) {
+                targetColor = 0;
+            } else {
+                getPaintVars(out int paintColor, out CustomPaint customPaint);
+                targetColor = getPaintingColorId(paintColor, customPaint, false);
+                if(method == PaintMethods.Tiles) {
+                    wallsAllowed = false;
+                } else if(method == PaintMethods.Walls) {
+                    blocksAllowed = false;
+                }
+            }
+            return paintDirect(x,y,targetColor,method,blocksAllowed,wallsAllowed,dontConsumePaint);
+        }
+
+        private bool paintDirect(int x, int y, byte color, PaintMethods method, bool blocksAllowed = true, bool wallsAllowed = true, bool dontConsumePaint = false) {
+            if(!WorldGen.InWorld(x, y, 10))
+                return false;
+            Tile t = Main.tile[x, y];
+            bool updated = false;
+            if(blocksAllowed && t.active() && t.color() != color && (color != 0 || method == PaintMethods.RemovePaint)) {
+                t.color(color);
+                updated = true;
+            }
+            if(wallsAllowed && t.wall > 0 && t.wallColor() != color && (color != 0 || method == PaintMethods.RemovePaint)) {
+                t.wallColor(color);
+                updated = true;
+            }
+            if(updated) {
+                if(!dontConsumePaint && method != PaintMethods.RemovePaint)
+                    consumePaint();
+                if(Main.netMode == NetmodeID.MultiplayerClient)
+                    sendTileFrame(x, y);
+            }
+            return updated;
+        }
+
+        public static void sendTileFrame(int x, int y) {
+            //WorldGen.SquareTileFrame(x, y);
+            //WorldGen.SquareWallFrame(x, y);
+            NetMessage.SendTileSquare(-1, x, y, 1);
+        }
     }
 }

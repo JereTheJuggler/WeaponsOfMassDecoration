@@ -28,8 +28,6 @@ namespace WeaponsOfMassDecoration.Items {
                 (postToolTip != "" ? "\n" + postToolTip : ""));
         }
 
-        public int numFrames = 31;
-
         public Player getOwner() {
             return getPlayer(item.owner);
 		}
@@ -74,42 +72,8 @@ namespace WeaponsOfMassDecoration.Items {
             Player p = getOwner();
             if(item.owner == Main.myPlayer && p != null) {
                 WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
-                PaintMethods method = player.getPaintMethod();
-                if(method == PaintMethods.None || (player.currentPaintIndex == -1 && method != PaintMethods.RemovePaint))
-                    return;
-                bool updated = false;
-                Tile t = Main.tile[x, y];
-                byte targetColor;
-                if(method == PaintMethods.RemovePaint) {
-                    targetColor = 0;
-                } else {
-                    player.getPaintVars(out int paintColor, out CustomPaint customPaint);
-                    targetColor = getPaintingColorId(paintColor, customPaint, false);
-                    if(method == PaintMethods.Tiles) {
-                        wallsAllowed = false;
-                    } else if(method == PaintMethods.Walls) {
-                        blocksAllowed = false;
-                    }
-                }
-                if(blocksAllowed && t.active() && t.color() != targetColor && (targetColor != 0 || method == PaintMethods.RemovePaint)) {
-                    t.color(targetColor);
-                    updated = true;
-                }
-                if(wallsAllowed && t.wall > 0 && t.wallColor() != targetColor && (targetColor != 0 || method == PaintMethods.RemovePaint)) {
-                    t.wallColor(targetColor);
-                    updated = true;
-                }
-                if(updated) {
-                    player.consumePaint();
-                    sendTileFrame(x, y);
-                }
+                player.paint(x, y, blocksAllowed, wallsAllowed);
             }
-        }
-
-        public void sendTileFrame(int x, int y) {
-            WorldGen.SquareTileFrame(x, y);
-            WorldGen.SquareWallFrame(x, y);
-            NetMessage.SendTileSquare(-1, x, y, 1);
         }
     }
 }
