@@ -205,7 +205,11 @@ namespace WeaponsOfMassDecoration.NPCs {
                 targetColor = 0;
             } else {
                 getPaintVars(out int paintColor, out CustomPaint customPaint);
-                targetColor = getPaintingColorId(paintColor, customPaint, false);
+                if(customPaint == null) {
+                    targetColor = (byte)paintColor;
+				} else {
+                    targetColor = customPaint.getPaintID(new CustomPaintData(false, paintCyclingTimeScale, 0, player));
+				}
                 if(method == PaintMethods.Tiles) {
                     wallsAllowed = false;
                 } else if(method == PaintMethods.Walls) {

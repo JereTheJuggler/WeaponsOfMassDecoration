@@ -51,7 +51,7 @@ namespace WeaponsOfMassDecoration.Items {
                         npc.painted = false;
                     } else {
                         player.getPaintVars(out int paintColor, out CustomPaint customPaint);
-                        applyPaintedToNPC(target, paintColor, customPaint);
+                        applyPaintedToNPC(target, paintColor, customPaint, new CustomPaintData() { player = p });
                     }
                 }
             }

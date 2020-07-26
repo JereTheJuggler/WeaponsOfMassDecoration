@@ -189,10 +189,12 @@ namespace WeaponsOfMassDecoration {
 		public static ShaderData applyShader(WoMDGlobalNPC globalNpc, NPC npc, DrawData? drawData = null) {
 			if(!globalNpc.painted)
 				return null;
-			getRenderVars(globalNpc, out byte currentColor, out byte? nextColor, out bool sprayPainted);
-			if(currentColor == 0)
-				return null;
-			return applyShader(npc, currentColor, nextColor, sprayPainted, npcCyclingTimeScale, globalNpc.paintedTime, drawData, 1f);
+			if(globalNpc.paintColor == PaintID.Negative)
+				return applyNegativeShader(npc);
+			Color color = getColor(globalNpc.paintColor, globalNpc.customPaint, npcCyclingTimeScale, globalNpc.paintedTime, null);
+			if(globalNpc.sprayPainted)
+				return applySprayPaintedShader(color, drawData);
+			return applyPaintedShader(color);
 		}
 		/// <summary>
 		/// Applies a shader for the provided PaintingProjectile
@@ -200,33 +202,30 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="projectile"></param>
 		/// <returns></returns>
 		public static ShaderData applyShader(PaintingProjectile projectile) {
-			getRenderVars(projectile, out byte currentColor, out byte? nextColor);
-			if(currentColor == 0)
+			WoMDPlayer player = projectile.getModPlayer();
+			if(player == null)
 				return null;
-			return applyShader(projectile.projectile, currentColor, nextColor, false, paintCyclingTimeScale, 0, null);
+			player.getPaintVars(out int paintColor, out CustomPaint customPaint);
+			if(paintColor == -1 && customPaint == null)
+				return null;
+			if(paintColor == PaintID.Negative)
+				return applyNegativeShader(projectile.projectile);
+			Color c = getColor(paintColor, customPaint, paintCyclingTimeScale, 0, projectile.getOwner());
+			return applyPaintedShader(c);
 		}
 
-		private static ShaderData applyShader(Entity entity, byte currentColor, byte? nextColor, bool sprayPainted, float timeScale, float timeOffset = 0, DrawData? drawData = null, float opacity = 1f) {
-			if(currentColor == PaintID.Negative) {
-				return applyNegativeShader(entity).UseOpacity(opacity);
-			} else if(sprayPainted){
-				return applySprayPaintedShader(currentColor, nextColor, timeScale, timeOffset, drawData).UseOpacity(opacity);
-			} else {
-				return applyPaintedShader(currentColor, nextColor, timeScale, timeOffset).UseOpacity(opacity);
-			}
-		}
 		private static ArmorShaderData applyNegativeShader(Entity entity) {
 			ArmorShaderData data = GameShaders.Armor.GetShaderFromItemId(ItemID.NegativeDye);
 			data.Apply(entity);
 			return data;
 		}
-		private static MiscShaderData applyPaintedShader(byte currentColor, byte? nextColor, float timeScale, float timeOffset = 0) {
-			MiscShaderData data = GameShaders.Misc["Painted"].UseColor(getColor(currentColor, nextColor, timeScale, timeOffset));
+		private static MiscShaderData applyPaintedShader(Color c) {
+			MiscShaderData data = GameShaders.Misc["Painted"].UseColor(c).UseOpacity(1f);
 			data.Apply();
 			return data;
 		}
-		private static MiscShaderData applySprayPaintedShader(byte currentColor, byte? nextColor, float timeScale, float timeOffset = 0, DrawData? drawData = null) {
-			MiscShaderData data = GameShaders.Misc["SprayPainted"].UseColor(getColor(currentColor, nextColor, timeScale, timeOffset)).UseImage("Images/Misc/noise");
+		private static MiscShaderData applySprayPaintedShader(Color color, DrawData? drawData = null) {
+			MiscShaderData data = GameShaders.Misc["SprayPainted"].UseColor(color).UseImage("Images/Misc/noise").UseOpacity(1f);
 			data.Apply(drawData);
 			return data;
 		}
@@ -241,84 +240,13 @@ namespace WeaponsOfMassDecoration {
 			if(player == null)
 				return Color.White;
 			player.getPaintVars(out int paintColor, out CustomPaint customPaint);
-			getCurrentAndNextColorIDs(paintColor, customPaint, out byte currentColor, out byte? nextColor, paintCyclingTimeScale);
-			return getColor(currentColor, nextColor, paintCyclingTimeScale);
-		}
-		private static Color getColor(byte currentColor, byte? nextColor, float timeScale, float timeOffset = 0) {
-			Color color = PaintColors.colors[currentColor];
-			if(nextColor != null) {
-				float lerpAmount = ((Main.GlobalTime - timeOffset) / timeScale) % 1;
-				//System.Diagnostics.Debug.Print(lerpAmount.ToString().PadRight(20).Substring(0, 7) + " " + currentColor + " " + nextColor);
-				color = Color.Lerp(color, PaintColors.colors[(int)nextColor], lerpAmount);
-			}
-
-			return color;
+			return getColor(paintColor, customPaint, paintCyclingTimeScale, 0, projectile.getOwner());
 		}
 
-		/// <summary>
-		/// Gets rendering vars for the provided npc, based on its painted, paintColor, customPaint, and paintedTime properties. This is called within applyShader
-		/// </summary>
-		/// <param name="npc">The npc to get rendering vars for</param>
-		/// <param name="currentColor">The PaintID for the current color of the paint applied to the npc</param>
-		/// <param name="nextColor">The PaintID for the next color of the paint applied to the npc, if the paint applied cycles between multiple colors</param>
-		/// <param name="sprayPainted">Whether the npc was hit with spray paint</param>
-		public static void getRenderVars(WoMDGlobalNPC npc, out byte currentColor, out byte? nextColor, out bool sprayPainted) {
-			if(!npc.painted) {
-				currentColor = 0;
-				nextColor = null;
-				sprayPainted = false;
-			} else {
-				getRenderVars(npc.paintColor, npc.customPaint, out currentColor, out nextColor, out sprayPainted, npcCyclingTimeScale, npc.paintedTime);
-			}
-		}
-		/// <summary>
-		/// Gets rendering vars for the provided npc, based on the currentPaintIndex of its owner. This is called within applyShader
-		/// </summary>
-		/// <param name="projectile">The projectile to get rendering vars for</param>
-		/// <param name="currentColor">The PaintID for the current color of the paint applied to the projectile</param>
-		/// <param name="nextColor">The PaintID for the next color of the paint applied to the projectile, if the paint applied cycles between multiple colors</param>
-		public static void getRenderVars(PaintingProjectile projectile,out byte currentColor, out byte? nextColor) {
-			WoMDPlayer player = projectile.getModPlayer();
-			if(player == null) {
-				currentColor = 0;
-				nextColor = null;
-			} else {
-				player.getPaintVars(out int paintColor, out CustomPaint customPaint);
-				getRenderVars(paintColor, customPaint, out currentColor, out nextColor, out _, paintCyclingTimeScale, 0);
-			}
-		}
-
-		/// <summary>
-		/// Gets the PaintID provided a paintColor and customPaint. forceColor can be provided to force a color to be returned for spray paints. Uses the paintCyclingTimeScale for custom paints that cycle through multiple colors
-		/// </summary>
-		/// <param name="paintColor">The PaintID of the paint being used. Should be -1 when using a CustomPaint</param>
-		/// <param name="customPaint">The CustomPaint of the paint being used. Should be null when using a vanilla paint</param>
-		/// <param name="forceColor">Whether color should be forced for spray paints</param>
-		/// <returns></returns>
-		public static byte getPaintingColorId(int paintColor, CustomPaint customPaint, bool forceColor = true) {
-			return getCurrentColorID(forceColor, paintColor, customPaint, paintCyclingTimeScale);
-		}
-
-		private static void getRenderVars(int paintColor, CustomPaint customPaint, out byte currentColor, out byte? nextColor, out bool sprayPainted, float timeScale, float timeOffset = 0) {
-			getCurrentAndNextColorIDs(paintColor, customPaint, out currentColor, out nextColor, timeScale, timeOffset);
-			sprayPainted = (customPaint != null && (customPaint is CustomSprayPaint || customPaint is VanillaSprayPaint));
-		}
-		private static void getCurrentAndNextColorIDs(int paintColor, CustomPaint customPaint, out byte currentColor, out byte? nextColor, float timeScale, float timeOffset = 0) {
-			currentColor = getCurrentColorID(true, paintColor, customPaint, timeScale, timeOffset);
-			nextColor = null;
-
-			if(customPaint != null) {
-				nextColor = customPaint.getNextColor(timeScale, true, timeOffset);
-				if(nextColor == currentColor)
-					nextColor = null;
-			}
-		}
-		public static byte getCurrentColorID(bool forceColor, int paintColor,CustomPaint customPaint, float timeScale, float timeOffset = 0) {
-			if(customPaint != null) {
-				return customPaint.getColor(timeScale, forceColor, timeOffset);
-			} else {
-				return (byte)paintColor;
-			}
+		private static Color getColor(int paintColor, CustomPaint customPaint, float timeScale, float timeOffset = 0, Player player = null) {
+			if(customPaint == null)
+				return PaintColors.colors[paintColor];
+			return customPaint.getColor(new CustomPaintData(true, timeScale, timeOffset, player));
 		}
 		#endregion
 
@@ -330,7 +258,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="customPaint">The CustomPaint to use for painting the npc. Should be null when using a vanilla paint</param>
 		/// <param name="handledNpcs">Should not be provided</param>
 		/// <param name="preventRecursion">Should not be provided</param>
-		public static void applyPaintedToNPC(NPC npc, int paintColor, CustomPaint customPaint, List<NPC> handledNpcs = null, bool preventRecursion = false) {
+		public static void applyPaintedToNPC(NPC npc, int paintColor, CustomPaint customPaint, CustomPaintData data, List<NPC> handledNpcs = null, bool preventRecursion = false) {
 			switch(npc.type) {
 				case NPCID.CultistDragonBody1:
 				case NPCID.CultistDragonBody2:
@@ -371,13 +299,17 @@ namespace WeaponsOfMassDecoration {
 			npc.AddBuff(ModContent.BuffType<Painted>(), 6000);
 
 			WoMDGlobalNPC globalNpc = npc.GetGlobalNPC<WoMDGlobalNPC>();
-			NPC[] npcs = Main.npc;
+
+			if(customPaint != null)
+				customPaint.getPaintVarsForNpc(out paintColor,out customPaint, data);
+
 			if(!globalNpc.painted || (customPaint != null && (globalNpc.customPaint == null || globalNpc.customPaint.displayName != customPaint.displayName)) || (paintColor != -1 && globalNpc.paintColor != paintColor))
 				globalNpc.paintedTime = Main.GlobalTime;
 			globalNpc.painted = true;
 			if(customPaint != null) {
 				globalNpc.paintColor = -1;
 				globalNpc.customPaint = (CustomPaint)customPaint.Clone();
+				globalNpc.sprayPainted = customPaint is ISprayPaint;
 			} else {
 				globalNpc.customPaint = null;
 				globalNpc.paintColor = paintColor;
@@ -400,7 +332,7 @@ namespace WeaponsOfMassDecoration {
 								case NPCID.MoonLordHead:
 								case NPCID.MoonLordHand:
 								case NPCID.MoonLordCore:
-									applyPaintedToNPC(Main.npc[i], paintColor, customPaint, null, true);
+									applyPaintedToNPC(Main.npc[i], paintColor, customPaint, data ,null, true);
 									break;
 							}
 						}
@@ -422,7 +354,7 @@ namespace WeaponsOfMassDecoration {
 						if(prevSection != null && !handledNpcs.Contains(prevSection)) {
 							NPC thisSection = getNpcById(prevSection.ai[1]);
 							if(thisSection != null && thisSection.Equals(npc)) {
-								applyPaintedToNPC(prevSection, paintColor, customPaint, handledNpcs);
+								applyPaintedToNPC(prevSection, paintColor, customPaint, data, handledNpcs);
 							}
 						}
 						goto case NPCID.EaterofWorldsTail;
@@ -440,7 +372,7 @@ namespace WeaponsOfMassDecoration {
 						if(previSection != null && !handledNpcs.Contains(previSection)) {
 							NPC thisSection = getNpcById(previSection.ai[1]);
 							if(thisSection != null && thisSection.Equals(npc)) {
-								applyPaintedToNPC(previSection, paintColor, customPaint, handledNpcs);
+								applyPaintedToNPC(previSection, paintColor, customPaint, data, handledNpcs);
 							}
 						}
 						break;
@@ -458,7 +390,7 @@ namespace WeaponsOfMassDecoration {
 						if(nextSection != null && !handledNpcs.Contains(nextSection)) {
 							NPC thisSection = getNpcById(nextSection.ai[0]);
 							if(thisSection != null && thisSection.Equals(npc)) {
-								applyPaintedToNPC(nextSection, paintColor, customPaint, handledNpcs);
+								applyPaintedToNPC(nextSection, paintColor, customPaint, data, handledNpcs);
 							}
 						}
 						break;

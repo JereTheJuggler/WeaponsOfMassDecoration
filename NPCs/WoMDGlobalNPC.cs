@@ -21,6 +21,7 @@ namespace WeaponsOfMassDecoration.NPCs {
         public bool painted = false;
         public int paintColor = -1;
         public CustomPaint customPaint = null;
+        public bool sprayPainted = false;
 		public float paintedTime = 0;
 
         public override bool InstancePerEntity {

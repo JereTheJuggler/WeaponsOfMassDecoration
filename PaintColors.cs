@@ -37,7 +37,6 @@ namespace WeaponsOfMassDecoration {
         public const byte Brown = 28;
         public const byte Shadow = 29;
         public const byte Negative = 30;
-        public const byte Custom = 31;
 
         public static readonly int[] itemIds = new int[] {
             0,

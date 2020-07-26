@@ -113,7 +113,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
                         npc.painted = false;
                     } else {
                         player.getPaintVars(out int paintColor, out CustomPaint customPaint);
-                        applyPaintedToNPC(target, paintColor, customPaint);
+                        applyPaintedToNPC(target, paintColor, customPaint, new CustomPaintData() { player = p });
                     }
                 }
             }
@@ -226,7 +226,12 @@ namespace WeaponsOfMassDecoration.Projectiles {
             WoMDPlayer player = getModPlayer();
             if(Main.myPlayer == projectile.owner && player != null) {
                 player.getPaintVars(out int paintColor, out CustomPaint customPaint);
-                colorFrame = getCurrentColorID(true, paintColor, customPaint, paintCyclingTimeScale);
+                if(paintColor == -1 && customPaint == null)
+                    colorFrame = 0;
+                else if(customPaint == null)
+                    colorFrame = (byte)paintColor;
+                else
+                    colorFrame = customPaint.getPaintID(new CustomPaintData(true, paintCyclingTimeScale, 0, getOwner()));
 			}
 		}
 
@@ -293,6 +298,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
                     spriteBatch.Draw(texture, drawPos, sourceRectangle, color, rotation, origin, scale, SpriteEffects.None, 0f);
                 }
 			} else {
+
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
 
