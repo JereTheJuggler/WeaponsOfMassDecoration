@@ -14,7 +14,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
         public SplatterBullet() : base() {
             explodesOnDeath = true;
-            explosionRadius = 16;
+            explosionRadius = 48;
 
             trailLength = 5;
             trailMode = 1;

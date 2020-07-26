@@ -85,12 +85,17 @@ namespace WeaponsOfMassDecoration.Items {
                 } else {
                     player.getPaintVars(out int paintColor, out CustomPaint customPaint);
                     targetColor = getPaintingColorId(paintColor, customPaint, false);
+                    if(method == PaintMethods.Tiles) {
+                        wallsAllowed = false;
+                    } else if(method == PaintMethods.Walls) {
+                        blocksAllowed = false;
+                    }
                 }
-                if(t.color() != targetColor) {
+                if(blocksAllowed && t.active() && t.color() != targetColor && (targetColor != 0 || method == PaintMethods.RemovePaint)) {
                     t.color(targetColor);
                     updated = true;
                 }
-                if(t.wallColor() != targetColor) {
+                if(wallsAllowed && t.wall > 0 && t.wallColor() != targetColor && (targetColor != 0 || method == PaintMethods.RemovePaint)) {
                     t.wallColor(targetColor);
                     updated = true;
                 }
