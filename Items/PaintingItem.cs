@@ -36,7 +36,7 @@ namespace WeaponsOfMassDecoration.Items {
 
 		public override void ModifyWeaponDamage(Player player, ref float add, ref float mult, ref float flat) {
             WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
-			if(p.canPaint()) {
+			if(!p.canPaint()) {
                 mult *= .5f;
 			} else if(p.getPaintMethod() ==  PaintMethods.RemovePaint){
                 mult *= .5f;
