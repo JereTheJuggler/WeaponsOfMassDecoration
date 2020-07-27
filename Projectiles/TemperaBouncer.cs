@@ -33,32 +33,29 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			xFrameCount = 1;
 
 			trailLength = 5;
-			trailMode = 0;
 
 			manualRotation = true;
 		}
 
         public override void SetStaticDefaults() {
 			base.SetStaticDefaults();
-            DisplayName.SetDefault("Tempera Bouncer");     //The English name of the projectile
+            DisplayName.SetDefault("Tempera Bouncer");
         }
 
         public override void SetDefaults() {
-            //projectile.velocity.Normalize();
-            //projectile.velocity *= 5;
-            projectile.width = 18;               //The width of projectile hitbox
-            projectile.height = 18;              //The height of projectile hitbox
-			//projectile.aiStyle = 15;
-            projectile.friendly = true;         //Can the projectile deal damage to enemies?
-            projectile.hostile = false;         //Can the projectile deal damage to the player?
-            projectile.magic = true;           //Is the projectile shoot by a ranged weapon?
-			projectile.penetrate = 4;           //How many monsters the projectile can penetrate. (OnTileCollide below also decrements penetrate for bounces as well)
-            projectile.timeLeft = 3600;          //The live time for the projectile (60 = 1 second, so 600 is 10 seconds)
-            projectile.alpha = 0;             //The transparency of the projectile, 255 for completely transparent. (aiStyle 1 quickly fades the projectile in)
-            projectile.ignoreWater = true;          //Does the projectile's speed be influenced by water?
-            projectile.tileCollide = true;          //Can the projectile collide with tiles?
+            projectile.width = 18;
+            projectile.height = 18;
+			projectile.friendly = true;
+            projectile.hostile = false;
+            projectile.magic = true;
+			projectile.penetrate = 4;
+            projectile.timeLeft = 3600;
+            projectile.alpha = 0;
+            projectile.ignoreWater = true;
+            projectile.tileCollide = true;
             projectile.Opacity = 1f;
 			projectile.scale = 1.3f;
+            projectile.light = .5f;
         }
 
         public override bool PreAI() {

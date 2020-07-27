@@ -63,6 +63,11 @@ namespace WeaponsOfMassDecoration.Items {
 				}
 			}
 		}
+		/// <summary>
+		/// Gets the item id of the deep version of the provided paint item id
+		/// </summary>
+		/// <param name="type"></param>
+		/// <returns></returns>
 		protected static int getDeepItemId(int type) {
 			int index = Array.IndexOf(PaintIDs.itemIds, type);
 			if(index == -1)
@@ -87,6 +92,9 @@ namespace WeaponsOfMassDecoration.Items {
 			}
 		}
 
+		/// <summary>
+		/// If true, the paint will cycle through colors going 1 2 3 4 1 2 3 4 etc. If false, the paint will cycle through colors going 1 2 3 4 3 2 1 2 3 4 3 etc.
+		/// </summary>
 		public bool cycleLoops = false;
 
 		public CustomPaint() : base() {
@@ -132,6 +140,11 @@ namespace WeaponsOfMassDecoration.Items {
 			}
 		}
 
+		/// <summary>
+		/// Gets the color to use for lights and shaders based on the data provided.
+		/// </summary>
+		/// <param name="data"></param>
+		/// <returns></returns>
 		public Color getColor(CustomPaintData data) {
 			if(colorCount == 1)
 				return getColorFromIndex(0);
@@ -142,6 +155,11 @@ namespace WeaponsOfMassDecoration.Items {
 			float lerpAmount = ((Main.GlobalTime - data.timeOffset) / data.timeScale) % 1;
 			return Color.Lerp(getColorFromIndex(index1), getColorFromIndex(index2), lerpAmount);
 		}
+		/// <summary>
+		/// Gets the PaintID for painting tiles based on the data provided.
+		/// </summary>
+		/// <param name="data"></param>
+		/// <returns></returns>
 		public byte getPaintID(CustomPaintData data) {
 			if(!data.forceColor && this is ISprayPaint && Main.rand.NextFloat() <= .66f)
 				return 0;
@@ -164,6 +182,12 @@ namespace WeaponsOfMassDecoration.Items {
 			return index;
 		}
 	
+		/// <summary>
+		/// Allows a custom paint to convert itself to a vanilla paint color before applying it to an npc
+		/// </summary>
+		/// <param name="paintColor"></param>
+		/// <param name="customPaint"></param>
+		/// <param name="data"></param>
 		public virtual void getPaintVarsForNpc(out int paintColor, out CustomPaint customPaint, CustomPaintData data) {
 			paintColor = -1;
 			customPaint = this;

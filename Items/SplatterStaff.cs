@@ -32,10 +32,8 @@ namespace WeaponsOfMassDecoration.Items {
             item.useAmmo = -1;
             item.useStyle = ItemUseStyleID.HoldingOut;
             item.noMelee = true;
-            //item.knockBack = 4f;
             item.value = Item.sellPrice(0, 0, 30, 0);
             item.UseSound = SoundID.Item21;
-            //item.autoReuse = true;
             item.shootSpeed = 9f;
         }
 

@@ -17,7 +17,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
             explosionRadius = 48;
 
             trailLength = 5;
-            trailMode = 1;
 
             yFrameCount = 1;
 
@@ -26,23 +25,23 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
         public override void SetStaticDefaults() {
             base.SetStaticDefaults();
-            DisplayName.SetDefault("Splatter Bullet");     //The English name of the projectile
+            DisplayName.SetDefault("Splatter Bullet");
         }
 
         public override void SetDefaults() {
             base.SetDefaults();
-            projectile.width = 8;               //The width of projectile hitbox
-            projectile.height = 8;              //The height of projectile hitbox
-            projectile.aiStyle = 1;             //The ai style of the projectile, please reference the source code of Terraria
-            projectile.friendly = true;         //Can the projectile deal damage to enemies?
-            projectile.hostile = false;         //Can the projectile deal damage to the player?
-            projectile.ranged = true;           //Is the projectile shoot by a ranged weapon?
-            projectile.penetrate = 1;           //How many monsters the projectile can penetrate. (OnTileCollide below also decrements penetrate for bounces as well)
-            projectile.timeLeft = 600;          //The live time for the projectile (60 = 1 second, so 600 is 10 seconds)
-            projectile.alpha = 255;             //The transparency of the projectile, 255 for completely transparent. (aiStyle 1 quickly fades the projectile in)
-            projectile.ignoreWater = true;          //Does the projectile's speed be influenced by water?
-            projectile.tileCollide = true;          //Can the projectile collide with tiles?
-            aiType = ProjectileID.Bullet;           //Act exactly like default Bullet
+            projectile.width = 8;
+            projectile.height = 8;
+            projectile.aiStyle = 1;
+            projectile.friendly = true;
+            projectile.hostile = false;
+            projectile.ranged = true;
+            projectile.penetrate = 1;
+            projectile.timeLeft = 600;
+            projectile.alpha = 255;
+            projectile.ignoreWater = true;
+            projectile.tileCollide = true;
+            aiType = ProjectileID.Bullet;
             projectile.light = .5f;
         }
 
@@ -115,9 +114,5 @@ namespace WeaponsOfMassDecoration.Projectiles {
             }
             Main.PlaySound(SoundID.Item14, projectile.Center);
         }
-
-		public override bool PreKill(int timeLeft) {
-            return base.PreKill(timeLeft);
-		}
     }
 }

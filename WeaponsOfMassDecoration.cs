@@ -29,10 +29,14 @@ namespace WeaponsOfMassDecoration {
 		NotSet
 	}
 	class WeaponsOfMassDecoration : Mod{
-		//colors used for painting the world (and by extension rendering projectiles) will cycle at this speed for custom paints
+		/// <summary>
+		/// The speed that custom paints cycle through colors for painting tiles. Also applies to the colors for projectile shaders to line up with the color they are painting.
+		/// </summary>
 		public const float paintCyclingTimeScale = .25f; 
 
-		//colors used for rendering painted npcs will cycle at this speed for custom paints
+		/// <summary>
+		/// The speed that custom paints cycle through colors for npc shaders
+		/// </summary>
 		public const float npcCyclingTimeScale = 1f;
 
 		public WeaponsOfMassDecoration(){
@@ -100,7 +104,7 @@ namespace WeaponsOfMassDecoration {
 			RecipeGroup.RegisterGroup("WoMD:goldSword", goldSwordGroup);
 		}
 
-		#region getting from arrays
+	#region getting from arrays
 		/// <summary>
 		/// Safely gets a Dust object from Main.dust. If the provided index is out of range, null will be returned
 		/// </summary>
@@ -144,7 +148,7 @@ namespace WeaponsOfMassDecoration {
 				return null;
 			return Main.npc[index];
 		}
-		#endregion
+	#endregion
 
 		/// <summary>
 		/// Checks if the provided item is either a vanilla paint, or a CustomPaint
@@ -178,7 +182,7 @@ namespace WeaponsOfMassDecoration {
 			return false;
 		}
 
-		#region shaders
+	#region shaders
 		/// <summary>
 		/// Applies a shader for the provided WoMDGlobalNPC, based on its painted, paintColor, customPaint, and paintedTime properties.
 		/// </summary>
@@ -248,7 +252,7 @@ namespace WeaponsOfMassDecoration {
 				return PaintColors.colors[paintColor];
 			return customPaint.getColor(new CustomPaintData(true, timeScale, timeOffset, player));
 		}
-		#endregion
+	#endregion
 
 		/// <summary>
 		/// Applies the painted buff to the provided npc, based on the paintColor and customPaint provided

@@ -22,9 +22,9 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.width = 20;
             projectile.height = 20;
             projectile.aiStyle = 3;
-            projectile.friendly = true; // 8 for paint flower
-            projectile.melee = true;    // 13 for harPAINT
-            projectile.penetrate = -1;  // 21 for water bolt
+            projectile.friendly = true;
+            projectile.melee = true;
+            projectile.penetrate = -1;
             projectile.light = .5f;
             projectile.gfxOffY = 19;
 
@@ -34,7 +34,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
         public override bool PreAI() {
             base.PreAI();
             if(canPaint()) {
-                //projectile.frame = color;
                 paint(new Vector2(projectile.Center.X + 8,projectile.Center.Y + 8));
                 paint(new Vector2(projectile.Center.X + 8, projectile.Center.Y - 8));
                 paint(new Vector2(projectile.Center.X - 8, projectile.Center.Y + 8));

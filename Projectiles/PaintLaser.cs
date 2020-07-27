@@ -30,8 +30,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.width = 6;
             projectile.height = 6;
             projectile.aiStyle = 0;
-            //projectile.CloneDefaults(ProjectileID.ShadowBeamFriendly);
-            //aiType = ProjectileID.ShadowBeamFriendly;
             projectile.friendly = true;
             projectile.timeLeft = 3;
             projectile.alpha = 255;
@@ -61,7 +59,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
 					createLight();
 
                     for(int p = 0; p < 12; p++) {
-                        //int dustId = Dust.NewDust(projectile.Center, 0, 0, mod.DustType<Dusts.LightDust>(), 0, 0, 200, getLightColor(), .75f);
                         Dust dust = getDust(Dust.NewDust(projectile.TopLeft + displacement * (p / 10f) + new Vector2(-3,-3), 7, 7, DustType<Dusts.LightDust>(), 0, 0, 200, getColor(this), 1f));
                         if(dust != null) {
                             dust.velocity = new Vector2(3, 0).RotatedByRandom(Math.PI * 2);

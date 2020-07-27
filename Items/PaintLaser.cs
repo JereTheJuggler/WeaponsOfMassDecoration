@@ -71,6 +71,7 @@ namespace WeaponsOfMassDecoration.Items{
         }
 
         public override bool Shoot(Player player, ref Vector2 position, ref float speedX, ref float speedY, ref int type, ref int damage, ref float knockBack) {
+            //TODO: rewrite this... again...
             /*Vector2 dir = new Vector2(speedX, speedY).SafeNormalize(new Vector2(0, 1));
             List<Vector2> endPoints = new List<Vector2>();
             int maxIterations = 600;

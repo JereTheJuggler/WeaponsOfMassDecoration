@@ -60,23 +60,5 @@ namespace WeaponsOfMassDecoration.Projectiles {
             Main.PlaySound(SoundID.Dig, projectile.Center);
             return true;
         }
-
-
-        public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor) {
-            return base.PreDraw(spriteBatch, lightColor);
-            //Redraw the projectile with the color not influenced by light
-            /*projectile.alpha = 0;
-            Texture2D texture = Main.projectileTexture[projectile.type];
-            int frameHeight = (Main.projectileTexture[projectile.type].Height - (2 * (Main.projFrames[projectile.type] - 1))) / Main.projFrames[projectile.type];
-            int startY = (frameHeight + 2) * projectile.frame;
-            projectile.gfxOffY = frameHeight / 2;
-            //int xOffset = (projectile.velocity.X < 0 ? 2f : -2f);
-            Rectangle sourceRectangle = new Rectangle(0, startY, texture.Width, frameHeight);
-            Vector2 origin = sourceRectangle.Size() / 2f;
-            Color color = projectile.GetAlpha(lightColor);
-            Vector2 drawPos = projectile.Center - Main.screenPosition;
-            spriteBatch.Draw(texture, drawPos, sourceRectangle, color, projectile.rotation, origin, projectile.scale, SpriteEffects.None, 0f);
-            return false;*/
-        }
     }
 }

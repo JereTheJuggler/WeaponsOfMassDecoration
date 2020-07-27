@@ -16,7 +16,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
         public PaintShuriken() : base() {
             trailLength = 3;
-            trailMode = 0;
 		}
 
         public override void SetStaticDefaults() {
@@ -36,7 +35,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
         public override bool PreAI() {
             base.PreAI();
             if(canPaint() && (projectile.timeLeft+1) % 3 == 0) {
-                //projectile.frame = color;
                 Vector2 projCenter = new Vector2((float)Math.Floor(projectile.Center.X / 16f)*16f, (float)Math.Floor(projectile.Center.Y / 16f) * 16f);
                 for(float delta = 0; delta < Math.PI * 2; delta += (float)Math.PI / 2) {
                     float startAngle = rotation + delta;

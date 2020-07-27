@@ -16,7 +16,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
         public PaintStaff() : base() {
             trailLength = 4;
-            trailMode = 0;
 
             dropsOnDeath = true;
             dropCount = 5;
@@ -26,27 +25,22 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
         public override void SetStaticDefaults() {
             base.SetStaticDefaults();
-            DisplayName.SetDefault("Paint Bolt");     //The English name of the projectile
+            DisplayName.SetDefault("Paint Bolt");
         }
 
         public override void SetDefaults() {
-            //projectile.velocity.Normalize();
-            //projectile.velocity *= 5;
-            //projectile.CloneDefaults(ProjectileID.DiamondBolt);
-            projectile.width = 10;               //The width of projectile hitbox
-            projectile.height = 10;              //The height of projectile hitbox
-            //projectile.aiStyle = 29;             //The ai style of the projectile, please reference the source code of Terraria
+            projectile.width = 10;
+            projectile.height = 10;
             projectile.aiStyle = 0;
-			projectile.friendly = true;         //Can the projectile deal damage to enemies?
-            projectile.hostile = false;         //Can the projectile deal damage to the player?
-            projectile.magic = true;           //Is the projectile shoot by a ranged weapon?
-            projectile.penetrate = 1;           //How many monsters the projectile can penetrate. (OnTileCollide below also decrements penetrate for bounces as well)
-            projectile.timeLeft = 3600;          //The live time for the projectile (60 = 1 second, so 600 is 10 seconds)
-            projectile.alpha = 200;             //The transparency of the projectile, 255 for completely transparent. (aiStyle 1 quickly fades the projectile in)
-            projectile.ignoreWater = true;          //Does the projectile's speed be influenced by water?
-            projectile.tileCollide = true;          //Can the projectile collide with tiles?
-            //projectile.extraUpdates = 1;            //Set to above 0 if you want the projectile to update multiple time in a frame
-            aiType = ProjectileID.DiamondBolt;           //Act exactly like default Bullet
+			projectile.friendly = true;
+            projectile.hostile = false;
+            projectile.magic = true;
+            projectile.penetrate = 1;
+            projectile.timeLeft = 3600;
+            projectile.alpha = 200;
+            projectile.ignoreWater = true;
+            projectile.tileCollide = true;
+            aiType = ProjectileID.DiamondBolt;
             projectile.light = 1f;
             projectile.alpha = 150;
         }

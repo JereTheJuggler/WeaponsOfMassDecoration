@@ -14,7 +14,6 @@ namespace WeaponsOfMassDecoration.Items {
     class TemperaBouncer : PaintingItem {
         public override void SetStaticDefaults() {
             DisplayName.SetDefault("Tempera Bouncer");
-            //Item.staff[mod.ItemType<PaintStaff>()] = true;
             base.SetStaticDefaults(halfDamageText);
         }
 
@@ -25,18 +24,11 @@ namespace WeaponsOfMassDecoration.Items {
             item.shoot = ProjectileType<Projectiles.TemperaBouncer>();
             item.rare = ItemRarityID.Green;
             item.damage = 60;
-            //item.width = 42;
-            //item.height = 30;
-            //item.useTime = 35;
-            //item.useAnimation = 35;
             item.useAmmo = -1;
             item.mana = 10;
-            //item.useStyle = 5;
             item.noMelee = true;
-            //item.knockBack = 4f;
             item.value = Item.sellPrice(0, 0, 30, 0);
             item.UseSound = SoundID.Item21;
-            //item.autoReuse = true;
             item.shootSpeed = 15f;
         }
 

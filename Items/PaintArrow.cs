@@ -21,13 +21,13 @@ namespace WeaponsOfMassDecoration.Items {
             item.width = 8;
             item.height = 8;
             item.maxStack = 999;
-            item.consumable = true;             //You need to set the item consumable so that the ammo would automatically consumed
+            item.consumable = true;
             item.knockBack = 1.5f;
             item.value = 10;
             item.rare = ItemRarityID.Green;
-            item.shoot = ProjectileType<Projectiles.PaintArrow>();   //The projectile shoot when your weapon using this ammo
-            item.shootSpeed = 1f;                  //The speed of the projectile
-            item.ammo = AmmoID.Arrow;              //The ammo class this ammo belongs to.
+            item.shoot = ProjectileType<Projectiles.PaintArrow>();
+            item.shootSpeed = 1f;
+            item.ammo = AmmoID.Arrow;
         }
     }
 }

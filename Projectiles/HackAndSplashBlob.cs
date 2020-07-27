@@ -31,7 +31,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			xFrameCount = 6;
 
 			trailLength = 3;
-			trailMode = 0;
 
             animationFrameDuration = 4;
 
@@ -40,21 +39,21 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override void SetStaticDefaults() {
 			base.SetStaticDefaults();
-            DisplayName.SetDefault("Paint Splatter");     //The English name of the projectile
+            DisplayName.SetDefault("Paint Splatter");
         }
 
         public override void SetDefaults() {
 			base.SetDefaults();
-            projectile.width = 20;              //The width of projectile hitbox
-            projectile.height = 20;             //The height of projectile hitbox
+            projectile.width = 20;
+            projectile.height = 20;
             projectile.gfxOffY = 12;
-			projectile.aiStyle = 0;             //The ai style of the projectile, please reference the source code of Terraria
-            projectile.friendly = true;         //Can the projectile deal damage to enemies?
-            projectile.hostile = false;         //Can the projectile deal damage to the player?
-            projectile.penetrate = 2;           //How many monsters the projectile can penetrate. (OnTileCollide below also decrements penetrate for bounces as well)
-            projectile.timeLeft = 1000;         //The live time for the projectile (60 = 1 second, so 600 is 10 seconds)
-            projectile.ignoreWater = true;      //Should the projectile's speed be influenced by water?
-            projectile.tileCollide = true;      //Can the projectile collide with tiles?
+			projectile.aiStyle = 0;
+            projectile.friendly = true;
+            projectile.hostile = false;
+            projectile.penetrate = 2;
+            projectile.timeLeft = 1000;
+            projectile.ignoreWater = true;
+            projectile.tileCollide = true;
             aiType = ProjectileID.MagicDagger;
             projectile.damage = 20;
             projectile.Opacity = .75f;

@@ -29,7 +29,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
         protected float dropVelocity = 5f;
 
         protected int trailLength = 0;
-        protected int trailMode = 0;
 
         protected Vector2 drawOriginOffset = new Vector2(0,0);
 
@@ -63,16 +62,13 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			base.SetStaticDefaults();
             Main.projFrames[projectile.type] = yFrameCount * xFrameCount;
             ProjectileID.Sets.TrailCacheLength[projectile.type] = trailLength;
-            if(trailLength > 0) {
-                ProjectileID.Sets.TrailingMode[projectile.type] = trailMode;
-            }
         }
 
 		public override void SetDefaults() {
 			base.SetDefaults();
 		}
 
-		#region getters / value conversion
+	#region getters / value conversion
 		public Player getOwner() {
             return getPlayer(projectile.owner);
         }
@@ -99,9 +95,9 @@ namespace WeaponsOfMassDecoration.Projectiles {
         public Point convertPositionToTile(Point position) {
             return new Point((int)Math.Floor(position.X / 16f), (int)Math.Floor(position.Y / 16f));
         }
-        #endregion
+       #endregion
 
-        #region tile/npc interaction
+    #region tile/npc interaction
         public override void OnHitNPC(NPC target, int damage, float knockback, bool crit) {
 			WoMDGlobalNPC npc = target.GetGlobalNPC<WoMDGlobalNPC>();
             Player p = getOwner();
@@ -159,7 +155,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
                 //target.GetGlobalNPC<NPCs.WoMDGlobalNPC>(mod).paintColor = -1;
             }*/
         }
-        #endregion
+    #endregion
 
         /// <summary>
         /// Creates drops of paint
@@ -190,7 +186,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             return base.PreKill(timeLeft);
         }
 
-		#region ai
+	#region ai
 		public override bool PreAI() {
             oldRotation = projectile.rotation;
             if(startPosition.X == 0 && startPosition.Y == 0)
@@ -216,9 +212,9 @@ namespace WeaponsOfMassDecoration.Projectiles {
             if(xFrameCount > 1 && (animationFrameDuration == 0 || projectile.timeLeft % animationFrameDuration == 0))
                 nextFrame();
         }
-        #endregion
+    #endregion
 
-        #region rendering
+    #region rendering
         /// <summary>
         /// Updates the colorFrame property
         /// </summary>
@@ -357,10 +353,9 @@ namespace WeaponsOfMassDecoration.Projectiles {
                 createLight();
 			}
         }
-        #endregion
+    #endregion
 
-        #region painting
-
+    #region painting
         public void paintAlongOldVelocity(Vector2 oldVelocity, bool blocks = true, bool walls = true) {
             if(!(blocks || walls))
                 return;
@@ -494,9 +489,9 @@ namespace WeaponsOfMassDecoration.Projectiles {
                 }
             }
         }
-        #endregion
+    #endregion
 
-		#region lights
+    #region lights
 		/// <summary>
 		/// Creates a light with the projectile's color. Uses the center of the projectile for position and projectile.light for brightness
 		/// </summary>
@@ -515,6 +510,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
             Lighting.AddLight(pos, adjustedColor.ToVector3());
             return adjustedColor;
         }
-        #endregion
+    #endregion
     }
 }

@@ -26,15 +26,11 @@ namespace WeaponsOfMassDecoration.Items {
             item.damage = 20;
             item.width = 42;
             item.height = 30;
-            //item.useTime = 35;
-            //item.useAnimation = 35;
             item.useAmmo = -1;
             item.useStyle = ItemUseStyleID.HoldingOut;
             item.noMelee = true;
-            //item.knockBack = 4f;
             item.value = Item.sellPrice(0, 0, 30, 0);
             item.UseSound = SoundID.Item21;
-            //item.autoReuse = true;
             item.shootSpeed = 12f;
         }
 
