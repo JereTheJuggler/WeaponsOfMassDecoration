@@ -16,6 +16,7 @@ using Terraria.Graphics.Shaders;
 using Terraria.DataStructures;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
+using System.IO;
 
 namespace WeaponsOfMassDecoration.Projectiles {
     public abstract class PaintingProjectile : ModProjectile {
@@ -54,6 +55,10 @@ namespace WeaponsOfMassDecoration.Projectiles {
         public int animationFrame = 0;
         public int colorFrame = 0;
 
+        public int frame = 0;
+
+        public int npcOwner = -1;
+
 		protected bool resetBatchInPost = false;
 
 		public PaintingProjectile() : base() { }
@@ -81,6 +86,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
         public bool canPaint() {
+            if(npcOwner != -1)
+                return true;
             if(projectile.owner != Main.myPlayer)
                 return false;
             WoMDPlayer player = getModPlayer();
@@ -99,7 +106,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
     #region tile/npc interaction
         public override void OnHitNPC(NPC target, int damage, float knockback, bool crit) {
-			WoMDGlobalNPC npc = target.GetGlobalNPC<WoMDGlobalNPC>();
+			WoMDNPC npc = target.GetGlobalNPC<WoMDNPC>();
             Player p = getOwner();
             if(npc != null && p != null && projectile.owner == Main.myPlayer) {
                 WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
@@ -139,20 +146,20 @@ namespace WeaponsOfMassDecoration.Projectiles {
             if(currentPaintIndex >= 0 && p != null) {
                 if(currentPaintIndex >= 0) {
                     if(p.inventory[currentPaintIndex].modItem is CustomPaint) {
-                        //target.GetGlobalNPC<NPCs.WoMDGlobalNPC>(mod).paintColor = -1;
-                        //target.GetGlobalNPC<NPCs.WoMDGlobalNPC>(mod).customPaint = (Items.CustomPaint)p.inventory[currentPaintIndex].modItem.Clone();
+                        //target.GetGlobalNPC<NPCs.WoMDNPC>(mod).paintColor = -1;
+                        //target.GetGlobalNPC<NPCs.WoMDNPC>(mod).customPaint = (Items.CustomPaint)p.inventory[currentPaintIndex].modItem.Clone();
                     }
                     for(int i = 0; i < PaintIDs.itemIds.Length; i++) {
                         if(p.inventory[currentPaintIndex].type == PaintIDs.itemIds[i]) {
-                            //target.GetGlobalNPC<NPCs.WoMDGlobalNPC>(mod).paintColor = (byte)i;
-                            //target.GetGlobalNPC<NPCs.WoMDGlobalNPC>(mod).customPaint = null;
+                            //target.GetGlobalNPC<NPCs.WoMDNPC>(mod).paintColor = (byte)i;
+                            //target.GetGlobalNPC<NPCs.WoMDNPC>(mod).customPaint = null;
                             break;
                         }
                     }
                 }
             } else {
-                //target.GetGlobalNPC<NPCs.WoMDGlobalNPC>(mod).customPaint = null;
-                //target.GetGlobalNPC<NPCs.WoMDGlobalNPC>(mod).paintColor = -1;
+                //target.GetGlobalNPC<NPCs.WoMDNPC>(mod).customPaint = null;
+                //target.GetGlobalNPC<NPCs.WoMDNPC>(mod).paintColor = -1;
             }*/
         }
     #endregion
@@ -209,8 +216,20 @@ namespace WeaponsOfMassDecoration.Projectiles {
             if(trailLength > 0) {
                 projectile.oldRot[0] = projectile.rotation;
             }
+
             if(xFrameCount > 1 && (animationFrameDuration == 0 || projectile.timeLeft % animationFrameDuration == 0))
                 nextFrame();
+            if(Main.netMode == NetmodeID.SinglePlayer || (Main.netMode == NetmodeID.MultiplayerClient && projectile.owner == Main.myPlayer) || (Main.netMode == NetmodeID.Server && npcOwner != -1)) {
+                if(!usesShader) {
+                    if(npcOwner == -1) {
+                        Player owner = getOwner();
+                        if(owner != null && projectile.owner == Main.myPlayer)
+                            updateColorFrame();
+					} else {
+                        updateColorFrame();
+					}
+                }
+            }
         }
     #endregion
 
@@ -219,16 +238,36 @@ namespace WeaponsOfMassDecoration.Projectiles {
         /// Updates the colorFrame property
         /// </summary>
         public void updateColorFrame() {
-            WoMDPlayer player = getModPlayer();
-            if(Main.myPlayer == projectile.owner && player != null) {
-                player.getPaintVars(out int paintColor, out CustomPaint customPaint);
+            int oldColorFrame = colorFrame;
+            if(npcOwner == -1) {
+                WoMDPlayer player = getModPlayer();
+                if(Main.myPlayer == projectile.owner && player != null) {
+                    player.getPaintVars(out int paintColor, out CustomPaint customPaint);
+                    if(paintColor == -1 && customPaint == null)
+                        colorFrame = 0;
+                    else if(customPaint == null)
+                        colorFrame = (byte)paintColor;
+                    else
+                        colorFrame = customPaint.getPaintID(new CustomPaintData(true, paintCyclingTimeScale, 0, getOwner()));
+                }
+			} else {
+                NPC npc = getNPC(npcOwner);
+                if(npc == null)
+                    return;
+                WoMDNPC gNpc = npc.GetGlobalNPC<WoMDNPC>();
+                if(gNpc == null)
+                    return;
+                gNpc.getPaintVars(out int paintColor, out CustomPaint customPaint);
                 if(paintColor == -1 && customPaint == null)
                     colorFrame = 0;
                 else if(customPaint == null)
                     colorFrame = (byte)paintColor;
                 else
-                    colorFrame = customPaint.getPaintID(new CustomPaintData(true, paintCyclingTimeScale, 0, getOwner()));
+                    colorFrame = customPaint.getPaintID(new CustomPaintData(true, npcCyclingTimeScale, gNpc.paintedTime));
 			}
+            if(oldColorFrame != colorFrame)
+                projectile.netUpdate = true;
+            updateFrame();
 		}
 
         /// <summary>
@@ -240,6 +279,18 @@ namespace WeaponsOfMassDecoration.Projectiles {
             animationFrame++;
             if(animationFrame >= xFrameCount)
                 animationFrame = 0;
+            updateFrame();
+		}
+
+        public void updateFrame() {
+            int targetFrame;
+            if(usesShader)
+                targetFrame = animationFrame;
+            else
+                targetFrame = colorFrame * xFrameCount + animationFrame;
+            if(targetFrame != frame) {
+                frame = targetFrame;
+			}
 		}
 
         /// <summary>
@@ -249,21 +300,31 @@ namespace WeaponsOfMassDecoration.Projectiles {
         /// <returns></returns>
         public Rectangle getSourceRectangle(Texture2D texture) {
             int frameHeight = (texture.Height - (2 * (yFrameCount - 1))) / yFrameCount;
-            int yFrame = (colorFrame > yFrameCount - 1? yFrameCount - 1: colorFrame);
+            int yFrame = (int)Math.Floor((float)frame / xFrameCount);
             int startY = yFrame * (frameHeight + 2);
             int frameWidth = (texture.Width - (2 * (xFrameCount - 1))) / xFrameCount;
-            int startX = animationFrame * (frameWidth + 2);
+            int xFrame = frame % xFrameCount;
+            int startX = xFrame * (frameWidth + 2);
             return new Rectangle(startX, startY, frameWidth, frameHeight);
         }
 
-        public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor) {
+		public override void SendExtraAI(BinaryWriter writer) {
+            writer.Write(colorFrame);
+            //Main.NewText("Sending " + frame.ToString());
+		}
+
+		public override void ReceiveExtraAI(BinaryReader reader) {
+            colorFrame = reader.ReadInt32();
+            updateFrame();
+            //Main.NewText("Received " + frame.ToString());
+        }
+
+		public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor) {
             if(!hasGraphics) {
                 createLight();
                 return false;
             }
             if(!usesShader) {
-                updateColorFrame();
-
                 Color projLight = createLight();
 
                 Texture2D texture = Main.projectileTexture[projectile.type];
@@ -349,9 +410,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
             }
-			if(!hasGraphics) {
-                createLight();
-			}
         }
     #endregion
 
@@ -367,6 +425,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
                 }
             }
         }
+
         public void paintBetweenPoints(Vector2 start, Vector2 end, bool blocks = true, bool walls = true) {
             if(!(blocks || walls))
                 return;
@@ -381,31 +440,31 @@ namespace WeaponsOfMassDecoration.Projectiles {
         }
 
         /// <summary>
-        /// Creates a circle of paint
+        /// Creates a circle of paint. Must be called instead of the version in WeaponsOfMassDestruction in order to consume paint and properly switch colors if the player runs out
         /// </summary>
         /// <param name="pos"></param>
         /// <param name="radius"></param>
         /// <param name="blocks"></param>
         /// <param name="walls"></param>
-        public void explode(Vector2 pos,float radius,bool blocks = true,bool walls = true) {
+        public void explode(Vector2 pos, float radius, bool blocks = true, bool walls = true) {
             for(int currentLevel = 0; currentLevel < Math.Ceiling(radius / 16f); currentLevel++) {
                 if(currentLevel == 0) {
-                    paint(pos,blocks,walls);
-                }else {
+                    paint(pos, blocks, walls);
+                } else {
                     for(int i = 0; i <= currentLevel * 2; i++) {
                         float xOffset;
                         float yOffset;
                         if(i <= currentLevel) {
                             xOffset = currentLevel;
                             yOffset = i;
-                        }else {
-                            xOffset = (currentLevel*2 - i + 1);
+                        } else {
+                            xOffset = (currentLevel * 2 - i + 1);
                             yOffset = (currentLevel + 1);
                         }
                         Vector2 offsetVector = new Vector2(xOffset * 16f, yOffset * 16f);
                         if(offsetVector.Length() <= radius) {
                             for(int dir = 0; dir < 4; dir++) {
-                                paint(pos + offsetVector.RotatedBy(dir * (Math.PI/2)),blocks,walls);
+                                paint(pos + offsetVector.RotatedBy(dir * (Math.PI / 2)), blocks, walls);
                             }
                         }
                     }
@@ -480,13 +539,32 @@ namespace WeaponsOfMassDecoration.Projectiles {
             if(x < 0 || x >= Main.maxTilesX || y < 0 || y >= Main.maxTilesY)
                 return;
             if(!paintedTiles.Contains(new Point(x, y))) {
-                Player p = getOwner();
-                if(projectile.owner == Main.myPlayer && p != null) {
-                    WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
-					if(player.paint(x, y, blocksAllowed, wallsAllowed)) {
-                        paintedTiles.Add(new Point(x, y));
+                if(npcOwner == -1) {
+                    Player p = getOwner();
+                    if(projectile.owner == Main.myPlayer && p != null) {
+                        WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
+                        if(player.paint(x, y, blocksAllowed, wallsAllowed)) {
+                            paintedTiles.Add(new Point(x, y));
+                        }
+                    }
+				} else {
+                    NPC npc = getNPC(npcOwner);
+                    if(npc != null) {
+                        WoMDNPC gNpc = npc.GetGlobalNPC<WoMDNPC>();
+                        if(gNpc != null) {
+                            gNpc.getPaintVars(out int paintColor, out CustomPaint customPaint);
+                            if(paintColor == -1 && customPaint == null)
+                                return;
+                            byte targetColor;
+                            if(customPaint != null) {
+                                targetColor = customPaint.getPaintID(new CustomPaintData(false, npcCyclingTimeScale, gNpc.paintedTime));
+							} else {
+                                targetColor = (byte)paintColor;
+							}
+                            WeaponsOfMassDecoration.paint(x, y, targetColor, PaintMethods.BlocksAndWalls, blocksAllowed, wallsAllowed);
+						}
 					}
-                }
+				}
             }
         }
     #endregion

@@ -10,14 +10,6 @@ using Steamworks;
 using Microsoft.Xna.Framework;
 
 namespace WeaponsOfMassDecoration.Items {
-	public enum CycleTypes {
-		Loop,
-		Reverse,
-		Spray,
-		LoopSpray,
-		ReverseSpray
-	}
-
 	public interface ISprayPaint { }
 
 	public interface IDeepPaint { }
@@ -174,10 +166,17 @@ namespace WeaponsOfMassDecoration.Items {
 			int index;
 			if(cycleLoops) {
 				index = ((int)Math.Floor((Main.GlobalTime - data.timeOffset) / data.timeScale) + offset) % colorCount;
+				if(index < 0)
+					index += colorCount;
 			} else {
 				index = ((int)Math.Floor((Main.GlobalTime - data.timeOffset) / data.timeScale) + offset) % (colorCount * 2 - 2);
+				if(index < 0)
+					index *= -1;
 				if(index >= colorCount)
 					index = colorCount * 2 - 2 - index;
+			}
+			if(index < 0 || index >= colorCount) {
+				throw new Exception("Error getting paint index for custom paint");
 			}
 			return index;
 		}

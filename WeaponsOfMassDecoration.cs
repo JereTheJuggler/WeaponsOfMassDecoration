@@ -23,10 +23,9 @@ namespace WeaponsOfMassDecoration {
 	public enum PaintMethods{
 		None,
 		RemovePaint,
-		Tiles,
+		Blocks,
 		Walls,
-		TilesAndWalls,
-		NotSet
+		BlocksAndWalls
 	}
 	class WeaponsOfMassDecoration : Mod{
 		/// <summary>
@@ -183,14 +182,23 @@ namespace WeaponsOfMassDecoration {
 		}
 
 	#region shaders
+		public static ShaderData applyShader(WoMDProjectile gProjectile, Projectile projectile) {
+			if(!gProjectile.painted)
+				return null;
+			if(gProjectile.paintColor == PaintID.Negative)
+				return applyNegativeShader(projectile);
+			Color color = getColor(gProjectile.paintColor, gProjectile.customPaint, npcCyclingTimeScale, gProjectile.paintedTime, null);
+			return applyPaintedShader(color);
+		}
+
 		/// <summary>
-		/// Applies a shader for the provided WoMDGlobalNPC, based on its painted, paintColor, customPaint, and paintedTime properties.
+		/// Applies a shader for the provided WoMDNPC, based on its painted, paintColor, customPaint, and paintedTime properties.
 		/// </summary>
 		/// <param name="globalNpc"></param>
 		/// <param name="npc"></param>
 		/// <param name="drawData"></param>
 		/// <returns></returns>
-		public static ShaderData applyShader(WoMDGlobalNPC globalNpc, NPC npc, DrawData? drawData = null) {
+		public static ShaderData applyShader(WoMDNPC globalNpc, NPC npc, DrawData? drawData = null) {
 			if(!globalNpc.painted)
 				return null;
 			if(globalNpc.paintColor == PaintID.Negative)
@@ -206,15 +214,32 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="projectile"></param>
 		/// <returns></returns>
 		public static ShaderData applyShader(PaintingProjectile projectile) {
-			WoMDPlayer player = projectile.getModPlayer();
-			if(player == null)
-				return null;
-			player.getPaintVars(out int paintColor, out CustomPaint customPaint);
+			int paintColor;
+			CustomPaint customPaint;
+			float timeScale;
+			float timeOffset = 0;
+			if(projectile.npcOwner == -1) {
+				WoMDPlayer player = projectile.getModPlayer();
+				if(player == null)
+					return null;
+				player.getPaintVars(out paintColor, out customPaint);
+				timeScale = paintCyclingTimeScale;
+			} else {
+				NPC npc = getNPC(projectile.npcOwner);
+				if(npc == null)
+					return null;
+				WoMDNPC gNpc = npc.GetGlobalNPC<WoMDNPC>();
+				if(gNpc == null)
+					return null;
+				gNpc.getPaintVars(out paintColor, out customPaint);
+				timeScale = npcCyclingTimeScale;
+				timeOffset = gNpc.paintedTime;
+			}
 			if(paintColor == -1 && customPaint == null)
 				return null;
 			if(paintColor == PaintID.Negative)
 				return applyNegativeShader(projectile.projectile);
-			Color c = getColor(paintColor, customPaint, paintCyclingTimeScale, 0, projectile.getOwner());
+			Color c = getColor(paintColor, customPaint, timeScale, timeOffset, projectile.getOwner());
 			return applyPaintedShader(c);
 		}
 
@@ -240,14 +265,33 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="projectile"></param>
 		/// <returns></returns>
 		public static Color getColor(PaintingProjectile projectile) {
-			WoMDPlayer player = projectile.getModPlayer();
-			if(player == null)
-				return Color.White;
-			player.getPaintVars(out int paintColor, out CustomPaint customPaint);
-			return getColor(paintColor, customPaint, paintCyclingTimeScale, 0, projectile.getOwner());
+			int paintColor;
+			CustomPaint customPaint;
+			float timeScale;
+			float timeOffset = 0;
+			if(projectile.npcOwner == -1) {
+				WoMDPlayer player = projectile.getModPlayer();
+				if(player == null)
+					return Color.White;
+				player.getPaintVars(out paintColor, out customPaint);
+				timeScale = paintCyclingTimeScale;
+			} else {
+				NPC npc = getNPC(projectile.npcOwner);
+				if(npc == null)
+					return Color.White;
+				WoMDNPC gNpc = npc.GetGlobalNPC<WoMDNPC>();
+				if(gNpc == null)
+					return Color.White;
+				gNpc.getPaintVars(out paintColor, out customPaint);
+				timeScale = npcCyclingTimeScale;
+				timeOffset = gNpc.paintedTime;
+			}
+			return getColor(paintColor, customPaint, timeScale, timeOffset, projectile.getOwner());
 		}
 
 		private static Color getColor(int paintColor, CustomPaint customPaint, float timeScale, float timeOffset = 0, Player player = null) {
+			if(paintColor == -1 && customPaint == null)
+				return Color.White;
 			if(customPaint == null)
 				return PaintColors.colors[paintColor];
 			return customPaint.getColor(new CustomPaintData(true, timeScale, timeOffset, player));
@@ -302,7 +346,7 @@ namespace WeaponsOfMassDecoration {
 
 			npc.AddBuff(ModContent.BuffType<Painted>(), 6000);
 
-			WoMDGlobalNPC globalNpc = npc.GetGlobalNPC<WoMDGlobalNPC>();
+			WoMDNPC globalNpc = npc.GetGlobalNPC<WoMDNPC>();
 
 			if(customPaint != null)
 				customPaint.getPaintVarsForNpc(out paintColor,out customPaint, data);
@@ -455,5 +499,108 @@ namespace WeaponsOfMassDecoration {
 			return value;
 		}
 
+	#region painting
+		public int paintBetweenPoints(Vector2 start, Vector2 end, int paintColor, CustomPaint customPaint, CustomPaintData data, PaintMethods method = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true) {
+			if(!(blocksAllowed || wallsAllowed))
+				return 0;
+			Vector2 unitVector = end - start;
+			float distance = unitVector.Length();
+			unitVector.Normalize();
+			int iterations = (int)Math.Ceiling(distance / 8f);
+			int count = 0;
+			for(int i = 0; i < iterations; i++) {
+				if(paint(start + (unitVector * i * 8), paintColor, customPaint, data, method, blocksAllowed, wallsAllowed)) 
+					count++;
+			}
+			return count;
+		}
+
+		/// <summary>
+		/// Creates a circle of paint
+		/// </summary>
+		/// <param name="pos"></param>
+		/// <param name="radius"></param>
+		/// <param name="blocksAllowed"></param>
+		/// <param name="wallsAllowed"></param>
+		public int explode(Vector2 pos, float radius, int paintColor, CustomPaint customPaint, CustomPaintData data, PaintMethods method = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true) {
+			int count = 0;
+			for(int currentLevel = 0; currentLevel < Math.Ceiling(radius / 16f); currentLevel++) {
+				if(currentLevel == 0) {
+					if(paint(pos, paintColor, customPaint, data, method, blocksAllowed, wallsAllowed))
+						count++;
+				} else {
+					for(int i = 0; i <= currentLevel * 2; i++) {
+						float xOffset;
+						float yOffset;
+						if(i <= currentLevel) {
+							xOffset = currentLevel;
+							yOffset = i;
+						} else {
+							xOffset = (currentLevel * 2 - i + 1);
+							yOffset = (currentLevel + 1);
+						}
+						Vector2 offsetVector = new Vector2(xOffset * 16f, yOffset * 16f);
+						if(offsetVector.Length() <= radius) {
+							for(int dir = 0; dir < 4; dir++) {
+								if(paint(pos + offsetVector.RotatedBy(dir * (Math.PI / 2)), paintColor, customPaint, data, method, blocksAllowed, wallsAllowed))
+									count++;
+							}
+						}
+					}
+				}
+			}
+			return count;
+		}
+
+		public static bool paint(Vector2 pos, int paintColor, CustomPaint customPaint, CustomPaintData data, PaintMethods method = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true) {
+			Point p = pos.ToTileCoordinates();
+			return paint(p.X, p.Y, paintColor, customPaint, data, method, blocksAllowed, wallsAllowed);
+		}
+
+		public static bool paint(int x, int y, int paintColor, CustomPaint customPaint, CustomPaintData data, PaintMethods method = PaintMethods.BlocksAndWalls,bool blocksAllowed = true, bool wallsAllowed = true) {
+			if(!WorldGen.InWorld(x, y, 10))
+				return false;
+			if(paintColor == -1 && customPaint == null)
+				return false;
+			byte targetColor;
+			if(customPaint != null) {
+				targetColor = customPaint.getPaintID(data);
+			} else {
+				targetColor = (byte)paintColor;
+			}
+			return paint(x, y, targetColor, method, blocksAllowed, wallsAllowed);
+		}
+
+		public static bool paint(Vector2 pos, byte color, PaintMethods method, bool blocksAllowed = true, bool wallsAllowed = true) {
+			Point p = pos.ToTileCoordinates();
+			return paint(p.X, p.Y, color, method, blocksAllowed, wallsAllowed);
+		}
+
+		public static bool paint(int x, int y, byte color, PaintMethods method, bool blocksAllowed = true, bool wallsAllowed = true) {
+			if(!WorldGen.InWorld(x, y, 10))
+				return false;
+			Tile t = Main.tile[x, y];
+			bool updated = false;
+			if(blocksAllowed && t.active() && t.color() != color && (color != 0 || method == PaintMethods.RemovePaint)) {
+				t.color(color);
+				updated = true;
+			}
+			if(wallsAllowed && t.wall > 0 && t.wallColor() != color && (color != 0 || method == PaintMethods.RemovePaint)) {
+				t.wallColor(color);
+				updated = true;
+			}
+			if(updated) {
+				if(Main.netMode == NetmodeID.MultiplayerClient)
+					sendTileFrame(x, y);
+			}
+			return updated;
+		}
+
+		public static void sendTileFrame(int x, int y) {
+			//WorldGen.SquareTileFrame(x, y);
+			//WorldGen.SquareWallFrame(x, y);
+			NetMessage.SendTileSquare(-1, x, y, 1);
+		}
+	#endregion
 	}
 }

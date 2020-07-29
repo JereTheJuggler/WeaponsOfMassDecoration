@@ -9,6 +9,7 @@ using Terraria.ID;
 using Microsoft.Xna.Framework;
 using WeaponsOfMassDecoration.Items;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
+using static Terraria.ModLoader.ModContent;
 using System.Runtime.Remoting;
 
 namespace WeaponsOfMassDecoration.NPCs {
@@ -44,46 +45,48 @@ namespace WeaponsOfMassDecoration.NPCs {
 
 		public override void PostUpdateBuffs() {
 			base.PostUpdateBuffs();
-			if(player.HasBuff(BuffID.UnicornMount)){
-                if(mountUnicornTime == 0)
-                    mountUnicornTime = Main.GlobalTime;
-                if(fartAnimationFrame == -1 && Main.GlobalTime - lastFartTime > 10 && Main.GlobalTime - mountUnicornTime > 10) {
-                    if(Main.rand.NextFloat() <= .3f) {
-                        fartAnimationFrame = 0;
-                        lastFartTime = Main.GlobalTime;
-                        fartDirection = player.direction * -1;
-                        fartPosition = (player.position + new Vector2(32 * fartDirection, 48)).ToTileCoordinates();
-                        Main.PlaySound(SoundID.Item16, player.position);
-                        for(int i = 0; i < 6; i++) {
-                            Dust d = Dust.NewDustPerfect(fartPosition.ToWorldCoordinates() + new Vector2(8, 8), 22, new Vector2(fartDirection * 3f, 0).RotatedBy(Main.rand.NextFloat((float)(Math.PI / -6f), (float)(Math.PI / 6f))) * 3f, 0, default, 1f);
-                            d.noGravity = true;
-                            d.fadeIn = 1.5f;
+            if(GetInstance<WoMDConfig>().chaosModeEnabled) {
+                if(player.HasBuff(BuffID.UnicornMount)) {
+                    if(mountUnicornTime == 0)
+                        mountUnicornTime = Main.GlobalTime;
+                    if(fartAnimationFrame == -1 && Main.GlobalTime - lastFartTime > 10 && Main.GlobalTime - mountUnicornTime > 10) {
+                        if(Main.rand.NextFloat() <= .3f) {
+                            fartAnimationFrame = 0;
+                            lastFartTime = Main.GlobalTime;
+                            fartDirection = player.direction * -1;
+                            fartPosition = (player.position + new Vector2(32 * fartDirection, 48)).ToTileCoordinates();
+                            Main.PlaySound(SoundID.Item16, player.position);
+                            for(int i = 0; i < 6; i++) {
+                                Dust d = Dust.NewDustPerfect(fartPosition.ToWorldCoordinates() + new Vector2(8, 8), 22, new Vector2(fartDirection * 3f, 0).RotatedBy(Main.rand.NextFloat((float)(Math.PI / -6f), (float)(Math.PI / 6f))) * 3f, 0, default, 1f);
+                                d.noGravity = true;
+                                d.fadeIn = 1.5f;
+                            }
                         }
                     }
+                } else {
+                    mountUnicornTime = 0;
                 }
-            } else {
-                mountUnicornTime = 0;
-			}
-            if(fartAnimationFrame >= 0 && fartAnimationFrame <= 3 && Main.rand.NextFloat() < .5f) {
-                Dust d = Dust.NewDustPerfect(fartPosition.ToWorldCoordinates() + new Vector2(8, 8), 22, new Vector2(fartDirection * 3f, 0).RotatedBy(Main.rand.NextFloat((float)(Math.PI / -6f), (float)(Math.PI / 6f))) * 3f, 0, default, 1f);
-                d.noGravity = true;
-                d.fadeIn = 1.5f;
+                if(fartAnimationFrame >= 0 && fartAnimationFrame <= 3 && Main.rand.NextFloat() < .5f) {
+                    Dust d = Dust.NewDustPerfect(fartPosition.ToWorldCoordinates() + new Vector2(8, 8), 22, new Vector2(fartDirection * 3f, 0).RotatedBy(Main.rand.NextFloat((float)(Math.PI / -6f), (float)(Math.PI / 6f))) * 3f, 0, default, 1f);
+                    d.noGravity = true;
+                    d.fadeIn = 1.5f;
+                }
+                if(fartAnimationFrame >= 0 && Main.GlobalTime - lastFartTime > (.05f * fartAnimationFrame)) {
+                    int[] heights = new int[] { 1, 3, 3, 5, 5, 7 };
+                    byte[] colors = new byte[] { PaintID.DeepRed, PaintID.DeepOrange, PaintID.DeepYellow, PaintID.DeepGreen, PaintID.DeepBlue, PaintID.DeepPurple };
+                    int height = heights[fartAnimationFrame];
+                    for(int i = 0; i < height; i++) {
+                        Point coords = new Point(
+                            fartPosition.X + (fartAnimationFrame * fartDirection),
+                            fartPosition.Y + (((height - 1) / -2) + i)
+                        );
+                        WeaponsOfMassDecoration.paint(coords.X, coords.Y, colors[fartAnimationFrame], PaintMethods.BlocksAndWalls, true, true);
+                    }
+                    fartAnimationFrame++;
+                    if(fartAnimationFrame >= heights.Length)
+                        fartAnimationFrame = -1;
+                }
             }
-            if(fartAnimationFrame >= 0 && Main.GlobalTime - lastFartTime > (.05f * fartAnimationFrame)) {
-                int[] heights = new int[] { 1, 3, 3, 5, 5, 7 };
-                byte[] colors = new byte[] { PaintID.DeepRed, PaintID.DeepOrange, PaintID.DeepYellow, PaintID.DeepGreen, PaintID.DeepBlue, PaintID.DeepPurple };
-                int height = heights[fartAnimationFrame];
-                for(int i = 0; i < height; i++) {
-                    Point coords = new Point(
-                        fartPosition.X + (fartAnimationFrame * fartDirection), 
-                        fartPosition.Y + (((height - 1) / -2) + i)
-                    );
-                    paintDirect(coords.X, coords.Y, colors[fartAnimationFrame], PaintMethods.TilesAndWalls, true, true, true);
-				}
-                fartAnimationFrame++;
-                if(fartAnimationFrame >= heights.Length)
-                    fartAnimationFrame = -1;
-			}
 		}
 
 		/// <summary>
@@ -139,11 +142,11 @@ namespace WeaponsOfMassDecoration.NPCs {
             Item item = player.inventory[currentPaintToolIndex];
             if(item.active && item.stack > 0) {
                 if(item.modItem is PaintingMultiTool)
-                    return PaintMethods.TilesAndWalls;
+                    return PaintMethods.BlocksAndWalls;
 				switch(item.type) {
                     case ItemID.Paintbrush:
                     case ItemID.SpectrePaintbrush:
-                        return PaintMethods.Tiles;
+                        return PaintMethods.Blocks;
                     case ItemID.PaintRoller:
                     case ItemID.SpectrePaintRoller:
                         return PaintMethods.Walls;
@@ -210,41 +213,18 @@ namespace WeaponsOfMassDecoration.NPCs {
 				} else {
                     targetColor = customPaint.getPaintID(new CustomPaintData(false, paintCyclingTimeScale, 0, player));
 				}
-                if(method == PaintMethods.Tiles) {
+                if(method == PaintMethods.Blocks) {
                     wallsAllowed = false;
                 } else if(method == PaintMethods.Walls) {
                     blocksAllowed = false;
                 }
             }
-            return paintDirect(x,y,targetColor,method,blocksAllowed,wallsAllowed,dontConsumePaint);
-        }
-
-        private bool paintDirect(int x, int y, byte color, PaintMethods method, bool blocksAllowed = true, bool wallsAllowed = true, bool dontConsumePaint = false) {
-            if(!WorldGen.InWorld(x, y, 10))
-                return false;
-            Tile t = Main.tile[x, y];
-            bool updated = false;
-            if(blocksAllowed && t.active() && t.color() != color && (color != 0 || method == PaintMethods.RemovePaint)) {
-                t.color(color);
-                updated = true;
-            }
-            if(wallsAllowed && t.wall > 0 && t.wallColor() != color && (color != 0 || method == PaintMethods.RemovePaint)) {
-                t.wallColor(color);
-                updated = true;
-            }
-            if(updated) {
+            if(WeaponsOfMassDecoration.paint(x, y, targetColor, method, blocksAllowed, wallsAllowed)) {
                 if(!dontConsumePaint && method != PaintMethods.RemovePaint)
                     consumePaint();
-                if(Main.netMode == NetmodeID.MultiplayerClient)
-                    sendTileFrame(x, y);
+                return true;
             }
-            return updated;
-        }
-
-        public static void sendTileFrame(int x, int y) {
-            //WorldGen.SquareTileFrame(x, y);
-            //WorldGen.SquareWallFrame(x, y);
-            NetMessage.SendTileSquare(-1, x, y, 1);
+            return false;
         }
     }
 }

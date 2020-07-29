@@ -9,8 +9,7 @@ namespace WeaponsOfMassDecoration.Items {
     class PaintBomb : PaintingItem{
         public override void SetStaticDefaults() {
             DisplayName.SetDefault("Paint Bomb");
-            // TODO: Insert halfDamageText in base call after making it actually damage enemies
-            base.SetStaticDefaults();
+            base.SetStaticDefaults(halfDamageText);
 		}
 
         public override void SetDefaults() {

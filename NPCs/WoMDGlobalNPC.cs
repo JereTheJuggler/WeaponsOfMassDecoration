@@ -15,9 +15,10 @@ using Terraria.DataStructures;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 using System.Security.AccessControl;
+using WeaponsOfMassDecoration.Projectiles;
 
 namespace WeaponsOfMassDecoration.NPCs {
-    class WoMDGlobalNPC : GlobalNPC{
+    class WoMDNPC : GlobalNPC{
         public bool painted = false;
         public int paintColor = -1;
         public CustomPaint customPaint = null;
@@ -38,6 +39,41 @@ namespace WeaponsOfMassDecoration.NPCs {
 			get {
 				return false;
 			}
+		}
+
+		public override void PostAI(NPC npc) {
+			base.PostAI(npc);
+            if(GetInstance<WoMDConfig>().chaosModeEnabled) {
+                if(painted) {
+                    switch(npc.aiStyle) {
+                        case 1: //slime
+                            if(npc.oldVelocity.Y > 2 && npc.velocity.Y == 0 && Main.rand.NextFloat() < .5f) {
+                                Point minTile = npc.BottomLeft.ToTileCoordinates();
+                                Point maxTile = npc.BottomRight.ToTileCoordinates();
+                                if(!(WorldGen.InWorld(minTile.X, minTile.Y + 1, 10) && WorldGen.InWorld(maxTile.X, maxTile.Y + 1, 10)))
+                                    break;
+                                bool foundGround = false;
+                                for(int i = minTile.X; i <= maxTile.X && !foundGround; i++) {
+                                    if(WorldGen.SolidOrSlopedTile(i, minTile.Y + 1))
+                                        foundGround = true;
+                                }
+                                if(!foundGround)
+                                    break;
+                                Vector2 startVector = new Vector2(0, -6).RotatedBy(Math.PI / -3);
+                                int numSplatters = 7;
+                                for(int i = 0; i < numSplatters; i++) {
+                                    Projectile p = Projectile.NewProjectileDirect(npc.Bottom - new Vector2(0, 8), startVector.RotatedBy(((Math.PI * 2f / 3f) / (numSplatters - 1)) * i), ProjectileType<PaintSplatter>(), 0, 0);
+                                    if(p != null) {
+                                        PaintingProjectile proj = (PaintingProjectile)p.modProjectile;
+                                        proj.npcOwner = npc.whoAmI;
+                                        p.timeLeft = 60;
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                }
+            }
 		}
 
 		private bool resetBatchInPost;
@@ -131,5 +167,10 @@ namespace WeaponsOfMassDecoration.NPCs {
             }
             return false;
         }
+    
+        public void getPaintVars(out int paintColor, out CustomPaint customPaint) {
+            paintColor = this.paintColor;
+            customPaint = this.customPaint;
+		}
     }
 }

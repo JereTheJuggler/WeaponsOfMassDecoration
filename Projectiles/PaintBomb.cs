@@ -9,11 +9,11 @@ using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.Projectiles {
     class PaintBomb : PaintingProjectile{
-        public static int bounceRadius = 25;
+        public const int bounceRadius = 30;
 
 		public PaintBomb() : base() {
-			explodesOnDeath = true;
-			explosionRadius = 80;
+			//explodesOnDeath = true;
+		    explosionRadius = 80;
 
             manualRotation = true;
         }
@@ -31,7 +31,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.friendly = true;
             projectile.hostile = false;
             projectile.ranged = true;
-            projectile.penetrate = 2;
+            projectile.penetrate = 3;
             projectile.timeLeft = 300;
             projectile.alpha = 0;
             projectile.ignoreWater = true;
@@ -73,6 +73,39 @@ namespace WeaponsOfMassDecoration.Projectiles {
             explode(projectile.Center, bounceRadius, true, true);
 
             projectile.penetrate--;
+
+            if(projectile.penetrate == 1) {
+                projectile.aiStyle = 0;
+                projectile.tileCollide = false;
+                projectile.timeLeft = 3;
+                projectile.penetrate = -1;
+                projectile.position = projectile.Center - new Vector2(explosionRadius, explosionRadius);
+                projectile.Size = new Vector2(explosionRadius * 2, explosionRadius * 2);
+                projectile.velocity = new Vector2(0, 0);
+                projectile.friendly = true;
+                projectile.damage = 100;
+
+                Main.PlaySound(SoundID.Item14, projectile.Center);
+                //smoke dust
+                for(int i = 0; i < 15; i++) {
+                    Dust smoke = getDust(Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, 31, 0f, 0f, 100, default, 2f));
+                    if(smoke != null)
+                        smoke.velocity *= 1.4f;
+                }
+                //fire dust
+                for(int i = 0; i < 30; i++) {
+                    Dust fire = getDust(Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, 3, 0f, 0f, 100, default, 1f));
+                    if(fire != null) {
+                        fire.noGravity = true;
+                        fire.velocity *= 2f;
+                    }
+                    fire = getDust(Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, 6, 0f, 0f, 100, default, 2f));
+                    if(fire != null)
+                        fire.velocity *= 2f;
+                }
+
+                explode(projectile.Center, explosionRadius);
+            }
             return false;
         }
 
@@ -95,46 +128,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             base.AI();
         }
 
-		public override bool PreKill(int timeLeft) {
-			int projectileId = Projectile.NewProjectile(
-				projectile.Center - new Vector2(explosionRadius / 2, explosionRadius / 2),
-				new Vector2(0,0),
-				ProjectileType<DamageProjectile>(),
-				projectile.damage,
-				projectile.knockBack,
-				projectile.owner
-			);
-            //doesn't do damage to mobs for whatever reason
-			Projectile damageArea = Main.projectile[projectileId];
-			damageArea.CloneDefaults(ProjectileID.Grenade);
-			damageArea.Size = new Vector2(explosionRadius, explosionRadius);
-			damageArea.position = projectile.Center - new Vector2(explosionRadius / 2, explosionRadius / 2);
-			damageArea.timeLeft = 5;
-			damageArea.damage = projectile.damage;
-			ModProjectile p = damageArea.modProjectile;
-			p.aiType = 0;
-			return base.PreKill(timeLeft);
-		}
-
 		public override void Kill(int timeLeft) {
-            Main.PlaySound(SoundID.Item14, projectile.Center);
-            //smoke dust
-            for(int i = 0; i < 15; i++) {
-                Dust smoke = getDust(Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, 31, 0f, 0f, 100, default, 2f));
-                if(smoke != null)
-                    smoke.velocity *= 1.4f;
-            }
-            //fire dust
-            for(int i = 0; i < 30; i++) {
-                Dust fire = getDust(Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, 3, 0f, 0f, 100, default, 1f));
-                if(fire != null) {
-                    fire.noGravity = true;
-                    fire.velocity *= 2f;
-                }
-                fire = getDust(Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, 6, 0f, 0f, 100, default, 2f));
-                if(fire != null)
-                    fire.velocity *= 2f;
-            }
 			base.Kill(timeLeft);
         }
     }

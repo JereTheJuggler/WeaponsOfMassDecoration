@@ -42,7 +42,7 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override void OnHitNPC(Player p, NPC target, int damage, float knockBack, bool crit) {
-            WoMDGlobalNPC npc = target.GetGlobalNPC<WoMDGlobalNPC>();
+            WoMDNPC npc = target.GetGlobalNPC<WoMDNPC>();
             if(npc != null && p != null && item.owner == Main.myPlayer) {
                 WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
                 PaintMethods method = player.getPaintMethod();

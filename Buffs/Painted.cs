@@ -18,7 +18,7 @@ namespace WeaponsOfMassDecoration.Buffs {
         }
 
         public override void Update(NPC npc, ref int buffIndex) {
-            npc.GetGlobalNPC<NPCs.WoMDGlobalNPC>().painted = true;
+            npc.GetGlobalNPC<NPCs.WoMDNPC>().painted = true;
         }
     }
 }
