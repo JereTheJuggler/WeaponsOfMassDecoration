@@ -73,6 +73,28 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			base.SetDefaults();
 		}
 
+        public static void sendProjNPCOwnerPacket(PaintingProjectile p,int toClient = -1,int ignoreClient=-1) {
+            ModPacket packet = p.mod.GetPacket();
+            packet.Write(WoMDMessageTypes.SetProjNPCOwner);
+            packet.Write(p.projectile.whoAmI);
+            packet.Write(p.projectile.type);
+            packet.Write(p.npcOwner);
+            packet.Send(toClient,ignoreClient);
+		}
+
+        public static void readProjNPCOwnerPacket(BinaryReader reader) {
+            int projId = reader.ReadInt32();
+            int projType = reader.ReadInt32();
+            int owner = reader.ReadInt32();
+            Projectile proj = getProjectile(projId);
+            if(proj != null && proj.type == projType && proj.active) {
+                PaintingProjectile p = proj.modProjectile as PaintingProjectile;
+                if(p != null) {
+                    p.npcOwner = owner;
+				}
+			}
+		}
+
 	#region getters / value conversion
 		public Player getOwner() {
             return getPlayer(projectile.owner);
@@ -108,7 +130,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
         public override void OnHitNPC(NPC target, int damage, float knockback, bool crit) {
 			WoMDNPC npc = target.GetGlobalNPC<WoMDNPC>();
             Player p = getOwner();
-            if(npc != null && p != null && projectile.owner == Main.myPlayer) {
+            if(npc != null && p != null){// && projectile.owner == Main.myPlayer) {
                 WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
                 PaintMethods method = player.getPaintMethod();
                 if(method != PaintMethods.None) {
@@ -219,16 +241,14 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
             if(xFrameCount > 1 && (animationFrameDuration == 0 || projectile.timeLeft % animationFrameDuration == 0))
                 nextFrame();
-            if(Main.netMode == NetmodeID.SinglePlayer || (Main.netMode == NetmodeID.MultiplayerClient && projectile.owner == Main.myPlayer) || (Main.netMode == NetmodeID.Server && npcOwner != -1)) {
-                if(!usesShader) {
-                    if(npcOwner == -1) {
-                        Player owner = getOwner();
-                        if(owner != null && projectile.owner == Main.myPlayer)
-                            updateColorFrame();
-					} else {
+            if(!usesShader) {
+                if(npcOwner == -1) {
+                    Player owner = getOwner();
+                    if(owner != null)
                         updateColorFrame();
-					}
-                }
+				} else {
+                    updateColorFrame();
+				}
             }
         }
     #endregion
@@ -238,10 +258,9 @@ namespace WeaponsOfMassDecoration.Projectiles {
         /// Updates the colorFrame property
         /// </summary>
         public void updateColorFrame() {
-            int oldColorFrame = colorFrame;
             if(npcOwner == -1) {
                 WoMDPlayer player = getModPlayer();
-                if(Main.myPlayer == projectile.owner && player != null) {
+                if(player != null) {
                     player.getPaintVars(out int paintColor, out CustomPaint customPaint);
                     if(paintColor == -1 && customPaint == null)
                         colorFrame = 0;
@@ -265,8 +284,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
                 else
                     colorFrame = customPaint.getPaintID(new CustomPaintData(true, npcCyclingTimeScale, gNpc.paintedTime));
 			}
-            if(oldColorFrame != colorFrame)
-                projectile.netUpdate = true;
             updateFrame();
 		}
 
@@ -308,17 +325,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
             return new Rectangle(startX, startY, frameWidth, frameHeight);
         }
 
-		public override void SendExtraAI(BinaryWriter writer) {
-            writer.Write(colorFrame);
-            //Main.NewText("Sending " + frame.ToString());
-		}
-
-		public override void ReceiveExtraAI(BinaryReader reader) {
-            colorFrame = reader.ReadInt32();
-            updateFrame();
-            //Main.NewText("Received " + frame.ToString());
-        }
-
 		public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor) {
             if(!hasGraphics) {
                 createLight();
@@ -355,7 +361,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
                     spriteBatch.Draw(texture, drawPos, sourceRectangle, color, rotation, origin, scale, SpriteEffects.None, 0f);
                 }
 			} else {
-
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
 

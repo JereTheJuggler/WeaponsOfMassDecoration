@@ -8,13 +8,14 @@ using Terraria;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.ID;
+using Terraria.Localization;
+using System.IO;
 using WeaponsOfMassDecoration.Items;
 using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
 using Terraria.DataStructures;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
-using System.Security.AccessControl;
 using WeaponsOfMassDecoration.Projectiles;
 
 namespace WeaponsOfMassDecoration.NPCs {
@@ -41,36 +42,86 @@ namespace WeaponsOfMassDecoration.NPCs {
 			}
 		}
 
+        public void setColors(NPC npc, int paintColor, CustomPaint customPaint, bool sprayPainted, float paintedTime) {
+            WoMDNPC gNpc = npc.GetGlobalNPC<WoMDNPC>();
+            if(gNpc != null) {
+                if(paintColor != gNpc.paintColor || sprayPainted != gNpc.sprayPainted || ((customPaint == null) != (gNpc.customPaint == null)) || (customPaint != null && customPaint.displayName != gNpc.customPaint.displayName)) {
+                    gNpc.paintColor = paintColor;
+                    gNpc.customPaint = customPaint;
+                    gNpc.sprayPainted = sprayPainted;
+                    if(multiplayer()) {
+                        sendColorPacket(gNpc,npc);
+                    }
+                }
+            }
+		}
+
+        public static void sendColorPacket(WoMDNPC gNpc, NPC npc, int toClient = -1, int ignoreClient = -1) {
+            ModPacket packet = gNpc.mod.GetPacket();
+            packet.Write(WoMDMessageTypes.SetNPCColors);
+            packet.Write(npc.whoAmI);
+            packet.Write(npc.type);
+            packet.Write(gNpc.paintColor);
+            packet.Write(gNpc.customPaint == null ? "null" : gNpc.customPaint.GetType().Name);
+            packet.Write(gNpc.sprayPainted);
+            packet.Write((double)gNpc.paintedTime);
+            packet.Send(toClient,ignoreClient);
+        }
+
+        public static void readColorPacket(BinaryReader reader, out WoMDNPC gNpc, out NPC npc) {
+            int npcId = reader.ReadInt32();
+            int npcType = reader.ReadInt32();
+            npc = getNPC(npcId);
+            gNpc = npc.GetGlobalNPC<WoMDNPC>();
+            int paintColor = reader.ReadInt32();
+            string customPaintName = reader.ReadString();
+            bool sprayPainted = reader.ReadBoolean();
+            float paintedTime = (float)reader.ReadDouble();
+            if(npc != null && npc.type == npcType && gNpc != null && npc.active) {
+                gNpc.paintColor = paintColor;
+                if(customPaintName == "null") {
+                    gNpc.customPaint = null;
+                } else {
+                    gNpc.customPaint = (CustomPaint)Activator.CreateInstance(Type.GetType("WeaponsOfMassDecoration.Items." + customPaintName));
+                }
+                gNpc.sprayPainted = sprayPainted;
+                gNpc.paintedTime = paintedTime;
+			}
+        }
+
 		public override void PostAI(NPC npc) {
 			base.PostAI(npc);
-            if(GetInstance<WoMDConfig>().chaosModeEnabled) {
-                if(painted) {
-                    switch(npc.aiStyle) {
-                        case 1: //slime
-                            if(npc.oldVelocity.Y > 2 && npc.velocity.Y == 0 && Main.rand.NextFloat() < .5f) {
-                                Point minTile = npc.BottomLeft.ToTileCoordinates();
-                                Point maxTile = npc.BottomRight.ToTileCoordinates();
-                                if(!(WorldGen.InWorld(minTile.X, minTile.Y + 1, 10) && WorldGen.InWorld(maxTile.X, maxTile.Y + 1, 10)))
-                                    break;
-                                bool foundGround = false;
-                                for(int i = minTile.X; i <= maxTile.X && !foundGround; i++) {
-                                    if(WorldGen.SolidOrSlopedTile(i, minTile.Y + 1))
-                                        foundGround = true;
-                                }
-                                if(!foundGround)
-                                    break;
-                                Vector2 startVector = new Vector2(0, -6).RotatedBy(Math.PI / -3);
-                                int numSplatters = 7;
-                                for(int i = 0; i < numSplatters; i++) {
-                                    Projectile p = Projectile.NewProjectileDirect(npc.Bottom - new Vector2(0, 8), startVector.RotatedBy(((Math.PI * 2f / 3f) / (numSplatters - 1)) * i), ProjectileType<PaintSplatter>(), 0, 0);
-                                    if(p != null) {
-                                        PaintingProjectile proj = (PaintingProjectile)p.modProjectile;
-                                        proj.npcOwner = npc.whoAmI;
-                                        p.timeLeft = 60;
+            if(Main.netMode == NetmodeID.SinglePlayer || Main.netMode == NetmodeID.Server) {
+                if(GetInstance<WoMDConfig>().chaosModeEnabled) {
+                    if(painted) {
+                        switch(npc.aiStyle) {
+                            case 1: //slime
+                                if(npc.oldVelocity.Y > 2 && npc.velocity.Y == 0 && Main.rand.NextFloat() < .5f) {
+                                    Point minTile = npc.BottomLeft.ToTileCoordinates();
+                                    Point maxTile = npc.BottomRight.ToTileCoordinates();
+                                    if(!(WorldGen.InWorld(minTile.X, minTile.Y + 1, 10) && WorldGen.InWorld(maxTile.X, maxTile.Y + 1, 10)))
+                                        break;
+                                    bool foundGround = false;
+                                    for(int i = minTile.X; i <= maxTile.X && !foundGround; i++) {
+                                        if(WorldGen.SolidOrSlopedTile(i, minTile.Y + 1))
+                                            foundGround = true;
+                                    }
+                                    if(!foundGround)
+                                        break;
+                                    Vector2 startVector = new Vector2(0, -6).RotatedBy(Math.PI / -3);
+                                    int numSplatters = 7;
+                                    for(int i = 0; i < numSplatters; i++) {
+                                        Projectile p = Projectile.NewProjectileDirect(npc.Bottom - new Vector2(0, 8), startVector.RotatedBy(((Math.PI * 2f / 3f) / (numSplatters - 1)) * i), ProjectileType<PaintSplatter>(), 0, 0);
+                                        if(p != null) {
+                                            PaintingProjectile proj = (PaintingProjectile)p.modProjectile;
+                                            proj.npcOwner = npc.whoAmI;
+                                            p.timeLeft = 60;
+                                            PaintingProjectile.sendProjNPCOwnerPacket(proj);
+                                        }
                                     }
                                 }
-                            }
-                            break;
+                                break;
+                        }
                     }
                 }
             }

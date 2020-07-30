@@ -18,6 +18,9 @@ using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
 using Terraria.DataStructures;
 using static Terraria.ModLoader.ModContent;
+using System.IO;
+using Newtonsoft.Json.Serialization;
+using Steamworks;
 
 namespace WeaponsOfMassDecoration {
 	public enum PaintMethods{
@@ -27,6 +30,13 @@ namespace WeaponsOfMassDecoration {
 		Walls,
 		BlocksAndWalls
 	}
+
+	public static class WoMDMessageTypes {
+		public const byte SetNPCColors = 1;
+		public const byte SetProjectileColor = 2;
+		public const byte SetProjNPCOwner = 3;
+	}
+
 	class WeaponsOfMassDecoration : Mod{
 		/// <summary>
 		/// The speed that custom paints cycle through colors for painting tiles. Also applies to the colors for projectile shaders to line up with the color they are painting.
@@ -103,6 +113,25 @@ namespace WeaponsOfMassDecoration {
 			RecipeGroup.RegisterGroup("WoMD:goldSword", goldSwordGroup);
 		}
 
+		public override void HandlePacket(BinaryReader reader, int whoAmI) {
+			switch(reader.ReadByte()) {
+				case WoMDMessageTypes.SetNPCColors:
+					WoMDNPC.readColorPacket(reader, out WoMDNPC gNpc, out NPC npc);
+					if(server()) {
+						WoMDNPC.sendColorPacket(gNpc, npc);
+					}
+					break;
+				case WoMDMessageTypes.SetProjectileColor:
+					if(multiplayer())
+						WoMDProjectile.readProjectileColorPacket(reader, out _, out _);
+					break;
+				case WoMDMessageTypes.SetProjNPCOwner:
+					if(multiplayer())
+						PaintingProjectile.readProjNPCOwnerPacket(reader);
+					break;
+			}
+		}
+
 	#region getting from arrays
 		/// <summary>
 		/// Safely gets a Dust object from Main.dust. If the provided index is out of range, null will be returned
@@ -148,6 +177,10 @@ namespace WeaponsOfMassDecoration {
 			return Main.npc[index];
 		}
 	#endregion
+
+		public static bool singlePlayer() => Main.netMode == NetmodeID.SinglePlayer;
+		public static bool multiplayer() => Main.netMode == NetmodeID.MultiplayerClient;
+		public static bool server() => Main.netMode == NetmodeID.Server;
 
 		/// <summary>
 		/// Checks if the provided item is either a vanilla paint, or a CustomPaint
@@ -351,16 +384,19 @@ namespace WeaponsOfMassDecoration {
 			if(customPaint != null)
 				customPaint.getPaintVarsForNpc(out paintColor,out customPaint, data);
 
-			if(!globalNpc.painted || (customPaint != null && (globalNpc.customPaint == null || globalNpc.customPaint.displayName != customPaint.displayName)) || (paintColor != -1 && globalNpc.paintColor != paintColor))
-				globalNpc.paintedTime = Main.GlobalTime;
+			float paintedTime;
+
 			globalNpc.painted = true;
+
+			if(!globalNpc.painted || (customPaint != null && (globalNpc.customPaint == null || globalNpc.customPaint.displayName != customPaint.displayName)) || (paintColor != -1 && globalNpc.paintColor != paintColor))
+				paintedTime = Main.GlobalTime;
+			else
+				paintedTime = globalNpc.paintedTime;
+
 			if(customPaint != null) {
-				globalNpc.paintColor = -1;
-				globalNpc.customPaint = (CustomPaint)customPaint.Clone();
-				globalNpc.sprayPainted = customPaint is ISprayPaint;
+				globalNpc.setColors(npc, -1, (CustomPaint)customPaint.Clone(), customPaint is ISprayPaint, paintedTime);
 			} else {
-				globalNpc.customPaint = null;
-				globalNpc.paintColor = paintColor;
+				globalNpc.setColors(npc, paintColor, null, false, paintedTime);
 			}
 
 			if(Main.netMode == NetmodeID.SinglePlayer) {
@@ -580,6 +616,8 @@ namespace WeaponsOfMassDecoration {
 			if(!WorldGen.InWorld(x, y, 10))
 				return false;
 			Tile t = Main.tile[x, y];
+			if(t == null)
+				return false;
 			bool updated = false;
 			if(blocksAllowed && t.active() && t.color() != color && (color != 0 || method == PaintMethods.RemovePaint)) {
 				t.color(color);
