@@ -34,6 +34,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
         protected Vector2 drawOriginOffset = new Vector2(0,0);
 
 		protected bool usesShader = false;
+        public bool usesGSShader = false;
 
         public List<Point> paintedTiles = new List<Point>();
         public double lastUpdateCheck = 0;
@@ -300,14 +301,14 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
         public void updateFrame() {
-            int targetFrame;
             if(usesShader)
-                targetFrame = animationFrame;
+                frame = animationFrame;
             else
-                targetFrame = colorFrame * xFrameCount + animationFrame;
-            if(targetFrame != frame) {
-                frame = targetFrame;
-			}
+                frame = convertColorFrame() * xFrameCount + animationFrame;
+		}
+
+        protected virtual int convertColorFrame() {
+            return colorFrame;
 		}
 
         /// <summary>
@@ -337,6 +338,17 @@ namespace WeaponsOfMassDecoration.Projectiles {
                 Rectangle sourceRectangle = getSourceRectangle(texture);
                 Vector2 origin = (sourceRectangle.Size() / 2) + drawOriginOffset;
                 float scale = projectile.scale;
+
+                MiscShaderData shader = null;
+                if(usesGSShader) {
+                    spriteBatch.End();
+                    //using PointClamp instead of LinearClamp here because it messes with the chroma keying of the shader.
+                    spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
+
+                    resetBatchInPost = true;
+                    shader = applyShader(this) as MiscShaderData;
+                }
+
                 for(int i = trailLength; i >= 0; i--) {
                     if(i == 1)
                         continue;
@@ -358,7 +370,17 @@ namespace WeaponsOfMassDecoration.Projectiles {
                     color.A = (byte)Math.Round(opacity * 255);
                     color = Color.Multiply(color, lightness);
 
+                    if(shader != null) {
+                        shader.UseOpacity(opacity).Apply();
+					}
+
                     spriteBatch.Draw(texture, drawPos, sourceRectangle, color, rotation, origin, scale, SpriteEffects.None, 0f);
+
+                    if(shader != null && i > 0) {
+                        spriteBatch.End();
+                        //using PointClamp instead of LinearClamp here because it messes with the chroma keying of the shader.
+                        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
+                    }
                 }
 			} else {
                 spriteBatch.End();
@@ -378,27 +400,17 @@ namespace WeaponsOfMassDecoration.Projectiles {
                 for(int i = trailLength; i >= 0; i--) {
                     if(i == 1)
                         continue;
-
+                
                     Vector2 projectilePos = (i == 0 ? projectile.Center : projectile.oldPos[i - 1] + (new Vector2(projectile.width / 2f, projectile.height / 2f)));
                     Vector2 drawPos = projectilePos - Main.screenPosition + new Vector2(0f, projectile.gfxOffY);
 
                     float rotation = (i == 0 ? projectile.rotation : projectile.oldRot[i - 1]);
 
-                    float opacity = projectile.Opacity - (projectile.Opacity / (trailLength + 1)) * i;
+                    float op = projectile.Opacity - (projectile.Opacity / (trailLength + 1)) * i;
                     float lightness = 1f - (.5f / (trailLength + 1)) * i;
-                    /*
-                    Color color;
-                    if(i == 0) {
-                        color = new Color(clamp(lightColor.R + projLight.R, 0, 255), clamp(lightColor.G + projLight.G, 0, 255), clamp(lightColor.B + projLight.B, 0, 255), lightColor.A);
-                    } else {
-                        color = lightColor;
-                    }
-                    color.A = (byte)Math.Round(opacity * 255);
-                    color = Color.Multiply(color, lightness);
-                    */
 
                     if(data != null)
-                        data.UseOpacity(opacity).Apply();
+                        data.UseOpacity(op).Apply();
 
                     spriteBatch.Draw(texture, drawPos, sourceRectangle, new Color(lightness,lightness,lightness,1f), rotation, origin, scale, SpriteEffects.None, 0f);
 
@@ -414,6 +426,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             if(resetBatchInPost) {
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
+                resetBatchInPost = false;
             }
         }
     #endregion

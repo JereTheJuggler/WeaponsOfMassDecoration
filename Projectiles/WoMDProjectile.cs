@@ -46,7 +46,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public static void sendProjectileColorPacket(WoMDProjectile gProj,Projectile proj,int toClient=-1,int ignoreClient=-1) {
-			Console.WriteLine("sending projectile color packet");
+			//Console.WriteLine("sending projectile color packet");
 			ModPacket packet = gProj.mod.GetPacket();
 			packet.Write(WoMDMessageTypes.SetProjectileColor);
 			packet.Write(proj.whoAmI);
@@ -84,6 +84,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 						setupPreAi = true;
 						switch(projectile.type) {
 							case ProjectileID.WoodenArrowHostile:
+								#region arrow
 								if(server())
 									break; //running into issues making this work in multiplayer
 								NPC archer = Main.npc
@@ -106,45 +107,43 @@ namespace WeaponsOfMassDecoration.Projectiles {
 									if(server())
 										PaintingProjectile.sendProjNPCOwnerPacket(arrow);
 								}
+								#endregion
 								break;
 							case ProjectileID.RainNimbus:
+								#region nimbus
 								NPC nimbus = Main.npc
 									.Where(npc => npc.type == NPCID.AngryNimbus)
 									.OrderBy(npc => Math.Abs(npc.Center.X - projectile.Center.X) + Math.Abs(npc.Center.Y - projectile.Center.Y))
 									.FirstOrDefault();
 								if(nimbus != null) {
-									WoMDNPC gNpc = nimbus.GetGlobalNPC<WoMDNPC>();
-									if(gNpc == null || !gNpc.painted)
-										break;
-									WoMDProjectile proj = projectile.GetGlobalProjectile<WoMDProjectile>();
-									proj.painted = true;
-									proj.paintColor = gNpc.paintColor;
-									proj.paintedTime = gNpc.paintedTime;
-									proj.customPaint = gNpc.customPaint;
-									proj.npcOwner = nimbus.whoAmI;
-									if(server())
-										sendProjectileColorPacket(proj, projectile);
+									applyPaintedFromNpc(projectile, nimbus);
 								}
+								#endregion
 								break;
 							case ProjectileID.SandnadoHostileMark:
 							case ProjectileID.SandnadoHostile:
+								#region sand elemental
 								NPC elemental = Main.npc
 									.Where(npc => npc.type == NPCID.SandElemental)
 									.OrderBy(npc => Math.Abs(npc.Center.X - projectile.Center.X) + Math.Abs(npc.Center.Y - projectile.Center.Y))
 									.FirstOrDefault();
 								if(elemental != null) {
-									WoMDNPC gNpc = elemental.GetGlobalNPC<WoMDNPC>();
-									if(gNpc == null || !gNpc.painted)
-										break;
-									WoMDProjectile proj = projectile.GetGlobalProjectile<WoMDProjectile>();
-									proj.painted = true;
-									proj.paintColor = gNpc.paintColor;
-									proj.paintedTime = gNpc.paintedTime;
-									proj.customPaint = gNpc.customPaint;
-									proj.npcOwner = elemental.whoAmI;
-									if(server())
-										sendProjectileColorPacket(proj, projectile);
+									applyPaintedFromNpc(projectile, elemental);
 								}
+								#endregion
+								break;
+							case ProjectileID.BulletDeadeye:
+								#region bullet
+								if(true) {
+									NPC enemy = Main.npc
+										.Where(npc => new int[] { NPCID.TacticalSkeleton, NPCID.SantaNK1, NPCID.ElfCopter, NPCID.PirateDeadeye, NPCID.PirateCaptain }.Contains(npc.type))
+										.OrderBy(npc => Math.Abs(npc.Center.X - projectile.Center.X) + Math.Abs(npc.Center.Y - projectile.Center.Y))
+										.FirstOrDefault();
+									if(Math.Abs(enemy.Center.X - projectile.Center.X) + Math.Abs(enemy.Center.Y - projectile.Center.Y) < 16) {
+										applyPaintedFromNpc(projectile, enemy);
+									}
+								}
+								#endregion
 								break;
 						}
 					}
@@ -153,29 +152,51 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			return base.PreAI(projectile);
 		}
 		
+		private static void applyPaintedFromNpc(Projectile projectile,NPC npc) {
+			WoMDNPC gNpc = npc.GetGlobalNPC<WoMDNPC>();
+			if(gNpc == null || !gNpc.painted)
+				return;
+			WoMDProjectile proj = projectile.GetGlobalProjectile<WoMDProjectile>();
+			if(proj == null)
+				return;
+			proj.painted = true;
+			proj.paintColor = gNpc.paintColor;
+			proj.paintedTime = gNpc.paintedTime;
+			proj.customPaint = gNpc.customPaint;
+			proj.npcOwner = npc.whoAmI;
+			if(server())
+				sendProjectileColorPacket(proj, projectile);
+		}
+
 		public override void PostAI(Projectile projectile) {
-			if(singlePlayer() || server()) {
-				if(painted) {
-					switch(projectile.type) {
-						case ProjectileID.SandnadoHostile:
-							if(projectile.timeLeft > 930 && Main.rand.NextFloat() < .25f) {
-								float y = Main.rand.NextFloat(projectile.height * .6f, projectile.height);
-								Vector2 pos = new Vector2(projectile.position.X + projectile.width / 2f, projectile.position.Y + projectile.height - y);
-								int dir = Main.rand.Next(0, 2) * 2 - 1;
-								//Projectile proj = Projectile.NewProjectileDirect(pos, new Vector2((4f + (float)Math.Sqrt(y / 16f)) * dir, -6f), ProjectileType<PaintSplatter>(), 0, 0);
-								Projectile proj = Projectile.NewProjectileDirect(pos, new Vector2(6f * dir, -6f - (float)Math.Sqrt(y/8f)), ProjectileType<PaintSplatter>(), 0, 0);
-								if(proj != null) {
-									proj.timeLeft = (int)Math.Round(30f + (2f * y));
-									PaintingProjectile p = proj.modProjectile as PaintingProjectile;
-									if(p != null) {
-										p.npcOwner = projectile.GetGlobalProjectile<WoMDProjectile>().npcOwner;
-										if(server())
-											PaintingProjectile.sendProjNPCOwnerPacket(p);
-									}
+			if(!projectile.friendly && (singlePlayer() || server()) && painted) {
+
+				switch(projectile.type) {
+					case ProjectileID.SandnadoHostile:
+						#region sand elemental
+						if(projectile.timeLeft > 930 && Main.rand.NextFloat() < .25f) {
+							float y = Main.rand.NextFloat(projectile.height * .6f, projectile.height);
+							Vector2 pos = new Vector2(projectile.position.X + projectile.width / 2f, projectile.position.Y + projectile.height - y);
+							int dir = Main.rand.Next(0, 2) * 2 - 1;
+							//Projectile proj = Projectile.NewProjectileDirect(pos, new Vector2((4f + (float)Math.Sqrt(y / 16f)) * dir, -6f), ProjectileType<PaintSplatter>(), 0, 0);
+							Projectile proj = Projectile.NewProjectileDirect(pos, new Vector2(6f * dir, -6f - (float)Math.Sqrt(y/8f)), ProjectileType<PaintSplatter>(), 0, 0);
+							if(proj != null) {
+								proj.timeLeft = (int)Math.Round(30f + (2f * y));
+								PaintingProjectile p = proj.modProjectile as PaintingProjectile;
+								if(p != null) {
+									p.npcOwner = projectile.GetGlobalProjectile<WoMDProjectile>().npcOwner;
+									if(server())
+										PaintingProjectile.sendProjNPCOwnerPacket(p);
 								}
 							}
-							break;
-					}
+						}
+						#endregion
+						break;
+					case ProjectileID.BulletDeadeye:
+						#region bullet
+						paint(projectile.Center, paintColor, customPaint, new CustomPaintData(false, npcCyclingTimeScale, paintedTime, null));
+						#endregion
+						break;
 				}
 			}
 			base.PostAI(projectile);

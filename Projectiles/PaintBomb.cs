@@ -16,6 +16,11 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		    explosionRadius = 80;
 
             manualRotation = true;
+
+            usesGSShader = true;
+
+            xFrameCount = 1;
+            yFrameCount = 2;
         }
 
         public override void SetStaticDefaults() {
@@ -130,6 +135,12 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override void Kill(int timeLeft) {
 			base.Kill(timeLeft);
+        }
+
+        protected override int convertColorFrame() {
+            if(colorFrame == PaintID.Negative)
+                return 1;
+            return 0;
         }
     }
 }

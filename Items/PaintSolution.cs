@@ -6,10 +6,16 @@ using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Microsoft.Xna.Framework.Graphics;
+using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
     class PaintSolution : PaintingItem{
+        public PaintSolution() {
+            usesGSShader = true;
+		}
+
         public override void SetStaticDefaults() {
             DisplayName.SetDefault("Paint Solution");
             SetStaticDefaults("Used by the Clentaminator", "75% chance to not consume paint for each block/wall covered");
@@ -24,6 +30,12 @@ namespace WeaponsOfMassDecoration.Items {
             item.rare = ItemRarityID.Orange;
             item.maxStack = 999;
             item.consumable = true;
+        }
+
+        protected override Texture2D getTexture(int paintColor, CustomPaint customPaint, PaintMethods method) {
+            if((paintColor == -1 && customPaint == null) || method == PaintMethods.RemovePaint)
+                return null;
+            return getExtraTexture("PaintSolutionPainted");
         }
     }
 }

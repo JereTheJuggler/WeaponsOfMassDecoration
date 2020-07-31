@@ -13,6 +13,15 @@ namespace WeaponsOfMassDecoration.Projectiles {
     class PaintSplatter : PaintingProjectile{
         public int startingTimeLeft = 25;
 
+        public PaintSplatter() : base() {
+            usesShader = true;
+
+            xFrameCount = 1;
+            yFrameCount = 1;
+
+            manualRotation = true;
+		}
+
         public override void SetStaticDefaults() {
             base.SetStaticDefaults();
             DisplayName.SetDefault("Paint Splatter");
@@ -37,14 +46,14 @@ namespace WeaponsOfMassDecoration.Projectiles {
         public override bool PreAI() {
             base.PreAI();
             if(canPaint()) {
-                Point coords = new Point((int)Math.Floor(projectile.Center.X / 16), (int)Math.Floor(projectile.Center.Y / 16));
+                Point coords = projectile.Center.ToTileCoordinates();
                 paint(coords.X, coords.Y);
             }
             return true;
         }
 
 		public override void PostAI() {
-            projectile.rotation = projectile.velocity.ToRotation() + (float)Math.PI/2f;
+            rotation = projectile.velocity.ToRotation() + (float)Math.PI/2f;
 			base.PostAI();
 		}
 

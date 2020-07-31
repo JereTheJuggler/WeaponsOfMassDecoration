@@ -10,13 +10,19 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.ID;
 using System.Runtime.Remoting.Messaging;
+using Terraria.Graphics.Effects;
+using Terraria.Graphics.Shaders;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
+using System.Runtime.InteropServices;
 
 namespace WeaponsOfMassDecoration.Items {
     public abstract class PaintingItem : ModItem{
 
 		public const string halfDamageText = "Damage is halved if you don't have any paint.";
+
+        public bool usesGSShader = false;
+        public int yFrameCount = 1;
 
 		public override void SetStaticDefaults() {
             SetStaticDefaults("", "");
@@ -31,6 +37,43 @@ namespace WeaponsOfMassDecoration.Items {
         public Player getOwner() {
             return getPlayer(item.owner);
 		}
+
+        protected bool resetBatchInPost = false;
+
+		public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale) {
+			if(usesGSShader) {
+                MiscShaderData shader = getShader(this,out int paintColor, out CustomPaint customPaint, out WoMDPlayer player);
+                if(shader != null) {
+                    spriteBatch.End();
+                    spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
+                    
+                    shader.Apply();
+
+                    Texture2D texture = getTexture(paintColor, customPaint, player.getPaintMethod());
+                    if(texture == null)
+                        texture = Main.itemTexture[item.type];
+
+                    spriteBatch.Draw(texture, position, frame, drawColor,0,new Vector2(0,0),scale,SpriteEffects.None,0);
+
+                    spriteBatch.End();
+                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix);//, Main.GameViewMatrix.ZoomMatrix);
+                    return false;
+                }
+            }
+            return true;
+		}
+
+        protected virtual Texture2D getTexture(int paintColor, CustomPaint customPaint, PaintMethods method) {
+            return null;
+		}
+
+		public override void PostDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale) {
+            if(resetBatchInPost) {
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
+                resetBatchInPost = false;
+            }
+        }
 
 		public override void ModifyWeaponDamage(Player player, ref float add, ref float mult, ref float flat) {
             WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();

@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Microsoft.Xna.Framework.Graphics;
+using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
@@ -29,6 +31,12 @@ namespace WeaponsOfMassDecoration.Items {
 		    recipe.AddTile(TileID.DyeVat);
 		    recipe.SetResult(this, 1);
 		    recipe.AddRecipe();
+		}
+
+		protected override Texture2D getTexture(int paintColor, CustomPaint customPaint, PaintMethods method) {
+			if((paintColor == -1 && customPaint == null) || method == PaintMethods.RemovePaint)
+				return null;
+			return getExtraTexture("InfinitePaintSolutionPainted");
 		}
 	}
 }

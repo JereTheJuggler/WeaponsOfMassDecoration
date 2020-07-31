@@ -74,37 +74,37 @@ namespace WeaponsOfMassDecoration {
     }
 
     public class PaintColors {
-        public static Color NoColor { get { return Color.White; } }
-        public static Color Red { get { return new Color(255,0,0,127); } }
-        public static Color Orange { get { return new Color(255,127,0,127); } }
-        public static Color Yellow { get { return new Color(255,255,0,127); } }
-        public static Color Lime { get { return new Color(125,255,0,127); } }
-        public static Color Green { get { return new Color(0, 255, 0,127); } }
-        public static Color Teal { get { return new Color(0,255,169,127); } }
-        public static Color Cyan { get { return new Color(0,255,255,127); } }
-        public static Color SkyBlue { get { return new Color(0,174,255,127); } }
-        public static Color Blue { get { return new Color(0,0,255,127); } }
-        public static Color Purple { get { return new Color(131,0,255, 127); } }
-        public static Color Violet { get { return new Color(242,0,255, 127); } }
-        public static Color Pink { get { return new Color(255,0,172, 127); } }
-		public static Color DeepRed { get { return new Color(255, 0, 0, 255); } }
-		public static Color DeepOrange { get { return new Color(255, 127, 0, 255); } }
-		public static Color DeepYellow { get { return new Color(255, 255, 0, 255); } }
-		public static Color DeepLime { get { return new Color(125, 255, 0, 255); } }
-		public static Color DeepGreen { get { return new Color(0, 255, 0, 255); } }
-		public static Color DeepTeal { get { return new Color(0, 255, 169, 255); } }
-		public static Color DeepCyan { get { return new Color(0, 255, 255, 255); } }
-		public static Color DeepSkyBlue { get { return new Color(0, 174, 255, 255); } }
-		public static Color DeepBlue { get { return new Color(0, 0, 255, 255); } }
-		public static Color DeepPurple { get { return new Color(131, 0, 255, 255); } }
-		public static Color DeepViolet { get { return new Color(242, 0, 255, 255); } }
-		public static Color DeepPink { get { return new Color(255, 0, 172, 255); } }
-		public static Color Black { get { return new Color(30,30,30,255); } }
-        public static Color White { get { return Color.White; } }
-        public static Color Gray { get { return new Color(127,127,127,255); } }
-        public static Color Brown { get { return new Color(151,107,75,255); } }
-        public static Color Shadow { get { return Color.Black; } }
-        public static Color Negative { get { return Color.Black; } }
+        public static Color NoColor { get {     return Color.White; } }
+        public static Color Red { get {         return new Color(255, 127, 127); } }
+        public static Color Orange { get {      return new Color(255, 191, 127); } }
+        public static Color Yellow { get {      return new Color(255, 255, 127); } }
+        public static Color Lime { get {        return new Color(191, 255, 127); } }
+        public static Color Green { get {       return new Color(127, 255, 127); } }
+        public static Color Teal { get {        return new Color(127, 255, 210); } }
+        public static Color Cyan { get {        return new Color(127, 255, 255); } }
+        public static Color SkyBlue { get {     return new Color(127, 214, 255); } }
+        public static Color Blue { get {        return new Color(127, 127, 255); } }
+        public static Color Purple { get {      return new Color(191, 127, 255); } }
+        public static Color Violet { get {      return new Color(246, 127, 255); } }
+        public static Color Pink { get {        return new Color(255, 127, 214); } }
+		public static Color DeepRed { get {     return new Color(255,   0,   0); } }
+		public static Color DeepOrange { get {  return new Color(255, 127,   0); } }
+		public static Color DeepYellow { get {  return new Color(255, 255,   0); } }
+		public static Color DeepLime { get {    return new Color(125, 255,   0); } }
+		public static Color DeepGreen { get {   return new Color(  0, 255,   0); } }
+		public static Color DeepTeal { get {    return new Color(  0, 255, 169); } }
+		public static Color DeepCyan { get {    return new Color(  0, 255, 255); } }
+		public static Color DeepSkyBlue { get { return new Color(  0, 174, 255); } }
+		public static Color DeepBlue { get {    return new Color(  0,   0, 255); } }
+		public static Color DeepPurple { get {  return new Color(131,   0, 255); } }
+		public static Color DeepViolet { get {  return new Color(242,   0, 255); } }
+		public static Color DeepPink { get {    return new Color(255,   0, 172); } }
+		public static Color Black { get {       return new Color( 30,  30,  30); } }
+        public static Color White { get {       return Color.White; } }
+        public static Color Gray { get {        return new Color(127, 127, 127); } }
+        public static Color Brown { get {       return new Color(151, 107,  75); } }
+        public static Color Shadow { get {      return Color.Black; } }
+        public static Color Negative { get {    return Color.Black; } }
 
         public static Color[] colors {
             get {

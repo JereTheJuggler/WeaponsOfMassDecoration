@@ -16,6 +16,11 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
         public PaintShuriken() : base() {
             trailLength = 3;
+
+            usesGSShader = true;
+
+            xFrameCount = 1;
+            yFrameCount = 3;
 		}
 
         public override void SetStaticDefaults() {
@@ -60,5 +65,13 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			}
 			return base.OnTileCollide(oldVelocity);
 		}
+
+        protected override int convertColorFrame() {
+            if(colorFrame == 0)
+                return 0;
+            if(colorFrame == PaintID.Negative)
+                return 2;
+            return 1;
+        }
     }
 }

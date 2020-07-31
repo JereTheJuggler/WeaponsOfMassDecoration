@@ -7,6 +7,10 @@ using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.Items {
     class PaintBomb : PaintingItem{
+        public PaintBomb() : base() {
+            usesGSShader = true;
+		}
+
         public override void SetStaticDefaults() {
             DisplayName.SetDefault("Paint Bomb");
             base.SetStaticDefaults(halfDamageText);

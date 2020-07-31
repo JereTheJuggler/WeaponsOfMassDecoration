@@ -9,6 +9,13 @@ using System.Diagnostics;
 namespace WeaponsOfMassDecoration.Projectiles {
     public class PaintArrow : PaintingProjectile {
 
+        public PaintArrow() : base() {
+            usesGSShader = true;
+
+            xFrameCount = 1;
+            yFrameCount = 3;
+		}
+
         public override void SetStaticDefaults() {
             base.SetStaticDefaults();
             DisplayName.SetDefault("Paint Arrow");
@@ -16,6 +23,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
         public override void SetDefaults() {
             base.SetDefaults();
+            projectile.CloneDefaults(ProjectileID.WoodenArrowFriendly);
             projectile.width = 10;
             projectile.height = 10;
             projectile.aiStyle = 1;
@@ -28,7 +36,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.light = 0f;
             projectile.ignoreWater = true;
             projectile.tileCollide = true;
-            aiType = ProjectileID.WoodenArrowFriendly;
         }
 
         public override bool PreAI() {
@@ -58,5 +65,13 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.Kill();
             return false;
         }
-    }
+
+		protected override int convertColorFrame() {
+            if(colorFrame == 0)
+                return 0;
+            if(colorFrame == PaintID.Negative)
+                return 2;
+            return 1;
+		}
+	}
 }

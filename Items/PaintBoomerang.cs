@@ -7,11 +7,16 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.Items {
     class PaintBoomerang : PaintingItem{
+        public PaintBoomerang() : base() {
+            usesGSShader = true;
+		}
+
         public override void SetStaticDefaults() {
             DisplayName.SetDefault("Paint Boomerang");
             SetStaticDefaults("Stacks up to 3\n"+halfDamageText,"");
@@ -52,8 +57,12 @@ namespace WeaponsOfMassDecoration.Items {
             recipe2.AddRecipe();
         }
 
-        public override bool Shoot(Player player, ref Vector2 position, ref float speedX, ref float speedY, ref int type, ref int damage, ref float knockBack) {
-            return base.Shoot(player, ref position, ref speedX, ref speedY, ref type, ref damage, ref knockBack);
+        protected override Texture2D getTexture(int paintColor, CustomPaint customPaint, PaintMethods method) {
+            if(paintColor == -1 && customPaint == null)
+                return null;
+            if(method == PaintMethods.RemovePaint)
+                return getExtraTexture("PaintBoomerangScraper");
+            return getExtraTexture("PaintBoomerangPainted");
         }
     }
 }

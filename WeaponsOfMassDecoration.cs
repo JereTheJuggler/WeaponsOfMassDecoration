@@ -48,6 +48,8 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		public const float npcCyclingTimeScale = 1f;
 
+		public static Dictionary<string, Texture2D> extraTextures;
+
 		public WeaponsOfMassDecoration(){
 			Properties = new ModProperties(){
 				Autoload = true,
@@ -60,13 +62,60 @@ namespace WeaponsOfMassDecoration {
 			if(Main.netMode != NetmodeID.Server) {
 				Ref<Effect> paintedRef = new Ref<Effect>(GetEffect("Effects/Painted"));
 				GameShaders.Misc["Painted"] = new MiscShaderData(paintedRef, "paintedColor").UseColor(1f, 0, 0).UseOpacity(1f);
-				
-				/*Ref<Effect> paintedNegativeRef = new Ref<Effect>(GetEffect("Effects/PaintedNegative"));
-				GameShaders.Misc["PaintedNegative"] = new MiscShaderData(paintedNegativeRef, "paintedNegativeColor");*/
+
+				Ref<Effect> gsPaintedRef = new Ref<Effect>(GetEffect("Effects/GreenScreenPainted"));
+				GameShaders.Misc["GSPainted"] = new MiscShaderData(gsPaintedRef, "gsPaintedColor").UseColor(1f, 0, 0).UseOpacity(1f);
+
+				Ref<Effect> paintedNegativeRef = new Ref<Effect>(GetEffect("Effects/PaintedNegative"));
+				GameShaders.Misc["PaintedNegative"] = new MiscShaderData(paintedNegativeRef, "paintedNegativeColor");
 
 				Ref<Effect> sprayPaintedRef = new Ref<Effect>(GetEffect("Effects/SprayPainted"));
 				GameShaders.Misc["SprayPainted"] = new MiscShaderData(sprayPaintedRef, "sprayPaintedColor").UseImage("Images/Misc/noise");
+
+				extraTextures = new Dictionary<string, Texture2D>();
+
+				loadExtraTexture("Items/PaintArrowScraper");
+				loadExtraTexture("Items/PaintArrowPainted");
+
+				loadExtraTexture("Items/PaintShurikenPainted");
+
+				loadExtraTexture("Items/PaintDynamitePainted");
+
+				loadExtraTexture("Items/ThrowingPaintbrushPainted");
+				loadExtraTexture("Items/ThrowingPaintbrushScraper");
+
+				loadExtraTexture("Items/PaintBombPainted");
+
+				loadExtraTexture("Items/PaintBoomerangPainted");
+				loadExtraTexture("Items/PaintBoomerangScraper");
+
+				loadExtraTexture("Items/PaintSolutionPainted");
+				loadExtraTexture("Items/InfinitePaintSolutionPainted");
+
+				loadExtraTexture("Items/PaintballPainted");
 			}
+		}
+
+		public static Texture2D getExtraTexture(string name) {
+			if(extraTextures.ContainsKey(name))
+				return extraTextures[name];
+			return null;
+		}
+
+		private void loadExtraTexture(string filename) {
+			loadExtraTexture(filename, filename.Substring(filename.LastIndexOf("/") + 1));
+		}
+		private void loadExtraTexture(string filename,string name) {
+			try {
+				Texture2D texture = GetTexture(filename);
+				extraTextures.Add(name, texture);
+			} catch {
+			}
+		}
+
+		public override void Unload() {
+			extraTextures = null;
+			base.Unload();
 		}
 
 		public override void AddRecipeGroups() {
@@ -215,13 +264,41 @@ namespace WeaponsOfMassDecoration {
 		}
 
 	#region shaders
-		public static ShaderData applyShader(WoMDProjectile gProjectile, Projectile projectile) {
+		public static MiscShaderData applyShader(WoMDProjectile gProjectile,Projectile projectile) {
+			MiscShaderData shader = getShader(gProjectile, projectile);
+			if(shader != null)
+				shader.Apply();
+			return shader;
+		}
+
+		public static MiscShaderData applyShader(WoMDNPC globalNpc, NPC npc, DrawData? drawData = null) {
+			MiscShaderData shader = getShader(globalNpc, npc, drawData);
+			if(shader != null)
+				shader.Apply();
+			return shader;
+		}
+
+		public static MiscShaderData applyShader(PaintingItem item, out int paintColor, out CustomPaint customPaint, out WoMDPlayer player) {
+			MiscShaderData shader = getShader(item, out paintColor, out customPaint, out player);
+			if(shader != null)
+				shader.Apply();
+			return shader;
+		}
+
+		public static MiscShaderData applyShader(PaintingProjectile projectile) {
+			MiscShaderData shader = getShader(projectile);
+			if(shader != null)
+				shader.Apply();
+			return shader;
+		}
+
+		public static MiscShaderData getShader(WoMDProjectile gProjectile, Projectile projectile) {
 			if(!gProjectile.painted)
 				return null;
 			if(gProjectile.paintColor == PaintID.Negative)
-				return applyNegativeShader(projectile);
+				return getNegativeShader();
 			Color color = getColor(gProjectile.paintColor, gProjectile.customPaint, npcCyclingTimeScale, gProjectile.paintedTime, null);
-			return applyPaintedShader(color);
+			return getPaintedShader(color);
 		}
 
 		/// <summary>
@@ -231,22 +308,39 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="npc"></param>
 		/// <param name="drawData"></param>
 		/// <returns></returns>
-		public static ShaderData applyShader(WoMDNPC globalNpc, NPC npc, DrawData? drawData = null) {
+		public static MiscShaderData getShader(WoMDNPC globalNpc, NPC npc, DrawData? drawData = null) {
 			if(!globalNpc.painted)
 				return null;
 			if(globalNpc.paintColor == PaintID.Negative)
-				return applyNegativeShader(npc);
+				return getNegativeShader();
 			Color color = getColor(globalNpc.paintColor, globalNpc.customPaint, npcCyclingTimeScale, globalNpc.paintedTime, null);
 			if(globalNpc.sprayPainted)
-				return applySprayPaintedShader(color, drawData);
-			return applyPaintedShader(color);
+				return getSprayPaintedShader(color, drawData);
+			return getPaintedShader(color);
+		}
+		public static MiscShaderData getShader(PaintingItem item, out int paintColor, out CustomPaint customPaint, out WoMDPlayer player) {
+			player = null;
+			paintColor = -1;
+			customPaint = null;
+			
+			Player p = item.getOwner();
+			if(p == null)
+				return null;
+			player = p.GetModPlayer<WoMDPlayer>();
+			if(player == null)
+				return null;
+			player.getPaintVars(out paintColor, out customPaint);
+			if(paintColor == PaintID.Negative)
+				return getNegativeShader();
+			Color c = getColor(paintColor, customPaint, paintCyclingTimeScale, default, p);
+			return getGSShader(c);
 		}
 		/// <summary>
 		/// Applies a shader for the provided PaintingProjectile
 		/// </summary>
 		/// <param name="projectile"></param>
 		/// <returns></returns>
-		public static ShaderData applyShader(PaintingProjectile projectile) {
+		public static MiscShaderData getShader(PaintingProjectile projectile) {
 			int paintColor;
 			CustomPaint customPaint;
 			float timeScale;
@@ -270,25 +364,31 @@ namespace WeaponsOfMassDecoration {
 			}
 			if(paintColor == -1 && customPaint == null)
 				return null;
-			if(paintColor == PaintID.Negative)
-				return applyNegativeShader(projectile.projectile);
+			if(paintColor == PaintID.Negative) {
+				if(projectile.usesGSShader)
+					return null;
+				return getNegativeShader();
+			}
 			Color c = getColor(paintColor, customPaint, timeScale, timeOffset, projectile.getOwner());
-			return applyPaintedShader(c);
+			if(projectile.usesGSShader) 
+				return getGSShader(c);
+			return getPaintedShader(c);
 		}
 
-		private static ArmorShaderData applyNegativeShader(Entity entity) {
-			ArmorShaderData data = GameShaders.Armor.GetShaderFromItemId(ItemID.NegativeDye);
-			data.Apply(entity);
+		private static MiscShaderData getNegativeShader() {
+			MiscShaderData data = GameShaders.Misc["PaintedNegative"];
 			return data;
 		}
-		private static MiscShaderData applyPaintedShader(Color c) {
+		private static MiscShaderData getPaintedShader(Color c) {
 			MiscShaderData data = GameShaders.Misc["Painted"].UseColor(c).UseOpacity(1f);
-			data.Apply();
 			return data;
 		}
-		private static MiscShaderData applySprayPaintedShader(Color color, DrawData? drawData = null) {
+		private static MiscShaderData getSprayPaintedShader(Color color, DrawData? drawData = null) {
 			MiscShaderData data = GameShaders.Misc["SprayPainted"].UseColor(color).UseImage("Images/Misc/noise").UseOpacity(1f);
-			data.Apply(drawData);
+			return data;
+		}
+		private static MiscShaderData getGSShader(Color color) {
+			MiscShaderData data = GameShaders.Misc["GSPainted"].UseColor(color).UseOpacity(1f);
 			return data;
 		}
 
@@ -628,7 +728,7 @@ namespace WeaponsOfMassDecoration {
 				updated = true;
 			}
 			if(updated) {
-				if(Main.netMode == NetmodeID.MultiplayerClient)
+				if(server())
 					sendTileFrame(x, y);
 			}
 			return updated;

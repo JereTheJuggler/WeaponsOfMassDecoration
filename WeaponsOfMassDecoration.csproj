@@ -17,6 +17,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Items\Unused\SmallPaintRocket.cs" />
+    <Compile Remove="Projectiles\Unused\SmallPaintRocket.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Projectiles\HackAndSplashBlob - Old.png" />

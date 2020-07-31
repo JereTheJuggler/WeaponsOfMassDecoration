@@ -6,12 +6,17 @@ using System.Threading.Tasks;
 using Terraria.ModLoader;
 using Terraria;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Terraria.ID;
+using Microsoft.Xna.Framework.Graphics;
+using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
     class ThrowingPaintbrush : PaintingItem{
+        public ThrowingPaintbrush() {
+            usesGSShader = true;
+		}
+
         public override void SetStaticDefaults() {
             DisplayName.SetDefault("Throwing Paintbrush");
             SetStaticDefaults(halfDamageText,"This is how most modern art is created anyways, right?");
@@ -23,6 +28,12 @@ namespace WeaponsOfMassDecoration.Items {
 
             item.thrown = true;
             item.shoot = ProjectileType<Projectiles.ThrowingPaintbrush>();
+        }
+
+        protected override Texture2D getTexture(int paintColor, CustomPaint customPaint, PaintMethods method) {
+            if((paintColor == -1 && customPaint == null) || method == PaintMethods.RemovePaint)
+                return null;
+            return getExtraTexture("ThrowingPaintbrushPainted");
         }
     }
 }

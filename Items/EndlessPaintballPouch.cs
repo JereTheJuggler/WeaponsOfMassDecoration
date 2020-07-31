@@ -3,10 +3,13 @@ using Terraria.ModLoader;
 using System;
 using Terraria;
 using static Terraria.ModLoader.ModContent;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace WeaponsOfMassDecoration.Items {
 	public class EndlessPaintballPouch : Paintball {
 		
+		public EndlessPaintballPouch() { }
+
 		public override void SetStaticDefaults() {
 			base.SetStaticDefaults();
 			DisplayName.SetDefault("Endless Paintball Pouch");
@@ -25,6 +28,10 @@ namespace WeaponsOfMassDecoration.Items {
 			recipe.AddTile(TileID.CrystalBall);
 			recipe.SetResult(this,1);
 			recipe.AddRecipe();
+		}
+
+		protected override Texture2D getTexture(int paintColor, CustomPaint customPaint, PaintMethods method) {
+			return null;
 		}
 	}
 }

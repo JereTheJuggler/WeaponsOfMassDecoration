@@ -11,6 +11,14 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace WeaponsOfMassDecoration.Projectiles {
     class PaintBoomerang : PaintingProjectile{
+
+        public PaintBoomerang() : base() {
+            usesGSShader = true;
+
+            xFrameCount = 1;
+            yFrameCount = 3;
+		}
+
         public override void SetStaticDefaults() {
             base.SetStaticDefaults();
             DisplayName.SetDefault("Paint Boomerang");
@@ -47,6 +55,14 @@ namespace WeaponsOfMassDecoration.Projectiles {
                 explode(projectile.Center, 45, true, true);
             }
             return true;
+        }
+
+        protected override int convertColorFrame() {
+            if(colorFrame == 0)
+                return 0;
+            if(colorFrame == PaintID.Negative)
+                return 2;
+            return 1;
         }
     }
 }

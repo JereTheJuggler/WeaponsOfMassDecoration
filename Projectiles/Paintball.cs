@@ -11,6 +11,11 @@ namespace WeaponsOfMassDecoration.Projectiles {
         
         public Paintball() {
             trailLength = 5;
+
+            usesGSShader = true;
+
+            xFrameCount = 1;
+            yFrameCount = 2;
 		}
 
         public override void SetStaticDefaults() {
@@ -61,6 +66,12 @@ namespace WeaponsOfMassDecoration.Projectiles {
             Main.PlaySound(SoundID.Dig,projectile.Center);
             projectile.Kill();
             return false;
+        }
+
+        protected override int convertColorFrame() {
+            if(colorFrame == PaintID.Negative)
+                return 1;
+            return 0;
         }
     }
 }

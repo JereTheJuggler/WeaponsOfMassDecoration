@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,10 @@ using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
 	public class EndlessPaintQuiver : PaintArrow {
+
+		public EndlessPaintQuiver() {
+
+		}
 
 		public override void SetStaticDefaults() {
 			base.SetStaticDefaults();
@@ -30,6 +35,10 @@ namespace WeaponsOfMassDecoration.Items {
 		    recipe.AddTile(TileID.CrystalBall);
 		    recipe.SetResult(this, 1);
 		    recipe.AddRecipe();
+		}
+
+		protected override Texture2D getTexture(int paintColor, CustomPaint customPaint, PaintMethods method) {
+			return null;
 		}
 	}
 }
