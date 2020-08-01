@@ -133,11 +133,5 @@ namespace WeaponsOfMassDecoration.Projectiles {
                 explode(projectile.Center, explosionRadius*16, true, true);
             }
         }
-
-        protected override int convertColorFrame() {
-            if(colorFrame == PaintID.Negative)
-                return 1;
-            return 0;
-        }
     }
 }

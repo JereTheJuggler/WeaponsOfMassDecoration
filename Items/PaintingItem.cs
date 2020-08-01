@@ -22,64 +22,107 @@ namespace WeaponsOfMassDecoration.Items {
 		public const string halfDamageText = "Damage is halved if you don't have any paint.";
 
         public bool usesGSShader = false;
-        public int yFrameCount = 1;
+        public int textureCount = 1;
+        public float paintConsumptionChance = 1f;
 
 		public override void SetStaticDefaults() {
-            SetStaticDefaults("", "");
+            SetStaticDefaults("", "", true);
         }
 
-        public virtual void SetStaticDefaults(string preToolTip,string postToolTip = "") {
-            Tooltip.SetDefault((preToolTip != "" ? preToolTip + "\n" : "") +
-                "Paints blocks and walls!\nBrushing, rolling, or scraping is determined by the first painting tool in your inventory" +
-                (postToolTip != "" ? "\n" + postToolTip : ""));
+        public virtual void SetStaticDefaults(string preToolTip,string postToolTip = "", bool dealsDamage = true) {
+            List<string> lines = new List<string>();
+
+			if(dealsDamage) {
+                lines.Add(halfDamageText);
+			}
+            if(preToolTip != "") {
+                lines.AddRange(preToolTip.Split('\n'));
+			}
+            lines.AddRange(new string[] {
+                "Paints blocks and walls!",
+                "The first paint and tool found in your inventory will be used"
+            });
+            if(paintConsumptionChance < 1f) {
+                lines.Add(Math.Round((1 - paintConsumptionChance) * 100f).ToString() + "% chance to not consume paint");
+			}
+            if(postToolTip != "") {
+                lines.AddRange(postToolTip.Split('\n'));
+			}
+            if(!(this is CustomPaint)) {
+                lines.AddRange(new string[] {
+                    "Current Tool: ",
+                    "Current Paint: "
+                });
+            }
+            Tooltip.SetDefault(string.Join("\n", lines));
         }
 
         public Player getOwner() {
             return getPlayer(item.owner);
 		}
 
-        protected bool resetBatchInPost = false;
+		public override void ModifyTooltips(List<TooltipLine> tooltips) {
+            Player p = getOwner();
+            if(p == null)
+                return;
+            WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
+            if(player == null)
+                return;
+            for(int i = 0; i < tooltips.Count; i++) {
+                if(tooltips[i].text.StartsWith("Current Tool: ")) {
+                    tooltips[i].text = "Current Tool: "+getPaintToolName(player.paintMethod);
+				}else if(tooltips[i].text.StartsWith("Current Paint: ")) {
+                    tooltips[i].text = "Current Paint: " + getPaintColorName(player.paintColor, player.customPaint);
+				}
+			}
+			base.ModifyTooltips(tooltips);
+		}
 
 		public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale) {
 			if(usesGSShader) {
-                MiscShaderData shader = getShader(this,out int paintColor, out CustomPaint customPaint, out WoMDPlayer player);
+                MiscShaderData shader = getShader(this, out WoMDPlayer player);
                 if(shader != null) {
                     spriteBatch.End();
                     spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
                     
                     shader.Apply();
 
-                    Texture2D texture = getTexture(paintColor, customPaint, player.getPaintMethod());
+                    Texture2D texture = getTexture(player);
                     if(texture == null)
                         texture = Main.itemTexture[item.type];
 
                     spriteBatch.Draw(texture, position, frame, drawColor,0,new Vector2(0,0),scale,SpriteEffects.None,0);
 
                     spriteBatch.End();
-                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix);//, Main.GameViewMatrix.ZoomMatrix);
+                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix);
                     return false;
                 }
             }
             return true;
 		}
 
-        protected virtual Texture2D getTexture(int paintColor, CustomPaint customPaint, PaintMethods method) {
+		protected virtual Texture2D getTexture(WoMDPlayer player) {
+            //default handling based on conventions with texture counts and texture names
+			switch(textureCount) {
+                case 2: //expects a default version with no paint, and a version with paint
+                    if((player.paintColor == -1 && player.customPaint == null) || player.paintMethod == PaintMethods.RemovePaint)
+                        return null;
+                    return getExtraTexture(GetType().Name + "Painted");
+                case 3: //expects a default version with no paint, and versions with paint and as a paint scraper
+                    if(player.paintMethod == PaintMethods.RemovePaint)
+                        return getExtraTexture(GetType().Name + "Scraper");
+                    if(player.paintColor == -1 && player.customPaint == null)
+                        return null;
+                    return getExtraTexture(GetType().Name + "Painted");
+            }
             return null;
 		}
-
-		public override void PostDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale) {
-            if(resetBatchInPost) {
-                spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
-                resetBatchInPost = false;
-            }
-        }
 
 		public override void ModifyWeaponDamage(Player player, ref float add, ref float mult, ref float flat) {
             WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
 			if(!p.canPaint()) {
                 mult *= .5f;
-			} else if(p.getPaintMethod() ==  PaintMethods.RemovePaint){
+			} else if(p.paintMethod ==  PaintMethods.RemovePaint){
                 mult *= .5f;
 			}
 		}
@@ -88,13 +131,12 @@ namespace WeaponsOfMassDecoration.Items {
             WoMDNPC npc = target.GetGlobalNPC<WoMDNPC>();
             if(npc != null && p != null && item.owner == Main.myPlayer) {
                 WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
-                PaintMethods method = player.getPaintMethod();
+                PaintMethods method = player.paintMethod;
                 if(method != PaintMethods.None) {
                     if(method == PaintMethods.RemovePaint) {
                         npc.painted = false;
                     } else {
-                        player.getPaintVars(out int paintColor, out CustomPaint customPaint);
-                        applyPaintedToNPC(target, paintColor, customPaint, new CustomPaintData() { player = p });
+                        applyPaintedToNPC(target, player.paintColor, player.customPaint, new CustomPaintData() { player = p });
                     }
                 }
             }

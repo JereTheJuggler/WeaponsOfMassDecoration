@@ -132,15 +132,5 @@ namespace WeaponsOfMassDecoration.Projectiles {
             }
             base.AI();
         }
-
-		public override void Kill(int timeLeft) {
-			base.Kill(timeLeft);
-        }
-
-        protected override int convertColorFrame() {
-            if(colorFrame == PaintID.Negative)
-                return 1;
-            return 0;
-        }
     }
 }

@@ -7,13 +7,14 @@ using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using WeaponsOfMassDecoration.NPCs;
 using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
 	public class EndlessPaintQuiver : PaintArrow {
 
-		public EndlessPaintQuiver() {
-
+		public EndlessPaintQuiver() : base(){
+			textureCount = 1;
 		}
 
 		public override void SetStaticDefaults() {
@@ -35,10 +36,6 @@ namespace WeaponsOfMassDecoration.Items {
 		    recipe.AddTile(TileID.CrystalBall);
 		    recipe.SetResult(this, 1);
 		    recipe.AddRecipe();
-		}
-
-		protected override Texture2D getTexture(int paintColor, CustomPaint customPaint, PaintMethods method) {
-			return null;
 		}
 	}
 }

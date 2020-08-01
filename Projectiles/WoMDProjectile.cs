@@ -23,7 +23,7 @@ using MonoMod.Utils;
 using System.Diagnostics;
 
 namespace WeaponsOfMassDecoration.Projectiles {
-	class WoMDProjectile : GlobalProjectile {
+	public class WoMDProjectile : GlobalProjectile {
 		public bool painted = false;
 		public int paintColor = -1;
 		public CustomPaint customPaint = null;
@@ -33,17 +33,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public bool setupPreAi = false;
 
-		public override bool InstancePerEntity {
-			get {
-				return true;
-			}
-		}
-
-		public override bool CloneNewInstances {
-			get {
-				return false;
-			}
-		}
+		public override bool InstancePerEntity { get { return true; } }
+		public override bool CloneNewInstances { get { return false; } }
 
 		public static void sendProjectileColorPacket(WoMDProjectile gProj,Projectile proj,int toClient=-1,int ignoreClient=-1) {
 			//Console.WriteLine("sending projectile color packet");
@@ -152,6 +143,11 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			return base.PreAI(projectile);
 		}
 		
+		/// <summary>
+		/// Copies the painted settings from the provided npc to the provided projectile
+		/// </summary>
+		/// <param name="projectile">The projectile to inherit the painted settings</param>
+		/// <param name="npc">The npc to copy the painted settings from</param>
 		private static void applyPaintedFromNpc(Projectile projectile,NPC npc) {
 			WoMDNPC gNpc = npc.GetGlobalNPC<WoMDNPC>();
 			if(gNpc == null || !gNpc.painted)
@@ -253,7 +249,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 				spriteBatch.End();
 				spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
 
-				applyShader(this, projectile);
+				applyShader(this);
 			}
 			return true;
 		}

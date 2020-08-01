@@ -59,7 +59,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 					createLight();
 
                     for(int p = 0; p < 12; p++) {
-                        Dust dust = getDust(Dust.NewDust(projectile.TopLeft + displacement * (p / 10f) + new Vector2(-3,-3), 7, 7, DustType<Dusts.LightDust>(), 0, 0, 200, getColor(this), 1f));
+                        Dust dust = getDust(Dust.NewDust(projectile.TopLeft + displacement * (p / 10f) + new Vector2(-3,-3), 7, 7, DustType<Dusts.PaintDust>(), 0, 0, 200, getColor(this), 1f));
                         if(dust != null) {
                             dust.velocity = new Vector2(3, 0).RotatedByRandom(Math.PI * 2);
                             dust.fadeIn = 3f;

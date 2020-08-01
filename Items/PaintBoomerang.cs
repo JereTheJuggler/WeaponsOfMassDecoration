@@ -8,6 +8,7 @@ using Terraria.ModLoader;
 using Terraria.ID;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using WeaponsOfMassDecoration.NPCs;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
@@ -15,11 +16,12 @@ namespace WeaponsOfMassDecoration.Items {
     class PaintBoomerang : PaintingItem{
         public PaintBoomerang() : base() {
             usesGSShader = true;
+            textureCount = 3;
 		}
 
         public override void SetStaticDefaults() {
             DisplayName.SetDefault("Paint Boomerang");
-            SetStaticDefaults("Stacks up to 3\n"+halfDamageText,"");
+            SetStaticDefaults("Stacks up to 3","");
         }
 
         public override bool CanUseItem(Player player) {
@@ -55,14 +57,6 @@ namespace WeaponsOfMassDecoration.Items {
             recipe2.AddTile(TileID.DyeVat);
             recipe2.SetResult(this);
             recipe2.AddRecipe();
-        }
-
-        protected override Texture2D getTexture(int paintColor, CustomPaint customPaint, PaintMethods method) {
-            if(paintColor == -1 && customPaint == null)
-                return null;
-            if(method == PaintMethods.RemovePaint)
-                return getExtraTexture("PaintBoomerangScraper");
-            return getExtraTexture("PaintBoomerangPainted");
         }
     }
 }

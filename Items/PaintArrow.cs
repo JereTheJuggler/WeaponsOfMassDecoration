@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using WeaponsOfMassDecoration.NPCs;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
@@ -14,11 +15,11 @@ namespace WeaponsOfMassDecoration.Items {
     public class PaintArrow : PaintingItem {
         public PaintArrow() : base() {
             usesGSShader = true;
-            yFrameCount = 3;
+            textureCount = 3;
 		}
         public override void SetStaticDefaults() {
+            base.SetStaticDefaults();
             DisplayName.SetDefault("Paint Arrow");
-			base.SetStaticDefaults(halfDamageText);
 		}
         public override void SetDefaults() {
             item.damage = 7;
@@ -34,14 +35,5 @@ namespace WeaponsOfMassDecoration.Items {
             item.shootSpeed = 1f;
             item.ammo = AmmoID.Arrow;
         }
-
-		protected override Texture2D getTexture(int paintColor, CustomPaint customPaint, PaintMethods method) {
-            if(paintColor == -1 && customPaint == null)
-                return null;
-            if(method == PaintMethods.RemovePaint)
-                return getExtraTexture("PaintArrowScraper");
-            return getExtraTexture("PaintArrowPainted");
-		}
-
 	}
 }

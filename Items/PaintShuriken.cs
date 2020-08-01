@@ -9,6 +9,7 @@ using Terraria.ID;
 using Microsoft.Xna.Framework;
 using Terraria.Graphics;
 using Microsoft.Xna.Framework.Graphics;
+using WeaponsOfMassDecoration.NPCs;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
@@ -16,11 +17,12 @@ namespace WeaponsOfMassDecoration.Items {
     class PaintShuriken : PaintingItem {
         public PaintShuriken() : base() {
             usesGSShader = true;
+            textureCount = 2;
 		}
 
         public override void SetStaticDefaults() {
+            base.SetStaticDefaults();
             DisplayName.SetDefault("Paint Shuriken");
-			base.SetStaticDefaults(halfDamageText);
 		}
 
         public override void SetDefaults() {
@@ -28,11 +30,5 @@ namespace WeaponsOfMassDecoration.Items {
             item.value = Item.sellPrice(silver: 5);
             item.shoot = ProjectileType<Projectiles.PaintShuriken>();
         }
-
-        protected override Texture2D getTexture(int paintColor, CustomPaint customPaint, PaintMethods method) {
-            if((paintColor == -1 && customPaint == null) || method == PaintMethods.RemovePaint)
-                return null;
-            return getExtraTexture("PaintShurikenPainted");
-        }
-    }
+	}
 }

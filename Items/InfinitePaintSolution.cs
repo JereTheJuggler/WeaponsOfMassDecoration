@@ -7,6 +7,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework.Graphics;
+using WeaponsOfMassDecoration.NPCs;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 using static Terraria.ModLoader.ModContent;
 
@@ -33,8 +34,8 @@ namespace WeaponsOfMassDecoration.Items {
 		    recipe.AddRecipe();
 		}
 
-		protected override Texture2D getTexture(int paintColor, CustomPaint customPaint, PaintMethods method) {
-			if((paintColor == -1 && customPaint == null) || method == PaintMethods.RemovePaint)
+		protected override Texture2D getTexture(WoMDPlayer player) {
+			if((player.paintColor == -1 && player.customPaint == null) || player.paintMethod == PaintMethods.RemovePaint)
 				return null;
 			return getExtraTexture("InfinitePaintSolutionPainted");
 		}

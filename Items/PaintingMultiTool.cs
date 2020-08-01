@@ -8,38 +8,45 @@ using Terraria.ModLoader;
 using Terraria.ID;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using WeaponsOfMassDecoration.NPCs;
+using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.Items {
-    public class PaintingMultiTool : PaintingItem{
+	public class PaintingMultiTool : PaintingItem {
 		public float rotation;
 		public int hitboxExtension = 0;
 		public int soundFrequency = 1;
 		public int soundTimer = 0;
 
-        public override void SetStaticDefaults() {
-            DisplayName.SetDefault("Paint Multi-Tool");
-            Tooltip.SetDefault("Paints both blocks and walls!\n"+halfDamageText);
-        }
+		public PaintingMultiTool() : base() {
+			textureCount = 2;
+			usesGSShader = true;
+		}
 
-        public override void SetDefaults() {
-            item.CloneDefaults(ItemID.Paintbrush);
+		public override void SetStaticDefaults() {
+			DisplayName.SetDefault("Paint Multi-Tool");
+			Tooltip.SetDefault(halfDamageText + "Paints blocks and walls at the same time!\nCurrent Paint: ");
+		}
+
+		public override void SetDefaults() {
+			item.CloneDefaults(ItemID.Paintbrush);
 			item.holdStyle = 0;
 			item.useAnimation = 30;
 			item.RebuildTooltip();
 			item.useStyle = ItemUseStyleID.HoldingOut;
-            item.width = 29;
-            item.height = 30;
-            item.maxStack = 1;
-            item.noUseGraphic = false;
-            item.noMelee = false;
+			item.width = 29;
+			item.height = 30;
+			item.maxStack = 1;
+			item.noUseGraphic = false;
+			item.noMelee = false;
 			item.melee = true;
 			item.damage = 4;
 			item.knockBack = 3f;
 			item.autoReuse = true;
-            item.value = Item.buyPrice(0, 0, 0, 10);
-            item.rare = ItemRarityID.Green;
+			item.value = Item.buyPrice(0, 0, 0, 10);
+			item.rare = ItemRarityID.Green;
 			item.useTime = 15;
-        }
+		}
 
 		public override Vector2? HoldoutOffset() {
 			return new Vector2(-26, 2).RotatedBy(rotation);
@@ -47,7 +54,7 @@ namespace WeaponsOfMassDecoration.Items {
 		public override void HoldStyle(Player player) {
 			rotation = 0;
 		}
-		
+
 		public override void UseItemHitbox(Player player, ref Rectangle hitbox, ref bool noHitbox) {
 			hitbox = new Rectangle(
 				(int)Math.Round(player.itemLocation.X) - hitboxExtension,
@@ -64,14 +71,14 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override void AddRecipes() {
-            ModRecipe recipe = new ModRecipe(mod);
-            recipe.AddIngredient(ItemID.Paintbrush);
-            recipe.AddIngredient(ItemID.PaintRoller);
-            recipe.AddTile(TileID.DyeVat);
-            recipe.SetResult(this);
-            recipe.AddRecipe();
-        }
-		
+			ModRecipe recipe = new ModRecipe(mod);
+			recipe.AddIngredient(ItemID.Paintbrush);
+			recipe.AddIngredient(ItemID.PaintRoller);
+			recipe.AddTile(TileID.DyeVat);
+			recipe.SetResult(this);
+			recipe.AddRecipe();
+		}
+
 		public override bool UseItem(Player player) {
 			soundTimer--;
 			if(soundTimer <= 0) {
@@ -79,21 +86,26 @@ namespace WeaponsOfMassDecoration.Items {
 				soundTimer = soundFrequency;
 			}
 			Point mousePosition = Main.MouseWorld.ToTileCoordinates();//(Main.screenPosition + Main.MouseScreen*2)/16;//Main.scrnew Vector2(Terraria.GameInput.PlayerInput.MouseX, Terraria.GameInput.PlayerInput.MouseY);
-            Point playerPos = player.position.ToTileCoordinates();
-            int xOffset = mousePosition.X - playerPos.X;
-            int yOffset = mousePosition.Y - playerPos.Y;
-            if(yOffset < 0)
-                yOffset--;
-            if(isInRange(player,xOffset,yOffset)) {
+			Point playerPos = player.position.ToTileCoordinates();
+			int xOffset = mousePosition.X - playerPos.X;
+			int yOffset = mousePosition.Y - playerPos.Y;
+			if(yOffset < 0)
+				yOffset--;
+			if(isInRange(player, xOffset, yOffset)) {
 				paint(mousePosition.X, mousePosition.Y);
-            }
-            return true;
-        }
+			}
+			return true;
+		}
 
-        public bool isInRange(Player player,int xOffset,int yOffset) {
-            return Math.Abs(xOffset) <= player.lastTileRangeX + item.tileBoost && Math.Abs(yOffset) <= player.lastTileRangeY + item.tileBoost;
-        }
+		public bool isInRange(Player player, int xOffset, int yOffset) {
+			return Math.Abs(xOffset) <= player.lastTileRangeX + item.tileBoost && Math.Abs(yOffset) <= player.lastTileRangeY + item.tileBoost;
+		}
 
+		protected override Texture2D getTexture(WoMDPlayer player) {
+			if(player.paintColor == -1 && player.customPaint == null)
+				return null;
+			return getExtraTexture(GetType().Name+"Painted");
+		}
 	}
 
     public class SpectrePaintingMultiTool : PaintingMultiTool {

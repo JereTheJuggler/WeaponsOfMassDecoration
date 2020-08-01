@@ -13,9 +13,9 @@ using static Terraria.ModLoader.ModContent;
 namespace WeaponsOfMassDecoration.Items {
     class PaintStaff : PaintingItem{
         public override void SetStaticDefaults() {
+            base.SetStaticDefaults();
             DisplayName.SetDefault("Paint Staff");
             Item.staff[ItemType<PaintStaff>()] = true;
-			base.SetStaticDefaults(halfDamageText);
 		}
 
         public override void SetDefaults() {

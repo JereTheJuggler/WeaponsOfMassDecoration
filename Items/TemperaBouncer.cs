@@ -13,8 +13,8 @@ using static Terraria.ModLoader.ModContent;
 namespace WeaponsOfMassDecoration.Items {
     class TemperaBouncer : PaintingItem {
         public override void SetStaticDefaults() {
+            base.SetStaticDefaults();
             DisplayName.SetDefault("Tempera Bouncer");
-            base.SetStaticDefaults(halfDamageText);
         }
 
         public override void SetDefaults() {

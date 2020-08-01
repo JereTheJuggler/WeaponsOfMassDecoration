@@ -97,7 +97,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
                 paintBetweenPoints(projectile.Center, projectile.Center + vel * length);
                 for(int j = 0; j < length; j++) {
-                    Dust dust = getDust(Dust.NewDust((projectile.Center + (vel * j)) - new Vector2(5, 5), 10, 10, DustType<LightDust>(), 0, 0, 0, c, 1f));
+                    Dust dust = getDust(Dust.NewDust((projectile.Center + (vel * j)) - new Vector2(5, 5), 10, 10, DustType<PaintDust>(), 0, 0, 0, c, 1f));
                     if(dust != null) {
                         dust.noGravity = true;
                         dust.velocity = new Vector2(1, 0).RotatedByRandom(Math.PI * 2);

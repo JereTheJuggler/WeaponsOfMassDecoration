@@ -8,20 +8,52 @@ using Terraria;
 using Terraria.ID;
 using Steamworks;
 using Microsoft.Xna.Framework;
+using WeaponsOfMassDecoration.Constants;
 
 namespace WeaponsOfMassDecoration.Items {
+	/// <summary>
+	/// An empty interface used to specify that a CustomPaint is a type of Spray Paint
+	/// </summary>
 	public interface ISprayPaint { }
 
+	/// <summary>
+	/// An empty interface used to specify that a CustomPaint is a Deep Paint
+	/// </summary>
 	public interface IDeepPaint { }
 
+	/// <summary>
+	/// An empty interface used to specify that a CustomPaint will cycle through different colors
+	/// </summary>
 	public interface ICyclingPaint { }
 
+	/// <summary>
+	/// A class that contains data that will be used to determine what color a custom paint will result in
+	/// </summary>
 	public struct CustomPaintData {
+		/// <summary>
+		/// How fast the paint will cycle through colors. Should be either WeaponsOfMassDecoration.paintCyclingTimeScale or WeaponsOfMassDecoration.npcCyclingTimeScale
+		/// </summary>
 		public float timeScale;
+		/// <summary>
+		/// An offset to use when calculating what color the paint will be. This allows the same custom paint to result in different colors at the same time
+		/// </summary>
 		public float timeOffset;
+		/// <summary>
+		/// The player to use when calculating what color the paint will be
+		/// </summary>
 		public Player player;
+		/// <summary>
+		/// Whether or not color should be forced. Color should be forced for anything that is not painting the world, including selecting frames, rendering shaders, and lights
+		/// </summary>
 		public bool forceColor;
 
+		/// <summary>
+		/// Creates an instance of CustomPaintData
+		/// </summary>
+		/// <param name="forceColor">Whether or not color should be forced. Color should be forced for anything that is not painting the world, including selecting frames, rendering shaders, and lights</param>
+		/// <param name="timeScale">How fast the paint will cycle through colors. Should be either WeaponsOfMassDecoration.paintCyclingTimeScale or WeaponsOfMassDecoration.npcCyclingTimeScale</param>
+		/// <param name="timeOffset">An offset to use when calculating what color the paint will be. This allows the same custom paint to result in different colors at the same time</param>
+		/// <param name="player">The player to use when calculating what color the paint will be</param>
 		public CustomPaintData(bool forceColor, float timeScale, float timeOffset = 0, Player player = null) {
 			this.forceColor = forceColor;
 			this.timeScale = timeScale;
@@ -29,20 +61,34 @@ namespace WeaponsOfMassDecoration.Items {
 			this.player = player;
 		}
 
+		/// <summary>
+		/// Creates an instance of CustomPaintData
+		/// </summary>
+		/// <param name="forceColor">Whether or not color should be forced. Color should be forced for anything that is not painting the world, including selecting frames, rendering shaders, and lights.</param>
+		/// <param name="timeScale">How fast the paint will cycle through colors. Should be either WeaponsOfMassDecoration.paintCyclingTimeScale or WeaponsOfMassDecoration.npcCyclingTimeScale</param>
+		/// <param name="player">The player to use when calculating what color the paint will be</param>
 		public CustomPaintData(bool forceColor, float timeScale, Player player) : this(forceColor, timeScale, default, player) { }
 	}
 
 	public abstract class CustomPaint : PaintingItem {
-		public float consumptionChance = 1f;
+		/// <summary>
+		/// The value assigned to item.paint for every instance of a CustomPaint
+		/// </summary>
+		public const byte paintValue = 64;
 
-		public int colorCount {
-			get {
-				return _paintItemIds.Length;
-			}
-		}
-		protected abstract int[] _paintItemIds {
-			get;
-		}
+		protected virtual bool _includeVanillaRecipes { get { return true; } }
+
+		/// <summary>
+		/// The number of different colors a custom paint can produce. This is preferable to using paintItemIds.Length because it will not go through the process of converting base paint item ids to deep paint item ids first
+		/// </summary>
+		public int colorCount { get { return _paintItemIds.Length; } }
+		/// <summary>
+		/// The item ids of the paints that the custom paint will use
+		/// </summary>
+		protected abstract int[] _paintItemIds { get; }
+		/// <summary>
+		/// The item ids of the paints that the custom paint will use
+		/// </summary>
 		public int[] paintItemIds {
 			get {
 				if(this is IDeepPaint) {
@@ -61,17 +107,21 @@ namespace WeaponsOfMassDecoration.Items {
 		/// <param name="type"></param>
 		/// <returns></returns>
 		protected static int getDeepItemId(int type) {
-			int index = Array.IndexOf(PaintIDs.itemIds, type);
+			int index = Array.IndexOf(PaintItemID.list, type);
 			if(index == -1)
 				return type;
 			if(index >= PaintID.Red && index <= PaintID.Pink)
-				return PaintIDs.itemIds[index + 12];
+				return PaintItemID.list[index + 12];
 			return type;
 		}
 
-		protected abstract string _colorName {
-			get;
-		}
+		/// <summary>
+		/// The base color name for the custom paint. Additional keywords for Spray, Deep, and Paint will automatically be added in the public CustomPaint.displayName
+		/// </summary>
+		protected abstract string _colorName { get; }
+		/// <summary>
+		/// The display name to use for the custom paint
+		/// </summary>
 		public string displayName {
 			get {
 				string name = _colorName;
@@ -89,44 +139,148 @@ namespace WeaponsOfMassDecoration.Items {
 		/// </summary>
 		public bool cycleLoops = false;
 
-		public CustomPaint() : base() {
-
+		public CustomPaint() : base() { }
+		public override void SetDefaults() {
+			item.paint = paintValue;
 		}
-
 		public override void SetStaticDefaults() {
 			DisplayName.SetDefault(displayName);
-			SetStaticDefaults("", "");
+			SetStaticDefaults("", "",false);
 		}
 
-		public override void SetStaticDefaults(string preToolTip, string postToolTip) {
-			Tooltip.SetDefault((preToolTip != "" ? preToolTip + ((consumptionChance < 1f || postToolTip != "") ? "\n" : "") : "") +
-				(consumptionChance >= 1f ? postToolTip : ((1f - consumptionChance) * 100).ToString() + "% Chance to not be consumed" + (postToolTip != "" ? "\n" + postToolTip : "")));
-		}
-
+		/* Required recipes:
+		 * The number in parenthesis at the beginning of each description refers to which if statement is responsible for adding the recipe
+		 * 
+		 * For cycling paints:
+		 * - (1) using 1 of each base item to create 1 * the number of base items used.				Ex: 1 red + 1 orange + 1 yellow = 3 flame
+		 * 
+		 * For deep cycling paints:
+		 * - (2) using 2 of each base item to create .5 * the number of base items used.			Ex: 2 red + 2 orange + 2 yellow = 3 deep flame
+		 * - (1) using 1 of each deep item to create 1 * the number of deep items used.				Ex: 1 deep red + 1 deep orange + 1 deep yellow = 3 deep flame
+		 * - (3) using 2 of the base cycling paint to create 1 item.								Ex: 2 flame paint = 1 deep flame paint
+		 * 
+		 * For vanilla spray paints:
+		 * - (1) using 1 of the base item to create 1 item.											Ex: 1 red paint = 1 red spray paint
+		 * 
+		 * For deep vanilla spray paints:
+		 * - (2) using 2 of the base item to create 1 item.											Ex: 2 red = 1 deep red spray paint
+		 * - (1) using 1 of the deep item to create 1 item.											Ex: 1 deep red = 1 deep red spray paint
+		 * - (3) using 2 of the base spray paint to create 1 item.									Ex: 2 red spray paint = 1 deep red spray paint
+		 * 
+		 * For cycling spray paints:
+		 * - (1) using 1 of each base item to create 1 * the number of base items used.				Ex: 1 red + 1 orange + 1 yellow = 3 flame spray paint
+		 * - (4) using 1 of the base cycling paint to create 1 item.								Ex: 1 flame paint = 1 flame spray paint
+		 * - (5) using 1 of each base spray paint to create 1 * the number of base items used.		Ex: 1 red spray + 1 orange spray + 1 yellow spray = 3 flame spray paint
+		 * 
+		 * For deep cycling spray paints:
+		 * - (2) using 2 of each base item to create .5 * the number of base items used.			Ex: 2 red + 2 orange + 2 yellow = 3 deep flame spray paint
+		 * - (1) using 1 of each deep item to create 1 * the number of deep items used.				Ex: 1 deep red + 1 deep orange + 1 deep yellow = 3 deep flame spray paint
+		 * - (6a) using 2 of the base cycling paint to create 1 item.								Ex: 2 flame paint = 1 deep flame spray paint
+		 * - (6b) using 1 of the deep cycling paint to create 1 item.								Ex: 1 deep flame paint = 1 deep flame spray paint
+		 * - (6c) using 2 of each base spray paint to create .5 * the number of base items used.	Ex: 2 red spray + 2 orange spray + 2 yellow spray = 3 deep flame spray paint
+		 * - (5) using 1 of each deep spray paint to create 1 * the number of deep items used.		Ex: 1 deep red spray + 1 deep orange spray + 1 deep yellow spray = 3 deep flame spray paint
+		 * - (3) using 2 of the base cycling spray paint to create 1 item.							Ex: 2 flame spray paint = 1 deep flame spray paint
+		 */
 		public override void AddRecipes() {
+			//any paint type that has _includeVanillaRecipes set to false should ignore recipes that use paintItemIds (public or protected)
 			if(_paintItemIds.Length > 0) {
-				ModRecipe recipe = new ModRecipe(mod);
-				for(int p = 0; p < paintItemIds.Length; p++)
-					recipe.AddIngredient(paintItemIds[p], 1);
-				recipe.AddTile(TileID.DyeVat);
-				recipe.SetResult(this, paintItemIds.Length);
-				recipe.AddRecipe();
+				//case (1)
+				//using 1 of each base/deep item to create 1 * the number of items used.
+				//matches all paints
+				if(_includeVanillaRecipes) {
+					//using the public paintItemIds so base custom paints use base items and deep custom paints use deep items
+					ModRecipe recipe = new ModRecipe(mod);
+					int[] itemIds = paintItemIds; //store it so it doesn't need to convert multiple times
+					for(int p = 0; p < colorCount; p++)
+						recipe.AddIngredient(itemIds[p], 1);
+					recipe.AddTile(TileID.DyeVat);
+					recipe.SetResult(this, colorCount);
+					recipe.AddRecipe();
+				}
 
-				if(this is IDeepPaint) {
-					ModRecipe deepRecipe = new ModRecipe(mod);
+				//case (2)
+				//using 2 of each base item to create .5 * the number of items used.
+				//matchs all deep paints
+				if(_includeVanillaRecipes && this is IDeepPaint) {
+					//using the protected _paintItemIds so only base items are used
+					ModRecipe recipe = new ModRecipe(mod);
 					for(int p = 0; p < _paintItemIds.Length; p++)
-						deepRecipe.AddIngredient(_paintItemIds[p], 2);
-					deepRecipe.AddTile(TileID.DyeVat);
-					deepRecipe.SetResult(this, _paintItemIds.Length);
-					deepRecipe.AddRecipe();
+						recipe.AddIngredient(_paintItemIds[p], 2);
+					recipe.AddTile(TileID.DyeVat);
+					recipe.SetResult(this, colorCount);
+					recipe.AddRecipe();
+				}
 
-					if(this is ICyclingPaint) {
-						ModRecipe deepCycleRecipe = new ModRecipe(mod);
-						Type t = GetType().BaseType;
-						deepCycleRecipe.AddIngredient(mod.ItemType(t.Name), 2);
-						deepCycleRecipe.AddTile(TileID.DyeVat);
-						deepCycleRecipe.SetResult(this, 1);
-						deepCycleRecipe.AddRecipe();
+				//case (3)
+				//using 2 of the base custom paint to create 1 item
+				//matches deep cycling, deep vanilla spray paints, and deep cycling spray paints
+				if(this is IDeepPaint && (this is ICyclingPaint || this is ISprayPaint)) {
+					ModRecipe recipe = new ModRecipe(mod); 
+					Type t = GetType().BaseType;
+					recipe.AddIngredient(mod.ItemType(t.Name), 2);
+					recipe.AddTile(TileID.DyeVat);
+					recipe.SetResult(this, 1);
+					recipe.AddRecipe();
+				}
+
+				//case (4)
+				//using 1 of the base cycling paint to create 1 item
+				//matches cycling spray paints
+				//same as case (3), but only takes 1 of the base item
+				if(this is ISprayPaint && this is ICyclingPaint && !(this is IDeepPaint)) {
+					ModRecipe recipe = new ModRecipe(mod);
+					Type t = GetType().BaseType;
+					recipe.AddIngredient(mod.ItemType(t.Name), 1);
+					recipe.AddTile(TileID.DyeVat);
+					recipe.SetResult(this, 1);
+					recipe.AddRecipe();
+				}
+
+				//case (5)
+				//using 1 of each base/deep spray paint to create 1 * the number of items used
+				//matches cycling spray paints and deep cycling spray paints
+				if(_includeVanillaRecipes && this is ISprayPaint && this is ICyclingPaint) {
+					ModRecipe recipe = new ModRecipe(mod);
+					int[] itemIds = paintItemIds; //store it so it doesn't need to convert multiple times for deep paints
+					for(int p = 0; p < colorCount; p++)
+						recipe.AddIngredient(mod.ItemType(ColorNames.list[Array.IndexOf(PaintItemID.list, itemIds[p])].Replace(" ", "") + "SprayPaint"), 1);
+					recipe.AddTile(TileID.DyeVat);
+					recipe.SetResult(this, colorCount);
+					recipe.AddRecipe();
+				}
+
+				//case (6)
+				//since the rest of the needed recipes all apply to only deep cycling spray paints, this case will be broken into separate parts
+				//matches deep cycling spray paints
+				if(this is IDeepPaint && this is ICyclingPaint && this is ISprayPaint) {
+					//case (6a)
+					//using 2 of the base cycling paint to create 1 deep cycling spray paint
+					ModRecipe recipeA = new ModRecipe(mod);
+					Type sprayType = GetType().BaseType;
+					Type t = sprayType.BaseType;
+					recipeA.AddIngredient(mod.ItemType(t.Name), 2);
+					recipeA.AddTile(TileID.DyeVat);
+					recipeA.SetResult(this, 1);
+					recipeA.AddRecipe();
+
+					//case (6b)
+					//using 1 of the deep cycling paint to create 1 deep cycling spray paint
+					ModRecipe recipeB = new ModRecipe(mod);
+					recipeB.AddIngredient(mod.ItemType("Deep" + t.Name), 1);
+					recipeB.AddTile(TileID.DyeVat);
+					recipeB.SetResult(this, 1);
+					recipeB.AddRecipe();
+
+					//case (6c)
+					//using 2 of the base spray paints to create .5 * the number of items used
+					//using protected _paintItemIds to get only base paints
+					if(_includeVanillaRecipes) {
+						ModRecipe recipeC = new ModRecipe(mod);
+						for(int p = 0; p < colorCount; p++)
+							recipeC.AddIngredient(mod.ItemType("Deep" + ColorNames.list[Array.IndexOf(PaintItemID.list, _paintItemIds[p])].Replace(" ", "") + "SprayPaint"), 2);
+						recipeC.AddTile(TileID.DyeVat);
+						recipeC.SetResult(this, colorCount);
+						recipeC.AddRecipe();
 					}
 				}
 			}
@@ -160,8 +314,14 @@ namespace WeaponsOfMassDecoration.Items {
 			return getPaintIDFromIndex(getPaintIndex(data));
 		}
 
-		protected Color getColorFromIndex(int index) => PaintColors.colors[getPaintIDFromIndex(index)];
-		protected byte getPaintIDFromIndex(int index) => (byte)Array.IndexOf(PaintIDs.itemIds, paintItemIds[index]);
+		protected Color getColorFromIndex(int index) => PaintColors.list[getPaintIDFromIndex(index)];
+		protected byte getPaintIDFromIndex(int index) => (byte)Array.IndexOf(PaintItemID.list, paintItemIds[index]);
+		/// <summary>
+		/// Gets the index of the paint item id that the custom paint is currently using. Base implementation is dependant on Main.global time with a time scale and offset factored in
+		/// </summary>
+		/// <param name="data"></param>
+		/// <param name="offset">This can be used to offset the result. For example, to get the next index the paint will use the offset should be 1. This is useful for interpolating between the current and next color for the custom paint</param>
+		/// <returns></returns>
 		protected virtual int getPaintIndex(CustomPaintData data, int offset = 0) {
 			int index;
 			if(cycleLoops) {
@@ -182,10 +342,10 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 	
 		/// <summary>
-		/// Allows a custom paint to convert itself to a vanilla paint color before applying it to an npc
+		/// Allows a custom paint to convert itself to a vanilla paint color before applying it to an npc. This is useful for a custom paint that is dependent on the current player, where the color of the paint could change after the buff is applied in a way that is not desirable
 		/// </summary>
-		/// <param name="paintColor"></param>
-		/// <param name="customPaint"></param>
+		/// <param name="paintColor">If the custom paint converts itself to a vanilla paint, this will be the color's PaintID. Will be -1 if the paint is not converted</param>
+		/// <param name="customPaint">If the custom paint is not converted, this will just be the same custom paint object</param>
 		/// <param name="data"></param>
 		public virtual void getPaintVarsForNpc(out int paintColor, out CustomPaint customPaint, CustomPaintData data) {
 			paintColor = -1;
@@ -196,7 +356,7 @@ namespace WeaponsOfMassDecoration.Items {
 	public class RainbowPaint : CustomPaint, ICyclingPaint {
 		public RainbowPaint() : base() {
 			cycleLoops = true;
-			consumptionChance = .5f;
+			paintConsumptionChance = .5f;
 		}
 		protected override int[] _paintItemIds => new int[] {
 			ItemID.RedPaint,
@@ -216,7 +376,7 @@ namespace WeaponsOfMassDecoration.Items {
 	}
 	public class DeepRainbowPaint : RainbowPaint, IDeepPaint { }
 	public class RainbowSprayPaint : RainbowPaint, ISprayPaint { }
-	public class DeepRainbowSprayPaint : DeepRainbowPaint, ISprayPaint { }
+	public class DeepRainbowSprayPaint : RainbowSprayPaint, IDeepPaint { }
 
 	public class FlamePaint : CustomPaint, ICyclingPaint {
 		protected override int[] _paintItemIds => new int[] { ItemID.RedPaint, ItemID.OrangePaint, ItemID.YellowPaint };
@@ -224,7 +384,7 @@ namespace WeaponsOfMassDecoration.Items {
 	}
 	public class DeepFlamePaint : FlamePaint, IDeepPaint { }
 	public class FlameSprayPaint : FlamePaint, ISprayPaint { }
-	public class DeepFlameSprayPaint : DeepFlamePaint, ISprayPaint { }
+	public class DeepFlameSprayPaint : FlameSprayPaint, IDeepPaint { }
 
 	public class GreenFlamePaint : CustomPaint {
 		protected override int[] _paintItemIds => new int[] { ItemID.GreenPaint, ItemID.LimePaint, ItemID.YellowPaint };
@@ -232,7 +392,7 @@ namespace WeaponsOfMassDecoration.Items {
 	}
 	public class DeepGreenFlamePaint : GreenFlamePaint, IDeepPaint { }
 	public class GreenFlameSprayPaint : GreenFlamePaint, ISprayPaint { }
-	public class DeepGreenFlameSprayPaint : DeepGreenFlamePaint, ISprayPaint { }
+	public class DeepGreenFlameSprayPaint : GreenFlameSprayPaint, IDeepPaint { }
 
 	public class BlueFlamePaint : CustomPaint, ICyclingPaint {
 		protected override int[] _paintItemIds => new int[] { ItemID.BluePaint, ItemID.SkyBluePaint, ItemID.CyanPaint };
@@ -240,7 +400,7 @@ namespace WeaponsOfMassDecoration.Items {
 	}
 	public class DeepBlueFlamePaint : BlueFlamePaint, IDeepPaint { }
 	public class BlueFlameSprayPaint : BlueFlamePaint, ISprayPaint { }
-	public class DeepBlueFlameSprayPaint : DeepBlueFlamePaint, ISprayPaint { }
+	public class DeepBlueFlameSprayPaint : BlueFlameSprayPaint, IDeepPaint { }
 
 	public class YellowGradientPaint : CustomPaint, ICyclingPaint {
 		protected override int[] _paintItemIds => new int[] { ItemID.LimePaint, ItemID.YellowPaint, ItemID.OrangePaint };
@@ -248,7 +408,7 @@ namespace WeaponsOfMassDecoration.Items {
 	}
 	public class DeepYellowGradientPaint : YellowGradientPaint, IDeepPaint { }
 	public class YellowGradientSprayPaint : YellowGradientPaint, ISprayPaint { }
-	public class DeepYellowGradientSprayPaint : DeepYellowGradientPaint, ISprayPaint { }
+	public class DeepYellowGradientSprayPaint : YellowGradientSprayPaint, IDeepPaint { }
 
 	public class CyanGradientPaint : CustomPaint, ICyclingPaint {
 		protected override int[] _paintItemIds => new int[] { ItemID.TealPaint, ItemID.CyanPaint, ItemID.SkyBluePaint };
@@ -256,7 +416,7 @@ namespace WeaponsOfMassDecoration.Items {
 	}
 	public class DeepCyanGradientPaint : CyanGradientPaint, IDeepPaint { }
 	public class CyanGradientSprayPaint : CyanGradientPaint, ISprayPaint { }
-	public class DeepCyanGradientSprayPaint : DeepCyanGradientPaint, ISprayPaint { }
+	public class DeepCyanGradientSprayPaint : CyanGradientSprayPaint, IDeepPaint { }
 
 	public class VioletGradientPaint : CustomPaint, ICyclingPaint {
 		protected override int[] _paintItemIds => new int[] { ItemID.PinkPaint, ItemID.VioletPaint, ItemID.PurplePaint };
@@ -264,7 +424,7 @@ namespace WeaponsOfMassDecoration.Items {
 	}
 	public class DeepVioletGradientPaint : VioletGradientPaint, IDeepPaint { }
 	public class VioletGradientSprayPaint : VioletGradientPaint, ISprayPaint { }
-	public class DeepVioletGradientSprayPaint : DeepVioletGradientPaint, ISprayPaint { }
+	public class DeepVioletGradientSprayPaint : VioletGradientSprayPaint, IDeepPaint { }
 
 	public class GrayscalePaint : CustomPaint, ICyclingPaint {
 		protected override int[] _paintItemIds => new int[] { ItemID.ShadowPaint, ItemID.BlackPaint, ItemID.GrayPaint, ItemID.WhitePaint };
@@ -369,9 +529,10 @@ namespace WeaponsOfMassDecoration.Items {
 		protected override string _colorName => "Negative";
 	}
 
-	public class TeamPaint : CustomPaint {
+	public class TeamPaint : CustomPaint, ICyclingPaint{
 		protected override int[] _paintItemIds => new int[] { ItemID.WhitePaint, ItemID.RedPaint, ItemID.GreenPaint, ItemID.BluePaint, ItemID.YellowPaint,ItemID.PinkPaint};
 		protected override string _colorName => "Team";
+		protected override bool _includeVanillaRecipes => false;
 
 		protected override int getPaintIndex(CustomPaintData data, int offset = 0) {
 			if(data.player == null)
@@ -387,5 +548,5 @@ namespace WeaponsOfMassDecoration.Items {
 	}
 	public class DeepTeamPaint : TeamPaint, IDeepPaint { }
 	public class TeamSprayPaint : TeamPaint, ISprayPaint { }
-	public class DeepTeamSprayPaint : DeepTeamPaint, ISprayPaint { }
+	public class DeepTeamSprayPaint : TeamSprayPaint, IDeepPaint { }
 }

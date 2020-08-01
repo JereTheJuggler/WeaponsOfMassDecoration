@@ -4,24 +4,100 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
-using Terraria.ModLoader;
 using Terraria.ID;
+using Terraria.ModLoader;
+using static Terraria.ModLoader.ModContent;
 using Microsoft.Xna.Framework;
 using WeaponsOfMassDecoration.Items;
+using WeaponsOfMassDecoration.Constants;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
-using static Terraria.ModLoader.ModContent;
-using System.Runtime.Remoting;
 
 namespace WeaponsOfMassDecoration.NPCs {
     public class WoMDPlayer : ModPlayer{
-        public int currentPaintIndex;
-        public int currentPaintToolIndex;
+        /// <summary>
+        /// The index of the first slot containing paint in the player's inventory
+        /// </summary>
+        protected int _currentPaintIndex;
+        /// <summary>
+        /// The index of the first slot containing paint in the player's inventory
+        /// </summary>
+        public int currentPaintIndex { get {
+            if(!_indexesSet)
+                updateIndexes();
+            return _currentPaintIndex;
+		} }
+        /// <summary>
+        /// The index of the first slot containing a painting tool in the player's inventory
+        /// </summary>
+        protected int _currentPaintToolIndex;
+        /// <summary>
+        /// The index of the first slot containing a painting tool in the player's inventory
+        /// </summary>
+        public int currentPaintToolIndex { get {
+            if(!_indexesSet)
+                updateIndexes();
+            return _currentPaintToolIndex;
+        } }
+
+        /// <summary>
+        /// The paint method attached to the first painting tool found in the player's inventory
+        /// </summary>
+        protected PaintMethods _paintMethod;
+        /// <summary>
+        /// The paint method attached to the first painting tool found in the player's inventory
+        /// </summary>
+        public PaintMethods paintMethod { get { return _paintMethod; } }
+
+        /// <summary>
+        /// This is used to keep track of whether or not the current indexes for paint and paint tools has been updated during this game tick. Allows the indexes to not be set at all for ticks where they are not needed
+        /// </summary>
+        protected bool _indexesSet = false;
+
+        /// <summary>
+        /// The PaintID of the first paint found in the player's inventory. If a custom paint is the first paint found, then this will be -1
+        /// </summary>
+        protected int _paintColor;
+        /// <summary>
+        /// The PaintID of the first paint found in the player's inventory. If a custom paint is the first paint found, then this will be -1
+        /// </summary>
+        public int paintColor { get {
+            if(!_indexesSet)
+                updateIndexes();
+            return _paintColor; 
+        } }
+        /// <summary>
+        /// The CustomPaint instance for the first paint found in the player's inventory. If a vanilla paint is the first paint found, then this will be null
+        /// </summary>
+        protected CustomPaint _customPaint;
+        /// <summary>
+        /// The CustomPaint instance for the first paint found in the player's inventory. If a vanilla paint is the first paint found, then this will be null
+        /// </summary>
+        public CustomPaint customPaint { get {
+            if(!_indexesSet)
+                updateIndexes();
+            return _customPaint == null ? null : (CustomPaint)_customPaint.Clone(); 
+        } }
+        /// <summary>
+        /// The color to use during rendering based on the first paint in the player's inventory. Combination of paintColor, customPaint, paintMethod, and interpolation between custom paint colors
+        /// </summary>
+        protected Color _renderColor = default;
+        /// <summary>
+        /// The color to use during rendering based on the first paint in the player's inventory. Combination of paintColor, customPaint, paintMethod, and interpolation between custom paint colors
+        /// </summary>
+        public Color renderColor { get {
+            if(!_indexesSet)
+                updateIndexes();
+            return new Color(_renderColor.ToVector3()); 
+        } }
 
         public bool buffPainted;
         public int buffPaintedTime;
         public int buffPaintedColor;
         public CustomPaint buffPaintedCustomPaint;
 
+        /// <summary>
+        /// Whether or not the player has the Artist's Palette accessory equipped
+        /// </summary>
         public bool accPalette = false;
 
         public float mountUnicornTime = 0;
@@ -40,7 +116,7 @@ namespace WeaponsOfMassDecoration.NPCs {
         }
 
 		public override void PreUpdate() {
-            updateIndexes();
+            _indexesSet = false;
 		}
 
 		public override void PostUpdateBuffs() {
@@ -94,77 +170,92 @@ namespace WeaponsOfMassDecoration.NPCs {
 		/// </summary>
 		/// <param name="updatePaint">Set to false to prevent updating the currentPaintIndex</param>
 		/// <param name="updateTool">Set to false to prevent updating the currentPaintingToolIndex</param>
-		public void updateIndexes(bool updatePaint = true, bool updateTool = true) {
-            if(updatePaint)
-                currentPaintIndex = -1;
-            if(updateTool)
-                currentPaintToolIndex = -1;
-            for(int i = 0; i < player.inventory.Length && ((updateTool && currentPaintToolIndex < 0) || (updatePaint && currentPaintIndex < 0)); i++) {
+		protected void updateIndexes(bool updatePaint = true, bool updateTool = true) {
+            if(updatePaint) {
+                _currentPaintIndex = -1;
+                _paintColor = -1;
+                _customPaint = null;
+                _renderColor = PaintColors.list[0];
+            }
+            if(updateTool) {
+                _currentPaintToolIndex = -1;
+                _paintMethod = PaintMethods.None;
+			}
+            for(int i = 0; i < player.inventory.Length && ((updateTool && _currentPaintToolIndex < 0) || (updatePaint && _currentPaintIndex < 0)); i++) {
                 Item item = player.inventory[i];
                 if(item.active && item.stack > 0) {
-                    if(updatePaint && currentPaintIndex < 0 && isPaint(item))
-                        currentPaintIndex = i;
-                    if(updateTool && currentPaintToolIndex < 0 && isPaintingTool(item))
-                        currentPaintToolIndex = i;
+                    if(updatePaint && i != 58 && _currentPaintIndex < 0 && isPaint(item)) {
+                        _currentPaintIndex = i;
+                        setPaintColors();
+                    }
+                    if(updateTool && i != 58 && _currentPaintToolIndex < 0 && isPaintingTool(item)) {
+                        _currentPaintToolIndex = i;
+                        setPaintMethod();
+                    }
                 }
 			}
+            if(updateTool && updatePaint)
+                _indexesSet = true;
 		}
 
         /// <summary>
-        /// Checks the item in the player's currentPaintIndex and sets variables for paintColor and customPaint
+        /// Sets _paintColor, _customPaint, and _renderColor based on the currentPaintIndex
         /// </summary>
-        /// <param name="paintColor">If no paint is found, or a custom paint is found first, this will be -1. Otherwise it will match a value from PaintID</param>
-        /// <param name="customPaint">If no paint is found, or a vanilla paint is found first, this will be null. Otherwise it will be an instance of CustomPaint</param>
-        public void getPaintVars(out int paintColor, out CustomPaint customPaint) {
-            paintColor = -1;
-            customPaint = null;
-            PaintMethods method = getPaintMethod();
-            if(method == PaintMethods.None || method == PaintMethods.RemovePaint) {
-                paintColor = 0;
+        protected void setPaintColors() {
+            _paintColor = -1;
+            _customPaint = null;
+            if(_currentPaintIndex >= 0) {
+                Item item = player.inventory[_currentPaintIndex];
+                if(item.modItem is CustomPaint) {
+                    _customPaint = (CustomPaint)item.modItem;
+                    _renderColor = _customPaint.getColor(new CustomPaintData(true, paintCyclingTimeScale, player));
+                } else {
+                    _paintColor = Array.IndexOf(PaintItemID.list, item.type);
+                    _renderColor = PaintColors.list[_paintColor];
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets _paintMethod based on the currentPaintToolIndex
+        /// </summary>
+        protected void setPaintMethod() {
+            if(_currentPaintToolIndex < 0) {
+                _paintMethod = PaintMethods.None;
                 return;
             }
-            if(currentPaintIndex >= 0) {
-                Item item = player.inventory[currentPaintIndex];
-                if(item.modItem is CustomPaint)
-                    customPaint = (CustomPaint)item.modItem;
-                else
-                    paintColor = Array.IndexOf(PaintIDs.itemIds, item.type);
-            }
-		}
-
-        /// <summary>
-        /// Checks the item in the player's currentPaintingToolIndex and returns a member from PaintMethod
-        /// </summary>
-        /// <returns></returns>
-        public PaintMethods getPaintMethod() {
-            if(currentPaintToolIndex < 0)
-                return PaintMethods.None;
-            Item item = player.inventory[currentPaintToolIndex];
+            Item item = player.inventory[_currentPaintToolIndex];
             if(item.active && item.stack > 0) {
-                if(item.modItem is PaintingMultiTool)
-                    return PaintMethods.BlocksAndWalls;
-				switch(item.type) {
+                if(item.modItem is PaintingMultiTool) {
+                    _paintMethod = PaintMethods.BlocksAndWalls;
+                    return;
+                }
+                switch(item.type) {
                     case ItemID.Paintbrush:
                     case ItemID.SpectrePaintbrush:
-                        return PaintMethods.Blocks;
+                        _paintMethod = PaintMethods.Blocks;
+                        return;
                     case ItemID.PaintRoller:
                     case ItemID.SpectrePaintRoller:
-                        return PaintMethods.Walls;
+                        _paintMethod = PaintMethods.Walls;
+                        return;
                     case ItemID.PaintScraper:
                     case ItemID.SpectrePaintScraper:
-                        return PaintMethods.RemovePaint;
-				}
-			}
-            return PaintMethods.None;
-		}
+                        _paintMethod = PaintMethods.RemovePaint;
+                        return;
+                }
+            }
+            _paintMethod = PaintMethods.None;
+        }
 
         /// <summary>
         /// A quick check to test if the player is currently able to paint. Useful for optimization to check before running a bunch of subsequent functions that would need to check this individually
         /// </summary>
         /// <returns></returns>
         public bool canPaint() {
-            PaintMethods method = getPaintMethod();
-            return !(method == PaintMethods.None || (currentPaintIndex < 0 && method != PaintMethods.RemovePaint));
+            if(!_indexesSet)
+                updateIndexes();
+            return !(_paintMethod == PaintMethods.None || (_currentPaintIndex < 0 && _paintMethod != PaintMethods.RemovePaint));
 		}
 
         /// <summary>
@@ -173,10 +264,12 @@ namespace WeaponsOfMassDecoration.NPCs {
 		public void consumePaint() {
             if(accPalette)
                 return;
-            if(getPaintMethod() == PaintMethods.RemovePaint)
+            if(!_indexesSet)
+                updateIndexes();
+            if(_paintMethod == PaintMethods.RemovePaint)
                 return;
-            if(currentPaintIndex >= 0) {
-                Item item = player.inventory[currentPaintIndex];
+            if(_currentPaintIndex >= 0) {
+                Item item = player.inventory[_currentPaintIndex];
                 if(item.stack > 0)
                     item.stack--;
                 if(item.stack == 0) {
@@ -187,31 +280,65 @@ namespace WeaponsOfMassDecoration.NPCs {
 		}
 
         /// <summary>
-        /// Used to paint blocks and walls. blocksAllowed and wallsAllowed can be used to disable painting blocks and walls regardless of the player's current painting method.
+        /// Used to paint blocks and walls. Must be used to have paint properly be consumed.
         /// </summary>
         /// <param name="x">Tile x coordinate</param>
         /// <param name="y">Tile y coordinate</param>
         /// <param name="blocksAllowed">Can be used to disable painting blocks regardless of the current painting method</param>
         /// <param name="wallsAllowed">Can be used to disable painting walls regardless of the current painting method</param>
-        public bool paint(int x, int y, bool blocksAllowed = true, bool wallsAllowed = true, bool dontConsumePaint = false) {
+        /// <param name="dontConsumePaint"></param>
+        /// <param name="useWorldgen">If true, WorldGen.PaintTile and PaintWall will be used. This will cause dust to appear when blocks or tiles are painted</param>
+        public bool paint(int x, int y, bool blocksAllowed = true, bool wallsAllowed = true, bool dontConsumePaint = false, bool useWorldgen = false) {
             if(Main.netMode == NetmodeID.Server)
                 return false;
             if(!(blocksAllowed || wallsAllowed))
                 return false;
             if(x < 0 || x >= Main.maxTilesX || y < 0 || y >= Main.maxTilesY)
                 return false;
-            PaintMethods method = getPaintMethod();
-            if(method == PaintMethods.None || (currentPaintIndex == -1 && method != PaintMethods.RemovePaint))
+            if(!_indexesSet)
+                updateIndexes();
+
+            PaintMethods method = _paintMethod;
+
+            //extra checking for held and selected items in case the player is holding an actual painting tool.
+            //is they area, paint method needs to be overridden by the held or selected item's paint method instead of using the first one found in the inventory
+            Item paintTool = null;
+            if(player.inventory[58] != null && player.inventory[58].active && player.inventory[58].stack > 0 && isPaintingTool(player.inventory[58])) {
+                paintTool = player.inventory[58];
+			}else if(player.inventory[player.selectedItem] != null && player.inventory[player.selectedItem].active && isPaintingTool(player.inventory[player.selectedItem])) {
+                paintTool = player.inventory[player.selectedItem];
+            }
+            if(paintTool != null) {
+                if(paintTool.modItem is PaintingMultiTool) {
+                    method = PaintMethods.BlocksAndWalls;
+				} else {
+					switch(paintTool.type) {
+                        case ItemID.Paintbrush:
+                        case ItemID.SpectrePaintbrush:
+                            method = PaintMethods.Blocks;
+                            break;
+                        case ItemID.PaintRoller:
+                        case ItemID.SpectrePaintRoller:
+                            method = PaintMethods.Walls;
+                            break;
+                        case ItemID.PaintScraper:
+                        case ItemID.SpectrePaintScraper:
+                            method = PaintMethods.RemovePaint;
+                            break;
+					}
+				}
+			}
+
+            if(method == PaintMethods.None || (_currentPaintIndex < 0 && method != PaintMethods.RemovePaint))
                 return false;
             byte targetColor;
             if(method == PaintMethods.RemovePaint) {
                 targetColor = 0;
             } else {
-                getPaintVars(out int paintColor, out CustomPaint customPaint);
-                if(customPaint == null) {
-                    targetColor = (byte)paintColor;
+                if(_customPaint == null) {
+                    targetColor = (byte)_paintColor;
 				} else {
-                    targetColor = customPaint.getPaintID(new CustomPaintData(false, paintCyclingTimeScale, 0, player));
+                    targetColor = _customPaint.getPaintID(new CustomPaintData(false, paintCyclingTimeScale, 0, player));
 				}
                 if(method == PaintMethods.Blocks) {
                     wallsAllowed = false;
@@ -219,7 +346,7 @@ namespace WeaponsOfMassDecoration.NPCs {
                     blocksAllowed = false;
                 }
             }
-            if(WeaponsOfMassDecoration.paint(x, y, targetColor, method, blocksAllowed, wallsAllowed)) {
+            if(WeaponsOfMassDecoration.paint(x, y, targetColor, method, blocksAllowed, wallsAllowed, useWorldgen)) {
                 if(!dontConsumePaint && method != PaintMethods.RemovePaint)
                     consumePaint();
                 return true;

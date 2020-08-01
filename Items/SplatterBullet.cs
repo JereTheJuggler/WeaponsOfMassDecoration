@@ -11,8 +11,8 @@ using static Terraria.ModLoader.ModContent;
 namespace WeaponsOfMassDecoration.Items{
 	public class SplatterBullet : PaintingItem{
         public override void SetStaticDefaults() {
+            base.SetStaticDefaults();
             DisplayName.SetDefault("Splatter Bullet");
-            base.SetStaticDefaults(halfDamageText);
         }
 
         public override void SetDefaults() {

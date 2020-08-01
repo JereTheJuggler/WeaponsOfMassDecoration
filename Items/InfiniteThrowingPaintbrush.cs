@@ -8,12 +8,15 @@ using Terraria.ModLoader;
 using Terraria.ID;
 using Microsoft.Xna.Framework;
 using static Terraria.ModLoader.ModContent;
+using Microsoft.Xna.Framework.Graphics;
+using WeaponsOfMassDecoration.NPCs;
+using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.Items {
 	class InfiniteThrowingPaintbrush : ThrowingPaintbrush {
 		public override void SetStaticDefaults() {
+			base.SetStaticDefaults();
 			DisplayName.SetDefault("Infinite Throwing Paintbrush");
-			base.SetStaticDefaults(halfDamageText);
 		}
 
 		public override void SetDefaults() {
@@ -29,6 +32,15 @@ namespace WeaponsOfMassDecoration.Items {
 			recipe.AddTile(TileID.DyeVat);
 			recipe.SetResult(this, 1);
 			recipe.AddRecipe();
+		}
+
+		protected override Texture2D getTexture(WoMDPlayer player) {
+			//Needs to be overridden in this class, because the texture names do not follow the convention of <Class name>Painted and <Class name>Scraper
+			if(player.paintMethod == PaintMethods.RemovePaint)
+				return getExtraTexture("ThrowingPaintbrushScraper");
+			if(player.paintColor == -1 && player.customPaint == null)
+				return null;
+			return getExtraTexture("ThrowingPaintbrushPainted");
 		}
 	}
 }

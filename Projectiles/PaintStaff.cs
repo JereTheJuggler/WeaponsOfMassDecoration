@@ -51,7 +51,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
                 Point coords = new Point((int)Math.Floor(projectile.Center.X / 16), (int)Math.Floor(projectile.Center.Y / 16));
                 paint(coords.X, coords.Y);
                 for(int d = 0; d < 2; d++) {
-                    Dust dust = getDust(Dust.NewDust(projectile.position, 0, 0, DustType<Dusts.LightDust>(), 0, 0, 200, getColor(this), .75f));
+                    Dust dust = getDust(Dust.NewDust(projectile.position, 0, 0, DustType<Dusts.PaintDust>(), 0, 0, 200, getColor(this), .75f));
                     if(dust != null) {
                         dust.noGravity = true;
                         dust.velocity = new Vector2(1, 0).RotatedByRandom(Math.PI * 2);

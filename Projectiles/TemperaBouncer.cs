@@ -32,7 +32,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			yFrameCount = 1;
 			xFrameCount = 1;
 
-			trailLength = 5;
+			trailLength = 3;
 
 			manualRotation = true;
 		}
@@ -97,7 +97,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			projectile.velocity.Y += .3f;
 			rotation += (float)Math.PI / 10f * projectile.direction;
 			for(int i = 0; i < 1; i++) { 
-                Dust dust = getDust(Dust.NewDust(projectile.Center-new Vector2(projectile.width/2,projectile.height/2), projectile.width, projectile.height, DustType<LightDust>(), 0, 0, 0, getColor(this),1));
+                Dust dust = getDust(Dust.NewDust(projectile.Center-new Vector2(projectile.width/2,projectile.height/2), projectile.width, projectile.height, DustType<PaintDust>(), 0, 0, 0, getColor(this),1));
 				if(dust != null) {
 					dust.noGravity = true;
 					dust.velocity = new Vector2(1, 0).RotatedByRandom(Math.PI * 2);

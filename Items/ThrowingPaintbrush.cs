@@ -8,18 +8,20 @@ using Terraria;
 using Microsoft.Xna.Framework;
 using Terraria.ID;
 using Microsoft.Xna.Framework.Graphics;
+using WeaponsOfMassDecoration.NPCs;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
     class ThrowingPaintbrush : PaintingItem{
-        public ThrowingPaintbrush() {
+        public ThrowingPaintbrush() : base(){
             usesGSShader = true;
+            textureCount = 3;
 		}
 
         public override void SetStaticDefaults() {
             DisplayName.SetDefault("Throwing Paintbrush");
-            SetStaticDefaults(halfDamageText,"This is how most modern art is created anyways, right?");
+            SetStaticDefaults("","This is how most modern art is created anyways, right?");
         }
 
         public override void SetDefaults() {
@@ -28,12 +30,6 @@ namespace WeaponsOfMassDecoration.Items {
 
             item.thrown = true;
             item.shoot = ProjectileType<Projectiles.ThrowingPaintbrush>();
-        }
-
-        protected override Texture2D getTexture(int paintColor, CustomPaint customPaint, PaintMethods method) {
-            if((paintColor == -1 && customPaint == null) || method == PaintMethods.RemovePaint)
-                return null;
-            return getExtraTexture("ThrowingPaintbrushPainted");
         }
     }
 }

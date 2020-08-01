@@ -15,9 +15,9 @@ namespace WeaponsOfMassDecoration.Items{
         //please don't look at this... there's probably a much better way to do it.
 
         public override void SetStaticDefaults() {
+            base.SetStaticDefaults();
             DisplayName.SetDefault("Paint Laser");
             Item.staff[ModContent.ItemType<PaintLaser>()] = true;
-            base.SetStaticDefaults(halfDamageText);
         }
 
         public override void SetDefaults() {

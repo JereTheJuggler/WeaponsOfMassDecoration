@@ -20,7 +20,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             usesGSShader = true;
 
             xFrameCount = 1;
-            yFrameCount = 3;
+            yFrameCount = 2;
 		}
 
         public override void SetStaticDefaults() {
@@ -65,13 +65,5 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			}
 			return base.OnTileCollide(oldVelocity);
 		}
-
-        protected override int convertColorFrame() {
-            if(colorFrame == 0)
-                return 0;
-            if(colorFrame == PaintID.Negative)
-                return 2;
-            return 1;
-        }
     }
 }

@@ -17,6 +17,7 @@ using Terraria.DataStructures;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 using System.IO;
+using Steamworks;
 
 namespace WeaponsOfMassDecoration.Projectiles {
     public abstract class PaintingProjectile : ModProjectile {
@@ -46,20 +47,47 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
         public float oldRotation = 0;
 
+        /// <summary>
+        /// Whether or not the projectile has a sprite
+        /// </summary>
         public bool hasGraphics = true;
 
+        /// <summary>
+        /// The number of frames along the y axis of the projectile's sprite
+        /// </summary>
         protected int yFrameCount = 31;
+        /// <summary>
+        /// The number of frames along the x axis of the projectile's sprite
+        /// </summary>
         protected int xFrameCount = 1;
 
+        /// <summary>
+        /// The number of updates between advancing the projectile's animation
+        /// </summary>
         public int animationFrameDuration = 0;
 
+        /// <summary>
+        /// The current frame of animation for the projectile. Animation frames go along the x axis of the projectile's sprite
+        /// </summary>
         public int animationFrame = 0;
+        /// <summary>
+        /// The current frame along the y axis based on the projectile's current color
+        /// </summary>
         public int colorFrame = 0;
 
+        /// <summary>
+        /// The current frame of the projectile. Automatically calculated by updateFrame
+        /// </summary>
         public int frame = 0;
 
+        /// <summary>
+        /// Specifies the whoAmI of the npc that owns this projectile
+        /// </summary>
         public int npcOwner = -1;
 
+        /// <summary>
+        /// Used to specify that the spritebatch should be reset in the postDraw event hook
+        /// </summary>
 		protected bool resetBatchInPost = false;
 
 		public PaintingProjectile() : base() { }
@@ -68,12 +96,17 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			base.SetStaticDefaults();
             Main.projFrames[projectile.type] = yFrameCount * xFrameCount;
             ProjectileID.Sets.TrailCacheLength[projectile.type] = trailLength;
+            if(trailLength > 1) {
+                ProjectileID.Sets.TrailingMode[projectile.type] = 0;
+            }
         }
 
-		public override void SetDefaults() {
-			base.SetDefaults();
-		}
-
+        /// <summary>
+        /// Sends a ModPacket to sync the npc owner of a PaintingProjectile
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="toClient"></param>
+        /// <param name="ignoreClient"></param>
         public static void sendProjNPCOwnerPacket(PaintingProjectile p,int toClient = -1,int ignoreClient=-1) {
             ModPacket packet = p.mod.GetPacket();
             packet.Write(WoMDMessageTypes.SetProjNPCOwner);
@@ -83,6 +116,10 @@ namespace WeaponsOfMassDecoration.Projectiles {
             packet.Send(toClient,ignoreClient);
 		}
 
+        /// <summary>
+        /// Sets the npc owner of the projectile specified in ModPacket
+        /// </summary>
+        /// <param name="reader"></param>
         public static void readProjNPCOwnerPacket(BinaryReader reader) {
             int projId = reader.ReadInt32();
             int projType = reader.ReadInt32();
@@ -125,6 +162,15 @@ namespace WeaponsOfMassDecoration.Projectiles {
         public Point convertPositionToTile(Point position) {
             return new Point((int)Math.Floor(position.X / 16f), (int)Math.Floor(position.Y / 16f));
         }
+
+        public PaintMethods getPaintMethod() {
+            if(npcOwner != -1)
+                return PaintMethods.BlocksAndWalls;
+            WoMDPlayer p = getModPlayer();
+            if(p == null)
+                return PaintMethods.BlocksAndWalls;
+            return p.paintMethod;
+        }
        #endregion
 
     #region tile/npc interaction
@@ -133,13 +179,12 @@ namespace WeaponsOfMassDecoration.Projectiles {
             Player p = getOwner();
             if(npc != null && p != null){// && projectile.owner == Main.myPlayer) {
                 WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
-                PaintMethods method = player.getPaintMethod();
+                PaintMethods method = player.paintMethod;
                 if(method != PaintMethods.None) {
                     if(method == PaintMethods.RemovePaint) {
                         npc.painted = false;
                     } else {
-                        player.getPaintVars(out int paintColor, out CustomPaint customPaint);
-                        applyPaintedToNPC(target, paintColor, customPaint, new CustomPaintData() { player = p });
+                        applyPaintedToNPC(target, player.paintColor, player.customPaint, new CustomPaintData() { player = p });
                     }
                 }
             }
@@ -151,7 +196,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             Player p = getOwner();
             if(p != null && projectile.owner == Main.myPlayer) {
                 WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
-                PaintMethods method = player.getPaintMethod();
+                PaintMethods method = player.paintMethod;
                 if(method == PaintMethods.None || method == PaintMethods.RemovePaint || player.currentPaintIndex < 0) {
                     damage = (int)Math.Round(damage * .5f);
                 }
@@ -172,8 +217,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
                         //target.GetGlobalNPC<NPCs.WoMDNPC>(mod).paintColor = -1;
                         //target.GetGlobalNPC<NPCs.WoMDNPC>(mod).customPaint = (Items.CustomPaint)p.inventory[currentPaintIndex].modItem.Clone();
                     }
-                    for(int i = 0; i < PaintIDs.itemIds.Length; i++) {
-                        if(p.inventory[currentPaintIndex].type == PaintIDs.itemIds[i]) {
+                    for(int i = 0; i < PaintItemID.list.Length; i++) {
+                        if(p.inventory[currentPaintIndex].type == PaintItemID.list[i]) {
                             //target.GetGlobalNPC<NPCs.WoMDNPC>(mod).paintColor = (byte)i;
                             //target.GetGlobalNPC<NPCs.WoMDNPC>(mod).customPaint = null;
                             break;
@@ -239,17 +284,11 @@ namespace WeaponsOfMassDecoration.Projectiles {
             if(trailLength > 0) {
                 projectile.oldRot[0] = projectile.rotation;
             }
-
+            PaintMethods method = getPaintMethod();
             if(xFrameCount > 1 && (animationFrameDuration == 0 || projectile.timeLeft % animationFrameDuration == 0))
-                nextFrame();
+                nextFrame(method);
             if(!usesShader) {
-                if(npcOwner == -1) {
-                    Player owner = getOwner();
-                    if(owner != null)
-                        updateColorFrame();
-				} else {
-                    updateColorFrame();
-				}
+                updateColorFrame(method);
             }
         }
     #endregion
@@ -258,17 +297,16 @@ namespace WeaponsOfMassDecoration.Projectiles {
         /// <summary>
         /// Updates the colorFrame property
         /// </summary>
-        public void updateColorFrame() {
+        public void updateColorFrame(PaintMethods method) {
             if(npcOwner == -1) {
                 WoMDPlayer player = getModPlayer();
                 if(player != null) {
-                    player.getPaintVars(out int paintColor, out CustomPaint customPaint);
-                    if(paintColor == -1 && customPaint == null)
+                    if(player.paintColor == -1 && player.customPaint == null)
                         colorFrame = 0;
-                    else if(customPaint == null)
-                        colorFrame = (byte)paintColor;
+                    else if(player.customPaint == null)
+                        colorFrame = (byte)player.paintColor;
                     else
-                        colorFrame = customPaint.getPaintID(new CustomPaintData(true, paintCyclingTimeScale, 0, getOwner()));
+                        colorFrame = player.customPaint.getPaintID(new CustomPaintData(true, paintCyclingTimeScale, 0, getOwner()));
                 }
 			} else {
                 NPC npc = getNPC(npcOwner);
@@ -285,29 +323,52 @@ namespace WeaponsOfMassDecoration.Projectiles {
                 else
                     colorFrame = customPaint.getPaintID(new CustomPaintData(true, npcCyclingTimeScale, gNpc.paintedTime));
 			}
-            updateFrame();
+            updateFrame(method);
 		}
 
         /// <summary>
         /// Advances the animation frame, wrapping back to frame 0 if necessary
         /// </summary>
-        public void nextFrame() {
+        public void nextFrame(PaintMethods method) {
             if(xFrameCount == 1)
                 return;
             animationFrame++;
             if(animationFrame >= xFrameCount)
                 animationFrame = 0;
-            updateFrame();
+            updateFrame(method);
 		}
 
-        public void updateFrame() {
+        /// <summary>
+        /// Updates the frame property based on the current animationFrame and colorFrame
+        /// </summary>
+        /// <param name="method"></param>
+        public void updateFrame(PaintMethods method) {
             if(usesShader)
                 frame = animationFrame;
             else
-                frame = convertColorFrame() * xFrameCount + animationFrame;
+                frame = convertColorFrame(method) * xFrameCount + animationFrame;
 		}
 
-        protected virtual int convertColorFrame() {
+        /// <summary>
+        /// Can be used to convert the current colorFrame into a different index. This is useful for projectiles that use the GSShader.
+        /// </summary>
+        /// <param name="method"></param>
+        /// <returns></returns>
+        protected virtual int convertColorFrame(PaintMethods method) {
+			switch(yFrameCount) {
+                case 2:
+                    if(method == PaintMethods.RemovePaint || colorFrame == 0)
+                        return 0;
+                    return 1;
+                case 3:
+                    if(method == PaintMethods.RemovePaint)
+                        return 1;
+                    if(colorFrame == 0)
+                        return 0;
+                    return 2;
+			}
+            if(method == PaintMethods.RemovePaint)
+                return 0;
             return colorFrame;
 		}
 
@@ -346,7 +407,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
                     spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
 
                     resetBatchInPost = true;
-                    shader = applyShader(this) as MiscShaderData;
+                    shader = applyShader(this);
                 }
 
                 for(int i = trailLength; i >= 0; i--) {
@@ -395,7 +456,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
                 Vector2 origin = (sourceRectangle.Size() / 2) + drawOriginOffset;
                 float scale = projectile.scale;
 
-                MiscShaderData data = (MiscShaderData)applyShader(this);
+                MiscShaderData data = applyShader(this);
 
                 for(int i = trailLength; i >= 0; i--) {
                     if(i == 1)
@@ -407,7 +468,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
                     float rotation = (i == 0 ? projectile.rotation : projectile.oldRot[i - 1]);
 
                     float op = projectile.Opacity - (projectile.Opacity / (trailLength + 1)) * i;
-                    float lightness = 1f - (.5f / (trailLength + 1)) * i;
+                    float lightness = 1f - (.75f / (trailLength + 1)) * i;
 
                     if(data != null)
                         data.UseOpacity(op).Apply();
@@ -432,42 +493,68 @@ namespace WeaponsOfMassDecoration.Projectiles {
     #endregion
 
     #region painting
-        public void paintAlongOldVelocity(Vector2 oldVelocity, bool blocks = true, bool walls = true) {
-            if(!(blocks || walls))
-                return;
+        /// <summary>
+        /// Paints tiles along the old velocity of the projectile. Must be used for projectiles controlled by the player to ensure that paint is properly consumed, and colors are properly changed if the player runs out of a color mid operation
+        /// </summary>
+        /// <param name="oldVelocity">The old velocity of the projectile</param>
+        /// <param name="blocksAllowed">Can be set to false to prevent painting walls regardless of paint method</param>
+        /// <param name="wallsAllowed">Can be set to false to prevent painting tiles regardless of paint method</param>
+        /// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
+        /// <returns>The number of tiles that were updated</returns>
+        public int paintAlongOldVelocity(Vector2 oldVelocity, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
+            if(!(blocksAllowed || wallsAllowed))
+                return 0;
+            int count = 0;
             if(oldVelocity.Length() > 0 && !(startPosition.X == 0 && startPosition.Y == 0) && (startPosition - projectile.position).Length() > oldVelocity.Length()) {
                 Vector2 unitVector = new Vector2(oldVelocity.X, oldVelocity.Y);
                 unitVector.Normalize();
                 for(int o = 0; o < Math.Ceiling(oldVelocity.Length()); o += 8) {
-                    paint(projectile.Center - oldVelocity + (unitVector * o), blocks, walls);
+                    if(paint(projectile.Center - oldVelocity + (unitVector * o), blocksAllowed, wallsAllowed, useWorldGen))
+                        count++;
                 }
             }
+            return count;
         }
 
-        public void paintBetweenPoints(Vector2 start, Vector2 end, bool blocks = true, bool walls = true) {
-            if(!(blocks || walls))
-                return;
+        /// <summary>
+        /// Paints tiles between the 2 provided world coordinates. Must be used for projectiles controlled by the player to ensure that paint is properly consumed and colors are properly changed if the player runs out of a color mid operation
+        /// </summary>
+        /// <param name="start">The starting position of the line to paint. Expects values in world coordinates</param>
+		/// <param name="end">The ending position of the line to paint. Expects values in world coordinates</param>
+		/// <param name="blocksAllowed">Can be set to false to prevent painting walls regardless of paint method</param>
+        /// <param name="wallsAllowed">Can be set to false to prevent painting tiles regardless of paint method</param>
+        /// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
+        /// <returns>The number of tiles that were updated</returns>
+        public int paintBetweenPoints(Vector2 start, Vector2 end, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
+            if(!(blocksAllowed || wallsAllowed))
+                return 0;
+            int count = 0;
             Vector2 unitVector = end - start;
             float distance = unitVector.Length();
             unitVector.Normalize();
             int iterations = (int)Math.Ceiling(distance / 8f);
             for(int i = 0; i < iterations; i++) {
-                paint(start + (unitVector * i * 8), blocks, walls);
+                if(paint(start + (unitVector * i * 8), blocksAllowed, wallsAllowed, useWorldGen))
+                    count++;
             }
-
+            return count;
         }
 
         /// <summary>
-        /// Creates a circle of paint. Must be called instead of the version in WeaponsOfMassDestruction in order to consume paint and properly switch colors if the player runs out
+        /// Creates a circle of paint. Must be used for projectiles controlled by the player to ensure that paint is properly consumed and colors are properly changed if the player runs out of a color mid operation
         /// </summary>
-        /// <param name="pos"></param>
-        /// <param name="radius"></param>
-        /// <param name="blocks"></param>
-        /// <param name="walls"></param>
-        public void explode(Vector2 pos, float radius, bool blocks = true, bool walls = true) {
+        /// <param name="pos">The position of the center of the circle. Expects values in world coordinates</param>
+		/// <param name="radius">The radiues of the circle. 16 for each tile</param>
+		/// <param name="blocksAllowed">Can be set to false to prevent painting walls regardless of paint method</param>
+        /// <param name="wallsAllowed">Can be set to false to prevent painting tiles regardless of paint method</param>
+        /// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
+        /// <returns>The number of tiles that were updated</returns>
+        public int explode(Vector2 pos, float radius, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
+            int count = 0;
             for(int currentLevel = 0; currentLevel < Math.Ceiling(radius / 16f); currentLevel++) {
                 if(currentLevel == 0) {
-                    paint(pos, blocks, walls);
+                    if(paint(pos, blocksAllowed, wallsAllowed, useWorldGen))
+                        count++;
                 } else {
                     for(int i = 0; i <= currentLevel * 2; i++) {
                         float xOffset;
@@ -482,24 +569,28 @@ namespace WeaponsOfMassDecoration.Projectiles {
                         Vector2 offsetVector = new Vector2(xOffset * 16f, yOffset * 16f);
                         if(offsetVector.Length() <= radius) {
                             for(int dir = 0; dir < 4; dir++) {
-                                paint(pos + offsetVector.RotatedBy(dir * (Math.PI / 2)), blocks, walls);
+                                if(paint(pos + offsetVector.RotatedBy(dir * (Math.PI / 2)), blocksAllowed, wallsAllowed, useWorldGen))
+                                    count++;
                             }
                         }
                     }
                 }
             }
+            return count;
         }
 
         /// <summary>
         /// Creates a splatter of paint
         /// </summary>
-        /// <param name="pos"></param>
-        /// <param name="radius"></param>
-        /// <param name="spokes"></param>
-        /// <param name="blocks"></param>
-        /// <param name="walls"></param>
-        public void splatter(Vector2 pos,float radius,int spokes = 5,bool blocks = true,bool walls = true) {
-            explode(pos, 48f, blocks, walls);
+        /// <param name="pos">The position of the center of the splatter. Expects values in world coordinates</param>
+        /// <param name="radius">The length of the spokes coming out of the center of the splatter. 1 per tile</param>
+        /// <param name="spokes">The number of spokes to create</param>
+        /// <param name="blocksAllowed">Can be set to false to prevent painting walls regardless of paint method</param>
+        /// <param name="wallsAllowed">Can be set to false to prevent painting tiles regardless of paint method</param>
+        /// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
+        /// <returns>The total number of tiles that were updated</returns>
+        public int splatter(Vector2 pos,float radius,int spokes = 5,bool blocksAllowed = true,bool wallsAllowed = true, bool useWorldGen = false) {
+            int count = explode(pos, 48f, blocksAllowed, wallsAllowed);
             float angle = Main.rand.NextFloat((float)Math.PI);
             float[] angles = new float[spokes];
             float[] radii = new float[spokes];
@@ -515,54 +606,65 @@ namespace WeaponsOfMassDecoration.Projectiles {
                             (int)Math.Round(pos.X + Math.Cos(angles[s]) * offset),
                             (int)Math.Round(pos.Y + Math.Sin(angles[s]) * offset)
                         );
-                        paint(convertPositionToTile(newPos),blocks,walls);
+                        if(paint(convertPositionToTile(newPos), blocksAllowed, wallsAllowed, useWorldGen))
+                            count++;
                     }
                 }
             }
+            return count;
         }
 
         /// <summary>
-        /// Used to paint blocks and walls. blocksAllowed and wallsAllowed can be used to disable painting blocks and walls regardless of the player's current painting method.
+        /// Used to paint blocks and walls. Must be used for projectiles controlled by the player to ensure that paint is properly consumed
         /// </summary>
         /// <param name="coordinates">The position of the tile to paint. Expects values using world coordinates</param>
         /// <param name="blocksAllowed">Can be used to disable painting blocks regardless of the player's current painting method</param>
         /// <param name="wallsAllowed">Can be used to disable painting walls regardless of the player's current painting method</param>
-        public void paint(Vector2 coordinates, bool blocksAllowed = true, bool wallsAllowed = true) { paint(convertPositionToTile(coordinates),blocksAllowed,wallsAllowed); }
+        /// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
+        /// <returns>Returns true if the given tile was updated</returns>
+        public bool paint(Vector2 coordinates, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) => paint(convertPositionToTile(coordinates),blocksAllowed,wallsAllowed, useWorldGen);
 
         /// <summary>
-        /// Used to paint blocks and walls. Paints the tile at projectile.Center. blocksAllowed and wallsAllowed can be used to disable painting blocks and walls regardless of the player's current painting method.
+        /// Used to paint blocks and walls. Paints the tile at projectile.Center. Must be used for projectiles controlled by the player to ensure that paint is properly consumed
         /// </summary>
         /// <param name="blocksAllowed">Can be used to disable painting blocks regardless of the player's current painting method</param>
         /// <param name="wallsAllowed">Can be used to disable painting walls regardless of the player's current painting method</param>
-        public void paint(bool blocksAllowed = true, bool wallsAllowed = true) { paint(convertPositionToTile(projectile.Center),blocksAllowed,wallsAllowed); }
+        /// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
+        /// <returns>Returns true if the given tile was updated</returns>
+        public bool paint(bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) => paint(convertPositionToTile(projectile.Center),blocksAllowed,wallsAllowed, useWorldGen);
 
         /// <summary>
-        /// Used to paint blocks and walls. blocksAllowed and wallsAllowed can be used to disable painting blocks and walls regardless of the player's current painting method.
+        /// Used to paint blocks and walls. Must be used for projectiles controlled by the player to ensure that paint is properly consumed
         /// </summary>
         /// <param name="coordinates">The position of the tile to paint. Expects values using tile coordinates</param>
         /// <param name="blocksAllowed">Can be used to disable painting blocks regardless of the player's current painting method</param>
         /// <param name="wallsAllowed">Can be used to disable painting walls regardless of the player's current painting method</param>
-        public void paint(Point coordinates, bool blocksAllowed = true, bool wallsAllowed = true) { paint(coordinates.X, coordinates.Y, blocksAllowed, wallsAllowed); }
+        /// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
+        /// <returns>Returns true if the given tile was updated</returns>
+        public bool paint(Point coordinates, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) => paint(coordinates.X, coordinates.Y, blocksAllowed, wallsAllowed, useWorldGen);
 
         /// <summary>
-        /// Used to paint blocks and walls. blocksAllowed and wallsAllowed can be used to disable painting blocks and walls regardless of the player's current painting method.
+        /// Used to paint blocks and walls. Must be used for projectiles controlled by the player to ensure that paint is properly consumed
         /// </summary>
-        /// <param name="x">Tile x coordinate</param>
-        /// <param name="y">Tile y coordinate</param>
+        /// <param name="x">Tile x coordinate. Expects values using tile coordinates</param>
+        /// <param name="y">Tile y coordinate. Expects values using tile coordinates</param>
         /// <param name="blocksAllowed">Can be used to disable painting blocks regardless of the player's current painting method</param>
         /// <param name="wallsAllowed">Can be used to disable painting walls regardless of the player's current painting method</param>
-        public void paint(int x,int y,bool blocksAllowed = true, bool wallsAllowed = true) {
+        /// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
+        /// <returns>Returns true if the given tile was updated</returns>
+        public bool paint(int x,int y,bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
             if(!(blocksAllowed || wallsAllowed))
-                return;
+                return false;
             if(x < 0 || x >= Main.maxTilesX || y < 0 || y >= Main.maxTilesY)
-                return;
+                return false;
             if(!paintedTiles.Contains(new Point(x, y))) {
                 if(npcOwner == -1) {
                     Player p = getOwner();
                     if(projectile.owner == Main.myPlayer && p != null) {
                         WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
-                        if(player.paint(x, y, blocksAllowed, wallsAllowed)) {
+                        if(player.paint(x, y, blocksAllowed, wallsAllowed, useWorldGen)) {
                             paintedTiles.Add(new Point(x, y));
+                            return true;
                         }
                     }
 				} else {
@@ -572,18 +674,19 @@ namespace WeaponsOfMassDecoration.Projectiles {
                         if(gNpc != null) {
                             gNpc.getPaintVars(out int paintColor, out CustomPaint customPaint);
                             if(paintColor == -1 && customPaint == null)
-                                return;
+                                return false;
                             byte targetColor;
                             if(customPaint != null) {
                                 targetColor = customPaint.getPaintID(new CustomPaintData(false, npcCyclingTimeScale, gNpc.paintedTime));
 							} else {
                                 targetColor = (byte)paintColor;
 							}
-                            WeaponsOfMassDecoration.paint(x, y, targetColor, PaintMethods.BlocksAndWalls, blocksAllowed, wallsAllowed);
+                            return WeaponsOfMassDecoration.paint(x, y, targetColor, PaintMethods.BlocksAndWalls, blocksAllowed, wallsAllowed, useWorldGen);
 						}
 					}
 				}
             }
+            return false;
         }
     #endregion
 

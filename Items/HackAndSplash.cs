@@ -17,8 +17,8 @@ namespace WeaponsOfMassDecoration.Items {
     class HackAndSplash : PaintingItem {
 
         public override void SetStaticDefaults() {
-			DisplayName.SetDefault("Hack 'n Splash");
-			base.SetStaticDefaults(halfDamageText);
+            base.SetStaticDefaults();
+            DisplayName.SetDefault("Hack 'n Splash");
 		}
 
         public override void SetDefaults() {

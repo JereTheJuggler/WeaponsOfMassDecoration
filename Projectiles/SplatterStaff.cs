@@ -67,7 +67,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
         public override void AI() {
             for(int i = 0; i < 2; i++) {
 				Vector2 speed = new Vector2(2, 0).RotatedByRandom(Math.PI * 2);
-                Dust dust = getDust(Dust.NewDust(projectile.Center, 0, 0, mod.DustType("LightDust"), speed.X, speed.Y , 0, getColor(this), 1));
+                Dust dust = getDust(Dust.NewDust(projectile.Center, 0, 0, mod.DustType("PaintDust"), speed.X, speed.Y , 0, getColor(this), 1));
                 if(dust != null) {
                     dust.noGravity = true;
                     dust.fadeIn = 1.5f;

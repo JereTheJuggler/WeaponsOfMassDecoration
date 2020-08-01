@@ -2,6 +2,8 @@
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
+using Microsoft.Xna.Framework.Graphics;
+using WeaponsOfMassDecoration.NPCs;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
@@ -9,11 +11,12 @@ namespace WeaponsOfMassDecoration.Items {
     class PaintBomb : PaintingItem{
         public PaintBomb() : base() {
             usesGSShader = true;
+            textureCount = 2;
 		}
 
         public override void SetStaticDefaults() {
+            base.SetStaticDefaults();
             DisplayName.SetDefault("Paint Bomb");
-            base.SetStaticDefaults(halfDamageText);
 		}
 
         public override void SetDefaults() {

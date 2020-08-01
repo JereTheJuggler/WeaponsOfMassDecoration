@@ -3,18 +3,21 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
 using Microsoft.Xna.Framework.Graphics;
+using WeaponsOfMassDecoration.NPCs;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.Items {
     class PaintDynamite : PaintingItem {
-        public PaintDynamite() {
+        public PaintDynamite() : base() {
             usesGSShader = true;
+            textureCount = 2;
+            paintConsumptionChance = .5f;
 		}
 
         public override void SetStaticDefaults() {
+            base.SetStaticDefaults();
             DisplayName.SetDefault("Paint Dynamite");
-            SetStaticDefaults("","50% chance to not consume paint for each block/wall covered");
         }
 
         public override void SetDefaults() {
@@ -33,12 +36,6 @@ namespace WeaponsOfMassDecoration.Items {
             item.value = Item.buyPrice(0, 1, 0, 0);
             item.rare = ItemRarityID.Green;
             item.autoReuse = false;
-        }
-
-        protected override Texture2D getTexture(int paintColor, CustomPaint customPaint, PaintMethods method) {
-            if((paintColor == -1 && customPaint == null) || method == PaintMethods.RemovePaint)
-                return null;
-            return getExtraTexture("PaintDynamitePainted");
         }
     }
 }

@@ -67,11 +67,5 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.Kill();
             return false;
         }
-
-        protected override int convertColorFrame() {
-            if(colorFrame == PaintID.Negative)
-                return 1;
-            return 0;
-        }
     }
 }

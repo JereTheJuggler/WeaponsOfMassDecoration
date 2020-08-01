@@ -3,19 +3,21 @@ using Terraria.ModLoader;
 using System;
 using Terraria;
 using Microsoft.Xna.Framework.Graphics;
+using WeaponsOfMassDecoration.NPCs;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items{
     public class Paintball : PaintingItem{
 		
-        public Paintball() {
+        public Paintball() : base(){
             usesGSShader = true;
+            textureCount = 2;
 		}
 
-        public override void SetStaticDefaults(){
-			DisplayName.SetDefault("Paintball");
-			base.SetStaticDefaults(halfDamageText);
+        public override void SetStaticDefaults() {
+            base.SetStaticDefaults();
+            DisplayName.SetDefault("Paintball");
 		}
 
 		public override void SetDefaults(){
@@ -31,12 +33,6 @@ namespace WeaponsOfMassDecoration.Items{
             item.shoot = ProjectileType<Projectiles.Paintball>();
             item.shootSpeed = 14f;
             item.ammo = AmmoID.Bullet;
-        }
-        
-        protected override Texture2D getTexture(int paintColor, CustomPaint customPaint, PaintMethods method) {
-            if((paintColor == -1 && customPaint == null) || method == PaintMethods.RemovePaint)
-                return null;
-            return getExtraTexture("PaintballPainted");
         }
     }
 }

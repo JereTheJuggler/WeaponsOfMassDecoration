@@ -18,7 +18,7 @@ using Terraria.DataStructures;
 using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Dusts {
-    public class LightDust : ModDust{
+    public class PaintDust : ModDust{
 
         public Color trueColor;
 
