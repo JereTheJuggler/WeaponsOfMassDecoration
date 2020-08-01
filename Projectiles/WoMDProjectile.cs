@@ -24,20 +24,46 @@ using System.Diagnostics;
 
 namespace WeaponsOfMassDecoration.Projectiles {
 	public class WoMDProjectile : GlobalProjectile {
+		/// <summary>
+		/// Whether or not this projectile has been painted
+		/// </summary>
 		public bool painted = false;
+		/// <summary>
+		/// The PaintID of the paint that is being used to paint with and render this projectile. -1 if projectile is using a custom paint
+		/// </summary>
 		public int paintColor = -1;
+		/// <summary>
+		/// The custom paint that is being used to paint with and render this projectile. null if projectile is using a vanilla paint
+		/// </summary>
 		public CustomPaint customPaint = null;
-		public bool sprayPainted = false;
+		/// <summary>
+		/// The time that this projectile was painted. Used for applying shaders for color changing paints
+		/// </summary>
 		public float paintedTime = 0;
+		/// <summary>
+		/// The whoAmI of the NPC that this projectile belongs to
+		/// </summary>
 		public int npcOwner = -1;
 
+		/// <summary>
+		/// Whether or this projectile has been taken care of in the preAI event
+		/// </summary>
 		public bool setupPreAi = false;
 
+		//All the above fields need to be stored per entity
 		public override bool InstancePerEntity { get { return true; } }
+
+		//Don't want new instances to be cloned either
 		public override bool CloneNewInstances { get { return false; } }
 
+		/// <summary>
+		/// Sends a packet to sync the variables regarding the rendering of the projectile
+		/// </summary>
+		/// <param name="gProj"></param>
+		/// <param name="proj"></param>
+		/// <param name="toClient"></param>
+		/// <param name="ignoreClient"></param>
 		public static void sendProjectileColorPacket(WoMDProjectile gProj,Projectile proj,int toClient=-1,int ignoreClient=-1) {
-			//Console.WriteLine("sending projectile color packet");
 			if(server() || multiplayer()) {
 				ModPacket packet = gProj.mod.GetPacket();
 				packet.Write(WoMDMessageTypes.SetProjectileColor);
@@ -50,6 +76,12 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			}
 		}
 
+		/// <summary>
+		/// Handles reading a packet to sync the variables regarding the rendering of the projectile
+		/// </summary>
+		/// <param name="reader"></param>
+		/// <param name="gProj"></param>
+		/// <param name="proj"></param>
 		public static void readProjectileColorPacket(BinaryReader reader, out WoMDProjectile gProj, out Projectile proj) {
 			int projId = reader.ReadInt32();
 			int projType = reader.ReadInt32();
@@ -168,7 +200,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override void PostAI(Projectile projectile) {
 			if(!projectile.friendly && (singlePlayer() || server()) && painted) {
-
 				switch(projectile.type) {
 					case ProjectileID.SandnadoHostile:
 						#region sand elemental
@@ -216,7 +247,12 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			return base.OnTileCollide(projectile, oldVelocity);
 		}
 
-		public static void cloneProperties(Projectile src,Projectile dest) {
+		/// <summary>
+		/// Uses Reflection to copy most properties and field from one projectile to another
+		/// </summary>
+		/// <param name="src"></param>
+		/// <param name="dest"></param>
+		protected static void cloneProperties(Projectile src,Projectile dest) {
 			PropertyInfo[] properties = dest.GetType().GetProperties();
 			foreach(PropertyInfo property in properties) {
 				switch(property.Name) {
@@ -242,7 +278,10 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			}
 		}
 
-		public bool resetBatchInPost = false;
+		/// <summary>
+		/// Will be set to true if the spritebatch needs to be reset after the projectile is drawn. 
+		/// </summary>
+		protected bool resetBatchInPost = false;
 
 		public override bool PreDraw(Projectile projectile, SpriteBatch spriteBatch, Color lightColor) {
 			if(painted && Main.netMode != NetmodeID.Server && (paintColor != -1 || customPaint != null)) {

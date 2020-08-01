@@ -76,6 +76,11 @@ namespace WeaponsOfMassDecoration.Items {
 		/// </summary>
 		public const byte paintValue = 64;
 
+		/// <summary>
+		/// The chance that this paint will be consumed when used
+		/// </summary>
+		public virtual float paintConsumptionChance { get { return 1f; } }
+
 		protected virtual bool _includeVanillaRecipes { get { return true; } }
 
 		/// <summary>
@@ -145,7 +150,10 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 		public override void SetStaticDefaults() {
 			DisplayName.SetDefault(displayName);
-			SetStaticDefaults("", "",false);
+			string paintConsumptionText = "";
+			if(paintConsumptionChance < 1)
+				paintConsumptionText = Math.Round(100 * (1f - paintConsumptionChance)).ToString() + "% chance to not be consumed";
+			SetStaticDefaults(paintConsumptionText, "",false);
 		}
 
 		/* Required recipes:
@@ -354,9 +362,9 @@ namespace WeaponsOfMassDecoration.Items {
 	}
 
 	public class RainbowPaint : CustomPaint, ICyclingPaint {
+		public override float paintConsumptionChance => .5f;
 		public RainbowPaint() : base() {
 			cycleLoops = true;
-			paintConsumptionChance = .5f;
 		}
 		protected override int[] _paintItemIds => new int[] {
 			ItemID.RedPaint,

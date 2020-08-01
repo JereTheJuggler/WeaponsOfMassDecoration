@@ -12,7 +12,6 @@ namespace WeaponsOfMassDecoration.Items {
         public PaintDynamite() : base() {
             usesGSShader = true;
             textureCount = 2;
-            paintConsumptionChance = .5f;
 		}
 
         public override void SetStaticDefaults() {

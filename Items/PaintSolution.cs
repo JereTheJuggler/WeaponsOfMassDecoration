@@ -16,7 +16,6 @@ namespace WeaponsOfMassDecoration.Items {
         public PaintSolution() : base(){
             usesGSShader = true;
             textureCount = 2;
-            paintConsumptionChance = .25f;
 		}
 
         public override void SetStaticDefaults() {

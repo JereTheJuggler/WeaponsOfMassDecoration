@@ -18,12 +18,19 @@ using System.Runtime.InteropServices;
 
 namespace WeaponsOfMassDecoration.Items {
     public abstract class PaintingItem : ModItem{
-
+        /// <summary>
+        /// This text is applied to all painting weapons
+        /// </summary>
 		public const string halfDamageText = "Damage is halved if you don't have any paint.";
 
+        /// <summary>
+        /// Whether or not this item uses the "green screen" shader during rendering in the player's inventory
+        /// </summary>
         public bool usesGSShader = false;
+        /// <summary>
+        /// The number of textures this item uses for rendering in the player's inventory
+        /// </summary>
         public int textureCount = 1;
-        public float paintConsumptionChance = 1f;
 
 		public override void SetStaticDefaults() {
             SetStaticDefaults("", "", true);
@@ -42,9 +49,6 @@ namespace WeaponsOfMassDecoration.Items {
                 "Paints blocks and walls!",
                 "The first paint and tool found in your inventory will be used"
             });
-            if(paintConsumptionChance < 1f) {
-                lines.Add(Math.Round((1 - paintConsumptionChance) * 100f).ToString() + "% chance to not consume paint");
-			}
             if(postToolTip != "") {
                 lines.AddRange(postToolTip.Split('\n'));
 			}
@@ -57,12 +61,9 @@ namespace WeaponsOfMassDecoration.Items {
             Tooltip.SetDefault(string.Join("\n", lines));
         }
 
-        public Player getOwner() {
-            return getPlayer(item.owner);
-		}
-
+        //This is what fills in the "Current Tool" and "Current Paint" lines of the tooltip
 		public override void ModifyTooltips(List<TooltipLine> tooltips) {
-            Player p = getOwner();
+            Player p = getPlayer(item.owner);
             if(p == null)
                 return;
             WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
@@ -78,6 +79,7 @@ namespace WeaponsOfMassDecoration.Items {
 			base.ModifyTooltips(tooltips);
 		}
 
+        //This is where shaders are applied to items to make them reflect the current paint and tool the player is using
 		public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale) {
 			MiscShaderData shader = getShader(this, out WoMDPlayer player);
             if((usesGSShader || ((player.paintColor == PaintID.Negative || player.customPaint is NegativeSprayPaint) && !(this is CustomPaint))) && shader != null) {
@@ -116,6 +118,7 @@ namespace WeaponsOfMassDecoration.Items {
             return null;
 		}
 
+        //This is where damage is cut in half if the player's current tool is a paint scraper or the player doesn't have any paint or tools in their inventory
 		public override void ModifyWeaponDamage(Player player, ref float add, ref float mult, ref float flat) {
             WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
 			if(!p.canPaint()) {
@@ -125,6 +128,7 @@ namespace WeaponsOfMassDecoration.Items {
 			}
 		}
 
+        //This is where the painted buff is applied to NPCs that the item hits with melee
 		public override void OnHitNPC(Player p, NPC target, int damage, float knockBack, bool crit) {
             WoMDNPC npc = target.GetGlobalNPC<WoMDNPC>();
             if(npc != null && p != null && item.owner == Main.myPlayer) {
@@ -152,7 +156,7 @@ namespace WeaponsOfMassDecoration.Items {
                 return;
             if(x < 0 || x >= Main.maxTilesX || y < 0 || y >= Main.maxTilesY)
                 return;
-            Player p = getOwner();
+            Player p = getPlayer(item.owner);
             if(item.owner == Main.myPlayer && p != null) {
                 WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
                 player.paint(x, y, blocksAllowed, wallsAllowed);

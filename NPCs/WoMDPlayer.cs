@@ -269,6 +269,8 @@ namespace WeaponsOfMassDecoration.NPCs {
             if(_paintMethod == PaintMethods.RemovePaint)
                 return;
             if(_currentPaintIndex >= 0) {
+                if(_customPaint != null && _customPaint.paintConsumptionChance < 1f && Main.rand.NextFloat() <= _customPaint.paintConsumptionChance)
+                    return;
                 Item item = player.inventory[_currentPaintIndex];
                 if(item.stack > 0)
                     item.stack--;

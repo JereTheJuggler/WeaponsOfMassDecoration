@@ -21,20 +21,45 @@ using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.NPCs {
     public class WoMDNPC : GlobalNPC{
+        /// <summary>
+        /// Whether or not the NPC is currently painted
+        /// </summary>
         public bool painted = false;
+        /// <summary>
+        /// The PaintID being used to render the NPC. -1 if the NPC is using a custom paint
+        /// </summary>
         public int paintColor = -1;
+        /// <summary>
+        /// The custom paint being used to render the NPC. null if the NPC is using a vanilla paint
+        /// </summary>
         public CustomPaint customPaint = null;
+        /// <summary>
+        /// Whether or not the NPC was painted with spray paint
+        /// </summary>
         public bool sprayPainted = false;
+        /// <summary>
+        /// The time that the NPC was painted
+        /// </summary>
 		public float paintedTime = 0;
 
+        //Each entity needs their own set of the above variables
         public override bool InstancePerEntity { get { return true; } }
-		public override bool CloneNewInstances { get { return false; } }
 
+        //Don't want instances to be cloned
+		public override bool CloneNewInstances { get { return false; } }
+        
         public override void ResetEffects(NPC npc) {
             painted = false;
         }
 
-
+        /// <summary>
+        /// Sets the variables regarding the rendering of the NPC. Called in WeaponsOfMassDecoration.applyPaintedToNPC
+        /// </summary>
+        /// <param name="npc"></param>
+        /// <param name="paintColor"></param>
+        /// <param name="customPaint"></param>
+        /// <param name="sprayPainted"></param>
+        /// <param name="paintedTime"></param>
         public void setColors(NPC npc, int paintColor, CustomPaint customPaint, bool sprayPainted, float paintedTime) {
             WoMDNPC gNpc = npc.GetGlobalNPC<WoMDNPC>();
             if(gNpc != null) {
@@ -49,6 +74,13 @@ namespace WeaponsOfMassDecoration.NPCs {
             }
 		}
 
+        /// <summary>
+        /// Sends a packet to sync variables regarding the rendering of the NPC
+        /// </summary>
+        /// <param name="gNpc"></param>
+        /// <param name="npc"></param>
+        /// <param name="toClient"></param>
+        /// <param name="ignoreClient"></param>
         public static void sendColorPacket(WoMDNPC gNpc, NPC npc, int toClient = -1, int ignoreClient = -1) {
             if(server() || multiplayer()) {
                 ModPacket packet = gNpc.mod.GetPacket();
@@ -63,6 +95,12 @@ namespace WeaponsOfMassDecoration.NPCs {
             }
         }
 
+        /// <summary>
+        /// Handles reading a packet and setting variables regarding the rendering of the NPC
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="gNpc"></param>
+        /// <param name="npc"></param>
         public static void readColorPacket(BinaryReader reader, out WoMDNPC gNpc, out NPC npc) {
             int npcId = reader.ReadInt32();
             int npcType = reader.ReadInt32();
@@ -84,6 +122,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 			}
         }
 
+        //This is used for controlling certain Chaos Mode functionality
 		public override void PostAI(NPC npc) {
 			base.PostAI(npc);
             if(Main.netMode == NetmodeID.SinglePlayer || Main.netMode == NetmodeID.Server) {
@@ -122,8 +161,12 @@ namespace WeaponsOfMassDecoration.NPCs {
             }
 		}
 
+        /// <summary>
+        /// Whether or not the spritebatch needs to be reset after drawing an NPC
+        /// </summary>
 		private bool resetBatchInPost;
 		
+        //This is where the shaders are applied to the NPCs to make them appear painted
 		public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Color drawColor) {
 			if(painted && Main.netMode != NetmodeID.Server && (paintColor != -1 || customPaint != null)) {
 				resetBatchInPost = true;
@@ -136,6 +179,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 			return true;
 		}
 
+        //This just resets the spritebatch after the NPC is drawn, if necessary
 		public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Color drawColor) {
 			if(resetBatchInPost) {
 				spriteBatch.End();
@@ -213,6 +257,7 @@ namespace WeaponsOfMassDecoration.NPCs {
             return false;
         }
     
+
         public void getPaintVars(out int paintColor, out CustomPaint customPaint) {
             paintColor = this.paintColor;
             customPaint = this.customPaint;

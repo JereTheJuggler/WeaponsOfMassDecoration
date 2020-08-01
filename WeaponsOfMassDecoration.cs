@@ -415,9 +415,9 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="drawData">This is necessary for the SprayPainted shader to work</param>
 		/// <returns></returns>
 		public static MiscShaderData applyShader(WoMDNPC globalNpc, DrawData? drawData = null) {
-			MiscShaderData shader = getShader(globalNpc, drawData);
+			MiscShaderData shader = getShader(globalNpc, out bool needsDrawData);
 			if(shader != null)
-				shader.Apply();
+				shader.Apply(needsDrawData ? drawData : null);
 			return shader;
 		}
 		/// <summary>
@@ -462,14 +462,17 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="globalNpc"></param>
 		/// <param name="drawData">This is necessary for the SprayPainted shader to work</param>
 		/// <returns></returns>
-		public static MiscShaderData getShader(WoMDNPC globalNpc, DrawData? drawData = null) {
+		public static MiscShaderData getShader(WoMDNPC globalNpc, out bool needsDrawData) {
+			needsDrawData = false;
 			if(!globalNpc.painted)
 				return null;
 			if(globalNpc.paintColor == PaintID.Negative || globalNpc.customPaint is NegativeSprayPaint)
 				return getNegativeShader();
 			Color color = getColor(globalNpc.paintColor, globalNpc.customPaint, npcCyclingTimeScale, globalNpc.paintedTime, null);
-			if(globalNpc.sprayPainted)
-				return getSprayPaintedShader(color, drawData);
+			if(globalNpc.sprayPainted) {
+				needsDrawData = true;
+				return getSprayPaintedShader(color);
+			}
 			return getPaintedShader(color);
 		}
 		/// <summary>
@@ -480,7 +483,7 @@ namespace WeaponsOfMassDecoration {
 		/// <returns></returns>
 		public static MiscShaderData getShader(PaintingItem item, out WoMDPlayer player) {
 			player = null;
-			Player p = item.getOwner();
+			Player p = getPlayer(item.item.owner);
 			if(p == null)
 				return null;
 			player = p.GetModPlayer<WoMDPlayer>();
