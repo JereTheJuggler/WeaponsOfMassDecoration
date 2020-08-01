@@ -81,7 +81,6 @@ namespace WeaponsOfMassDecoration {
 		public const float npcCyclingTimeScale = 1f;
 
 		protected static Dictionary<string, Texture2D> extraTextures;
-		protected static Dictionary<byte, string> paintNames;
 
 		public WeaponsOfMassDecoration() {
 			Properties = new ModProperties() {
@@ -125,41 +124,6 @@ namespace WeaponsOfMassDecoration {
 
 				Ref<Effect> sprayPaintedRef = new Ref<Effect>(GetEffect("Effects/SprayPainted"));
 				GameShaders.Misc["SprayPainted"] = new MiscShaderData(sprayPaintedRef, "sprayPaintedColor").UseImage("Images/Misc/noise");
-				#endregion
-
-				#region load paint items
-				paintNames = new Dictionary<byte, string> {
-					{ 1 , "Red" },
-					{ 2 , "Orange" },
-					{ 3 , "Yellow" },
-					{ 4 , "Lime" },
-					{ 5 , "Green" },
-					{6,"Teal" },
-					{7,"Cyan" },
-					{8,"Sky Blue" },
-					{9,"Blue" },
-					{10,"Purple" },
-					{11,"Violet" },
-					{12,"Pink" },
-					{13,"Deep Red" },
-					{14,"Deep Orange" },
-					{15,"Deep Yellow" },
-					{16,"Deep Lime" },
-					{17,"Deep Green" },
-					{18,"Deep Teal" },
-					{19,"Deep Cyan" },
-					{20,"Deep Sky Blue" },
-					{21,"Deep Blue" },
-					{22,"Deep Purple" },
-					{23,"Deep Violet" },
-					{24,"Deep Pink" },
-					{25,"Black" },
-					{26,"White" },
-					{27,"Gray" },
-					{28,"Brown" },
-					{29,"Shadow" },
-					{30,"Negative" }
-				};
 				#endregion
 
 				#region load extra textures
@@ -258,7 +222,6 @@ namespace WeaponsOfMassDecoration {
 
 		public override void Unload() {
 			extraTextures = null;
-			paintNames = null;
 			base.Unload();
 		}
 
@@ -376,7 +339,7 @@ namespace WeaponsOfMassDecoration {
 		public static bool isPaint(Item item) {
 			if(item.modItem is CustomPaint)
 				return true;
-			if(PaintItemID.list.Contains(item.type))
+			if(item.paint > 0)
 				return true;
 			return false;
 		}
@@ -426,9 +389,8 @@ namespace WeaponsOfMassDecoration {
 			if(customPaint != null) {
 				return customPaint.displayName;
 			} else {
-				if(paintNames.ContainsKey((byte)paintColor)) {
-					return paintNames[(byte)paintColor]+" Paint";
-				}
+				if(paintColor < ColorNames.list.Length)
+					return ColorNames.list[paintColor];
 			}
 			return "None";
 		}
@@ -489,7 +451,7 @@ namespace WeaponsOfMassDecoration {
 		public static MiscShaderData getShader(WoMDProjectile gProjectile) {
 			if(!gProjectile.painted)
 				return null;
-			if(gProjectile.paintColor == PaintID.Negative)
+			if(gProjectile.paintColor == PaintID.Negative || gProjectile.customPaint is NegativeSprayPaint)
 				return getNegativeShader();
 			Color color = getColor(gProjectile.paintColor, gProjectile.customPaint, npcCyclingTimeScale, gProjectile.paintedTime, null);
 			return getPaintedShader(color);
@@ -503,7 +465,7 @@ namespace WeaponsOfMassDecoration {
 		public static MiscShaderData getShader(WoMDNPC globalNpc, DrawData? drawData = null) {
 			if(!globalNpc.painted)
 				return null;
-			if(globalNpc.paintColor == PaintID.Negative)
+			if(globalNpc.paintColor == PaintID.Negative || globalNpc.customPaint is NegativeSprayPaint)
 				return getNegativeShader();
 			Color color = getColor(globalNpc.paintColor, globalNpc.customPaint, npcCyclingTimeScale, globalNpc.paintedTime, null);
 			if(globalNpc.sprayPainted)
@@ -524,7 +486,7 @@ namespace WeaponsOfMassDecoration {
 			player = p.GetModPlayer<WoMDPlayer>();
 			if(player == null)
 				return null;
-			if(player.paintColor == PaintID.Negative)
+			if(player.paintColor == PaintID.Negative || player.customPaint is NegativeSprayPaint)
 				return getNegativeShader();
 			return getGSShader(player.renderColor);
 		}
@@ -563,9 +525,9 @@ namespace WeaponsOfMassDecoration {
 			}
 			if(paintColor == -1 && customPaint == null)
 				return null;
-			if(paintColor == PaintID.Negative) {
-				if(projectile.usesGSShader)
-					return null;
+			if(paintColor == PaintID.Negative || customPaint is NegativeSprayPaint) {
+				//if(projectile.usesGSShader)
+				//	return null;
 				return getNegativeShader();
 			}
 			if(projectile.npcOwner != -1) {
@@ -582,7 +544,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="player"></param>
 		/// <returns></returns>
 		public static MiscShaderData getShader(WoMDItem item, WoMDPlayer player) {
-			if(player.paintColor == PaintID.Negative)
+			if(player.paintColor == PaintID.Negative || player.customPaint is NegativeSprayPaint)
 				return getNegativeShader();
 			return getGSShader(player.renderColor);
 		}

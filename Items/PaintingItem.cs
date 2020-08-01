@@ -79,24 +79,22 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale) {
-			if(usesGSShader) {
-                MiscShaderData shader = getShader(this, out WoMDPlayer player);
-                if(shader != null) {
-                    spriteBatch.End();
-                    spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
+			MiscShaderData shader = getShader(this, out WoMDPlayer player);
+            if((usesGSShader || ((player.paintColor == PaintID.Negative || player.customPaint is NegativeSprayPaint) && !(this is CustomPaint))) && shader != null) {
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, (player.paintColor == PaintID.Negative || player.customPaint is NegativeSprayPaint) ? SamplerState.LinearClamp : SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
                     
-                    shader.Apply();
+                shader.Apply();
 
-                    Texture2D texture = getTexture(player);
-                    if(texture == null)
-                        texture = Main.itemTexture[item.type];
+                Texture2D texture = getTexture(player);
+                if(texture == null)
+                    texture = Main.itemTexture[item.type];
 
-                    spriteBatch.Draw(texture, position, frame, drawColor,0,new Vector2(0,0),scale,SpriteEffects.None,0);
+                spriteBatch.Draw(texture, position, frame, drawColor,0,new Vector2(0,0),scale,SpriteEffects.None,0);
 
-                    spriteBatch.End();
-                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix);
-                    return false;
-                }
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix);
+                return false;
             }
             return true;
 		}

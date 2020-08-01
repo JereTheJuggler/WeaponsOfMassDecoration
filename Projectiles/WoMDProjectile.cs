@@ -38,14 +38,16 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public static void sendProjectileColorPacket(WoMDProjectile gProj,Projectile proj,int toClient=-1,int ignoreClient=-1) {
 			//Console.WriteLine("sending projectile color packet");
-			ModPacket packet = gProj.mod.GetPacket();
-			packet.Write(WoMDMessageTypes.SetProjectileColor);
-			packet.Write(proj.whoAmI);
-			packet.Write(proj.type);
-			packet.Write(gProj.paintColor);
-			packet.Write(gProj.customPaint == null ? "null" : gProj.customPaint.GetType().Name);
-			packet.Write((double)gProj.paintedTime);
-			packet.Send(toClient, ignoreClient);
+			if(server() || multiplayer()) {
+				ModPacket packet = gProj.mod.GetPacket();
+				packet.Write(WoMDMessageTypes.SetProjectileColor);
+				packet.Write(proj.whoAmI);
+				packet.Write(proj.type);
+				packet.Write(gProj.paintColor);
+				packet.Write(gProj.customPaint == null ? "null" : gProj.customPaint.GetType().Name);
+				packet.Write((double)gProj.paintedTime);
+				packet.Send(toClient, ignoreClient);
+			}
 		}
 
 		public static void readProjectileColorPacket(BinaryReader reader, out WoMDProjectile gProj, out Projectile proj) {

@@ -50,15 +50,17 @@ namespace WeaponsOfMassDecoration.NPCs {
 		}
 
         public static void sendColorPacket(WoMDNPC gNpc, NPC npc, int toClient = -1, int ignoreClient = -1) {
-            ModPacket packet = gNpc.mod.GetPacket();
-            packet.Write(WoMDMessageTypes.SetNPCColors);
-            packet.Write(npc.whoAmI);
-            packet.Write(npc.type);
-            packet.Write(gNpc.paintColor);
-            packet.Write(gNpc.customPaint == null ? "null" : gNpc.customPaint.GetType().Name);
-            packet.Write(gNpc.sprayPainted);
-            packet.Write((double)gNpc.paintedTime);
-            packet.Send(toClient,ignoreClient);
+            if(server() || multiplayer()) {
+                ModPacket packet = gNpc.mod.GetPacket();
+                packet.Write(WoMDMessageTypes.SetNPCColors);
+                packet.Write(npc.whoAmI);
+                packet.Write(npc.type);
+                packet.Write(gNpc.paintColor);
+                packet.Write(gNpc.customPaint == null ? "null" : gNpc.customPaint.GetType().Name);
+                packet.Write(gNpc.sprayPainted);
+                packet.Write((double)gNpc.paintedTime);
+                packet.Send(toClient, ignoreClient);
+            }
         }
 
         public static void readColorPacket(BinaryReader reader, out WoMDNPC gNpc, out NPC npc) {

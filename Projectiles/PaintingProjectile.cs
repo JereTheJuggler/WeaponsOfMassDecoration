@@ -108,12 +108,14 @@ namespace WeaponsOfMassDecoration.Projectiles {
         /// <param name="toClient"></param>
         /// <param name="ignoreClient"></param>
         public static void sendProjNPCOwnerPacket(PaintingProjectile p,int toClient = -1,int ignoreClient=-1) {
-            ModPacket packet = p.mod.GetPacket();
-            packet.Write(WoMDMessageTypes.SetProjNPCOwner);
-            packet.Write(p.projectile.whoAmI);
-            packet.Write(p.projectile.type);
-            packet.Write(p.npcOwner);
-            packet.Send(toClient,ignoreClient);
+            if(server() || multiplayer()) {
+                ModPacket packet = p.mod.GetPacket();
+                packet.Write(WoMDMessageTypes.SetProjNPCOwner);
+                packet.Write(p.projectile.whoAmI);
+                packet.Write(p.projectile.type);
+                packet.Write(p.npcOwner);
+                packet.Send(toClient, ignoreClient);
+            }
 		}
 
         /// <summary>
