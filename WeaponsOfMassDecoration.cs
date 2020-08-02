@@ -67,9 +67,15 @@ namespace WeaponsOfMassDecoration {
 		/// Specifies that the packet is for syncing the npcOwner property of PaintingProjectile objects
 		/// </summary>
 		public const byte SetProjNPCOwner = 3;
+		/// <summary>
+		/// Specifies that the packet is for syncing the npcOwner property of multiple PaintingProjectile objects
+		/// </summary>
+		public const byte SetMultiProjNPCOwner = 4;
 	}
 
 	public class WeaponsOfMassDecoration : Mod {
+		public const float PI = 3.14159265f;
+
 		/// <summary>
 		/// The speed that custom paints cycle through colors for painting tiles. Also applies to the colors for projectile shaders to line up with the color they are painting.
 		/// </summary>
@@ -105,6 +111,10 @@ namespace WeaponsOfMassDecoration {
 				case WoMDMessageTypes.SetProjNPCOwner:
 					if(multiplayer())
 						PaintingProjectile.readProjNPCOwnerPacket(reader);
+					break;
+				case WoMDMessageTypes.SetMultiProjNPCOwner:
+					if(multiplayer())
+						PaintingProjectile.readMultiProjNPCOwnerPacket(reader);
 					break;
 			}
 		}
@@ -619,6 +629,18 @@ namespace WeaponsOfMassDecoration {
 			return getColor(paintColor, customPaint, timeScale, timeOffset, projectile.getOwner());
 		}
 
+		public static Color getColor(WoMDProjectile proj) {
+			if(!proj.painted)
+				return Color.White;
+			return getColor(proj.paintColor, proj.customPaint, npcCyclingTimeScale, proj.paintedTime);
+		}
+
+		public static Color getColor(WoMDNPC npc) {
+			if(!npc.painted)
+				return Color.White;
+			return getColor(npc.paintColor, npc.customPaint, npcCyclingTimeScale, npc.paintedTime);
+		}
+
 		private static Color getColor(int paintColor, CustomPaint customPaint, float timeScale, float timeOffset = 0, Player player = null) {
 			if(paintColor == -1 && customPaint == null)
 				return Color.White;
@@ -638,6 +660,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="preventRecursion">Should not be provided</param>
 		public static void applyPaintedToNPC(NPC npc, int paintColor, CustomPaint customPaint, CustomPaintData data, List<NPC> handledNpcs = null, bool preventRecursion = false) {
 			switch(npc.type) {
+				//cultist fight
 				case NPCID.CultistDragonBody1:
 				case NPCID.CultistDragonBody2:
 				case NPCID.CultistDragonBody3:
@@ -646,29 +669,34 @@ namespace WeaponsOfMassDecoration {
 				case NPCID.CultistDragonTail:
 				case NPCID.CultistBossClone:
 				case NPCID.CultistBoss:
+				case NPCID.AncientCultistSquidhead:
+				//destroyer
 				case NPCID.TheDestroyer:
 				case NPCID.TheDestroyerBody:
 				case NPCID.TheDestroyerTail:
-				case NPCID.AncientCultistSquidhead:
-				case NPCID.NebulaBeast:
+				//pillars
 				case NPCID.LunarTowerNebula:
+				case NPCID.NebulaBeast:
 				case NPCID.LunarTowerSolar:
+				case NPCID.LunarTowerStardust:
 				case NPCID.StardustWormTail:
 				case NPCID.StardustWormBody:
 				case NPCID.StardustWormHead:
-				case NPCID.LunarTowerStardust:
 				case NPCID.LunarTowerVortex:
-				case NPCID.DungeonSpirit:
-				case NPCID.Tumbleweed:
-				case NPCID.DesertDjinn:
-				case NPCID.Ghost:
+				//martian saucer
 				case NPCID.MartianSaucer:
 				case NPCID.MartianSaucerCannon:
 				case NPCID.MartianSaucerCore:
 				case NPCID.MartianSaucerTurret:
-				case NPCID.Poltergeist:
+				//misc bosses
 				case NPCID.Pumpking:
 				case NPCID.PumpkingBlade:
+				//misc random mobs
+				case NPCID.DungeonSpirit:
+				case NPCID.Tumbleweed:
+				case NPCID.DesertDjinn:
+				case NPCID.Ghost:
+				case NPCID.Poltergeist:
 					return;
 			}
 			if(preventRecursion)
@@ -849,7 +877,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="wallsAllowed">Can be set to false to prevent painting tiles regardless of paint method</param>
 		/// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
 		/// <returns>The number of tiles that were updated</returns>
-		public int paintBetweenPoints(Vector2 start, Vector2 end, int paintColor, CustomPaint customPaint, CustomPaintData data, PaintMethods method = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
+		public static int paintBetweenPoints(Vector2 start, Vector2 end, int paintColor, CustomPaint customPaint, CustomPaintData data, PaintMethods method = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false, List<Point> paintedTiles = null) {
 			if(!(blocksAllowed || wallsAllowed))
 				return 0;
 			Vector2 unitVector = end - start;
@@ -858,8 +886,15 @@ namespace WeaponsOfMassDecoration {
 			int iterations = (int)Math.Ceiling(distance / 8f);
 			int count = 0;
 			for(int i = 0; i < iterations; i++) {
-				if(paint(start + (unitVector * i * 8), paintColor, customPaint, data, method, blocksAllowed, wallsAllowed, useWorldGen)) 
+				Vector2 pos = start + (unitVector * i * 8);
+				if(paint(pos, paintColor, customPaint, data, method, blocksAllowed, wallsAllowed, useWorldGen)) {
 					count++;
+					if(paintedTiles != null) {
+						Point tPos = pos.ToTileCoordinates();
+						if(!paintedTiles.Contains(tPos))
+							paintedTiles.Add(tPos);
+					}
+				}
 			}
 			return count;
 		}
@@ -877,7 +912,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="wallsAllowed">Can be set to false to prevent painting tiles regardless of paint method</param>
 		/// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
 		/// <returns>The number of tiles that were updated</returns>
-		public int explode(Vector2 pos, float radius, int paintColor, CustomPaint customPaint, CustomPaintData data, PaintMethods method = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
+		public static int explode(Vector2 pos, float radius, int paintColor, CustomPaint customPaint, CustomPaintData data, PaintMethods method = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
 			int count = 0;
 			for(int currentLevel = 0; currentLevel < Math.Ceiling(radius / 16f); currentLevel++) {
 				if(currentLevel == 0) {
@@ -901,6 +936,45 @@ namespace WeaponsOfMassDecoration {
 									count++;
 							}
 						}
+					}
+				}
+			}
+			return count;
+		}
+
+		/// <summary>
+		/// Creates a splatter of paint
+		/// </summary>
+		/// <param name="pos">The position of the center of the splatter. Expects values in world coordinates</param>
+		/// <param name="radius">The length of the spokes coming out of the center of the splatter. 1 per tile</param>
+		/// <param name="spokes">The number of spokes to create</param>
+		/// <param name="paintColor">The PaintID to use for vanilla paints. -1 for custom paints</param>
+		/// <param name="customPaint">An instance of CustomPaint to use for painting. null for vanilla paints</param>
+		/// <param name="data">An instance of CustomPaintData to use for determining what color custom paints will output</param>
+		/// <param name="method">The painting method to use</param>
+		/// <param name="blocksAllowed">Can be set to false to prevent painting walls regardless of paint method</param>
+		/// <param name="wallsAllowed">Can be set to false to prevent painting tiles regardless of paint method</param>
+		/// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
+		/// <returns>The total number of tiles that were updated</returns>
+		public static int splatter(Vector2 pos, float radius, int spokes, int paintColor, CustomPaint customPaint, CustomPaintData data, PaintMethods method = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
+			int count = explode(pos, 48f, paintColor, customPaint, data, method, blocksAllowed, wallsAllowed);
+			float angle = Main.rand.NextFloat((float)Math.PI);
+			float[] angles = new float[spokes];
+			float[] radii = new float[spokes];
+			for(int s = 0; s < spokes; s++) {
+				angles[s] = angle;
+				angle += Main.rand.NextFloat((float)Math.PI / 6, (float)(Math.PI * 2) / 3);
+				radii[s] = radius - (Main.rand.NextFloat(4) * 8);
+			}
+			for(int offset = 0; offset < radius; offset += 8) {
+				for(int s = 0; s < spokes; s++) {
+					if(offset <= radii[s]) {
+						Point newPos = new Point(
+							(int)Math.Floor((pos.X + Math.Cos(angles[s]) * offset)/16f),
+							(int)Math.Floor((pos.Y + Math.Sin(angles[s]) * offset)/16f)
+						);
+						if(paint(newPos.X,newPos.Y, paintColor, customPaint, data, method, blocksAllowed, wallsAllowed, useWorldGen))
+							count++;
 					}
 				}
 			}

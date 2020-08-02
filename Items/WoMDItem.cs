@@ -23,7 +23,7 @@ namespace WeaponsOfMassDecoration.Items {
                         return false;
                 }
             }
-            return true;
+            return base.ConsumeItem(item,player);
         }
 
 		public override void ModifyTooltips(Item item, List<TooltipLine> tooltips) {
@@ -99,7 +99,6 @@ namespace WeaponsOfMassDecoration.Items {
             return getExtraTexture(itemname + "Painted");
         }
 
-        // this all hinges on getting some IL working, so RIP i guess
 		public override bool UseItem(Item item, Player player) {
             PaintMethods method = PaintMethods.None;
             switch(item.type) {
@@ -136,7 +135,7 @@ namespace WeaponsOfMassDecoration.Items {
                 p.paint(coords.X, coords.Y, method != PaintMethods.Walls, method != PaintMethods.Blocks, false, true);
                 return false;
             }
-            return true;
+            return false;
         }
 
         public bool isInRange(Player player, int xOffset, int yOffset, Item item) {

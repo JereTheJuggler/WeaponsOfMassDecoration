@@ -62,7 +62,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
                         Dust dust = getDust(Dust.NewDust(projectile.TopLeft + displacement * (p / 10f) + new Vector2(-3,-3), 7, 7, DustType<Dusts.PaintDust>(), 0, 0, 200, getColor(this), 1f));
                         if(dust != null) {
                             dust.velocity = new Vector2(.05f, 0f).RotatedByRandom(Math.PI * 2);
-                            ((float[])dust.customData)[1] = .02f;
+                            if(dust.customData != null)
+                                ((float[])dust.customData)[1] = .02f;
                             dust.fadeIn = 3f;
                         }
                     }

@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework;
 using WeaponsOfMassDecoration.Items;
 using WeaponsOfMassDecoration.Constants;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
+using Terraria.DataStructures;
 
 namespace WeaponsOfMassDecoration.NPCs {
     public class WoMDPlayer : ModPlayer{
@@ -114,6 +115,12 @@ namespace WeaponsOfMassDecoration.NPCs {
         public override void UpdateDead() {
             buffPainted = false;
         }
+
+		public override void Kill(double damage, int hitDirection, bool pvp, PlayerDeathReason damageSource) {
+			base.Kill(damage, hitDirection, pvp, damageSource);
+			if(GetInstance<WoMDConfig>().chaosModeEnabled)
+                splatter(player.Center, 130f, 6, PaintID.DeepRed, null, new CustomPaintData());
+		}
 
 		public override void PreUpdate() {
             _indexesSet = false;

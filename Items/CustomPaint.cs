@@ -80,7 +80,9 @@ namespace WeaponsOfMassDecoration.Items {
 		/// The chance that this paint will be consumed when used
 		/// </summary>
 		public virtual float paintConsumptionChance { get { return 1f; } }
-
+		/// <summary>
+		/// Whether or not the paint can be crafted from the items in paintItemIds
+		/// </summary>
 		protected virtual bool _includeVanillaRecipes { get { return true; } }
 
 		/// <summary>
@@ -157,38 +159,38 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		/* Required recipes:
-		 * The number in parenthesis at the beginning of each description refers to which if statement is responsible for adding the recipe
-		 * 
-		 * For cycling paints:
-		 * - (1) using 1 of each base item to create 1 * the number of base items used.				Ex: 1 red + 1 orange + 1 yellow = 3 flame
-		 * 
-		 * For deep cycling paints:
-		 * - (2) using 2 of each base item to create .5 * the number of base items used.			Ex: 2 red + 2 orange + 2 yellow = 3 deep flame
-		 * - (1) using 1 of each deep item to create 1 * the number of deep items used.				Ex: 1 deep red + 1 deep orange + 1 deep yellow = 3 deep flame
-		 * - (3) using 2 of the base cycling paint to create 1 item.								Ex: 2 flame paint = 1 deep flame paint
-		 * 
-		 * For vanilla spray paints:
-		 * - (1) using 1 of the base item to create 1 item.											Ex: 1 red paint = 1 red spray paint
-		 * 
-		 * For deep vanilla spray paints:
-		 * - (2) using 2 of the base item to create 1 item.											Ex: 2 red = 1 deep red spray paint
-		 * - (1) using 1 of the deep item to create 1 item.											Ex: 1 deep red = 1 deep red spray paint
-		 * - (3) using 2 of the base spray paint to create 1 item.									Ex: 2 red spray paint = 1 deep red spray paint
-		 * 
-		 * For cycling spray paints:
-		 * - (1) using 1 of each base item to create 1 * the number of base items used.				Ex: 1 red + 1 orange + 1 yellow = 3 flame spray paint
-		 * - (4) using 1 of the base cycling paint to create 1 item.								Ex: 1 flame paint = 1 flame spray paint
-		 * - (5) using 1 of each base spray paint to create 1 * the number of base items used.		Ex: 1 red spray + 1 orange spray + 1 yellow spray = 3 flame spray paint
-		 * 
-		 * For deep cycling spray paints:
-		 * - (2) using 2 of each base item to create .5 * the number of base items used.			Ex: 2 red + 2 orange + 2 yellow = 3 deep flame spray paint
-		 * - (1) using 1 of each deep item to create 1 * the number of deep items used.				Ex: 1 deep red + 1 deep orange + 1 deep yellow = 3 deep flame spray paint
-		 * - (6a) using 2 of the base cycling paint to create 1 item.								Ex: 2 flame paint = 1 deep flame spray paint
-		 * - (6b) using 1 of the deep cycling paint to create 1 item.								Ex: 1 deep flame paint = 1 deep flame spray paint
-		 * - (6c) using 2 of each base spray paint to create .5 * the number of base items used.	Ex: 2 red spray + 2 orange spray + 2 yellow spray = 3 deep flame spray paint
-		 * - (5) using 1 of each deep spray paint to create 1 * the number of deep items used.		Ex: 1 deep red spray + 1 deep orange spray + 1 deep yellow spray = 3 deep flame spray paint
-		 * - (3) using 2 of the base cycling spray paint to create 1 item.							Ex: 2 flame spray paint = 1 deep flame spray paint
-		 */
+		* The number in parenthesis at the beginning of each description refers to which if statement is responsible for adding the recipe
+		* 
+		* For cycling paints:
+		* - (1) using 1 of each base item to create 1 * the number of base items used.				Ex: 1 red + 1 orange + 1 yellow = 3 flame
+		* 
+		* For deep cycling paints:
+		* - (2) using 2 of each base item to create .5 * the number of base items used.				Ex: 2 red + 2 orange + 2 yellow = 3 deep flame
+		* - (1) using 1 of each deep item to create 1 * the number of deep items used.				Ex: 1 deep red + 1 deep orange + 1 deep yellow = 3 deep flame
+		* - (3) using 2 of the base cycling paint to create 1 item.									Ex: 2 flame paint = 1 deep flame paint
+		* 
+		* For vanilla spray paints:
+		* - (1) using 1 of the base item to create 1 item.											Ex: 1 red paint = 1 red spray paint
+		* 
+		* For deep vanilla spray paints:
+		* - (2) using 2 of the base item to create 1 item.											Ex: 2 red = 1 deep red spray paint
+		* - (1) using 1 of the deep item to create 1 item.											Ex: 1 deep red = 1 deep red spray paint
+		* - (3) using 2 of the base spray paint to create 1 item.									Ex: 2 red spray paint = 1 deep red spray paint
+		* 
+		* For cycling spray paints:
+		* - (1) using 1 of each base item to create 1 * the number of base items used.				Ex: 1 red + 1 orange + 1 yellow = 3 flame spray paint
+		* - (4) using 1 of the base cycling paint to create 1 item.									Ex: 1 flame paint = 1 flame spray paint
+		* - (5) using 1 of each base spray paint to create 1 * the number of base items used.		Ex: 1 red spray + 1 orange spray + 1 yellow spray = 3 flame spray paint
+		* 
+		* For deep cycling spray paints:
+		* - (2) using 2 of each base item to create .5 * the number of base items used.				Ex: 2 red + 2 orange + 2 yellow = 3 deep flame spray paint
+		* - (1) using 1 of each deep item to create 1 * the number of deep items used.				Ex: 1 deep red + 1 deep orange + 1 deep yellow = 3 deep flame spray paint
+		* - (6a) using 2 of the base cycling paint to create 1 item.								Ex: 2 flame paint = 1 deep flame spray paint
+		* - (6b) using 1 of the deep cycling paint to create 1 item.								Ex: 1 deep flame paint = 1 deep flame spray paint
+		* - (6c) using 2 of each base spray paint to create .5 * the number of base items used.		Ex: 2 red spray + 2 orange spray + 2 yellow spray = 3 deep flame spray paint
+		* - (5) using 1 of each deep spray paint to create 1 * the number of deep items used.		Ex: 1 deep red spray + 1 deep orange spray + 1 deep yellow spray = 3 deep flame spray paint
+		* - (3) using 2 of the base cycling spray paint to create 1 item.							Ex: 2 flame spray paint = 1 deep flame spray paint
+		*/
 		public override void AddRecipes() {
 			//any paint type that has _includeVanillaRecipes set to false should ignore recipes that use paintItemIds (public or protected)
 			if(_paintItemIds.Length > 0) {

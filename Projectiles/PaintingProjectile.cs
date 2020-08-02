@@ -17,11 +17,9 @@ using Terraria.DataStructures;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 using System.IO;
-using Steamworks;
 
 namespace WeaponsOfMassDecoration.Projectiles {
     public abstract class PaintingProjectile : ModProjectile {
-
 		protected bool explodesOnDeath = false;
 		protected float explosionRadius = 32f;
 
@@ -105,13 +103,14 @@ namespace WeaponsOfMassDecoration.Projectiles {
             }
         }
 
-        /// <summary>
-        /// Sends a ModPacket to sync the npc owner of a PaintingProjectile
-        /// </summary>
-        /// <param name="p"></param>
-        /// <param name="toClient"></param>
-        /// <param name="ignoreClient"></param>
-        public static void sendProjNPCOwnerPacket(PaintingProjectile p,int toClient = -1,int ignoreClient=-1) {
+	#region packets
+		/// <summary>
+		/// Sends a ModPacket to sync the npc owner of a PaintingProjectile
+		/// </summary>
+		/// <param name="p"></param>
+		/// <param name="toClient"></param>
+		/// <param name="ignoreClient"></param>
+		public static void sendProjNPCOwnerPacket(PaintingProjectile p,int toClient = -1,int ignoreClient=-1) {
             if(server() || multiplayer()) {
                 ModPacket packet = p.mod.GetPacket();
                 packet.Write(WoMDMessageTypes.SetProjNPCOwner);
@@ -139,11 +138,61 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			}
 		}
 
-	#region getters / value conversion
-		public Player getOwner() {
+        /// <summary>
+        /// Sends a ModPacket to sync the npc owner of multiple PaintingProjectile objects
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="toClient"></param>
+        /// <param name="ignoreClient"></param>
+        public static void sendMultiProjNPCOwnerPacket(IEnumerable<PaintingProjectile> projectiles,int toClient = -1,int ignoreClient = -1) {
+            if(projectiles.Count() == 0)
+                return;
+            if(server() || multiplayer()) {
+                ModPacket packet = ModLoader.GetMod("WeaponsOfMassDecoration").GetPacket();
+                packet.Write(projectiles.First().npcOwner);
+                packet.Write(WoMDMessageTypes.SetMultiProjNPCOwner);
+                packet.Write(projectiles.Count());
+                foreach(PaintingProjectile p in projectiles) {
+                    packet.Write(p.projectile.whoAmI);
+                    packet.Write(p.projectile.type);
+				}
+                packet.Send(toClient, ignoreClient);
+			}
+		}
+
+        /// <summary>
+        /// Sets the npc owner of the multiple projectiles specified in ModPacket
+        /// </summary>
+        /// <param name="reader"></param>
+        public static void readMultiProjNPCOwnerPacket(BinaryReader reader) {
+            int owner = reader.ReadInt32();
+            int count = reader.ReadInt32();
+            for(int i = 0; i < count; i++) {
+                int projId = reader.ReadInt32();
+                int projType = reader.ReadInt32();
+                Projectile p = getProjectile(projId);
+                if(p != null && p.type == projType) {
+                    PaintingProjectile proj = p.modProjectile as PaintingProjectile;
+                    if(proj != null)
+                        proj.npcOwner = owner;
+				}
+			}
+		}
+    #endregion
+
+    #region getters / value conversion
+        /// <summary>
+        /// Safely attempts to get the Player of the projectile's owner. Returns null if the Player cannot be obtained
+        /// </summary>
+        /// <returns></returns>
+        public Player getOwner() {
             return getPlayer(projectile.owner);
         }
 
+        /// <summary>
+        /// Safely attempts to get the ModPlayer of the projectile's owner. Returns null if the ModPlayer cannot be obtained
+        /// </summary>
+        /// <returns></returns>
         public WoMDPlayer getModPlayer() {
             Player p = getOwner();
             if(p == null)
@@ -151,6 +200,10 @@ namespace WeaponsOfMassDecoration.Projectiles {
             return p.GetModPlayer<WoMDPlayer>();
 		}
 
+        /// <summary>
+        /// Determines whether or not the projectile is currently able to paint. Returns false if the active paint method is removePaint
+        /// </summary>
+        /// <returns></returns>
         public bool canPaint() {
             if(npcOwner != -1)
                 return true;
@@ -177,7 +230,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
                 return PaintMethods.BlocksAndWalls;
             return p.paintMethod;
         }
-       #endregion
+    #endregion
 
     #region tile/npc interaction
         public override void OnHitNPC(NPC target, int damage, float knockback, bool crit) {
@@ -282,6 +335,10 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
         public override void PostAI() {
             base.PostAI();
+            if(projectile.light != 0) {
+                light = projectile.light;
+                projectile.light = 0;
+			}
             if(manualRotation)
                 projectile.rotation = rotation;
             if(trailLength > 1) {

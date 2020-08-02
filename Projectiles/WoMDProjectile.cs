@@ -21,6 +21,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using MonoMod.Utils;
 using System.Diagnostics;
+using WeaponsOfMassDecoration.Dusts;
 
 namespace WeaponsOfMassDecoration.Projectiles {
 	public class WoMDProjectile : GlobalProjectile {
@@ -109,66 +110,121 @@ namespace WeaponsOfMassDecoration.Projectiles {
 						setupPreAi = true;
 						switch(projectile.type) {
 							case ProjectileID.WoodenArrowHostile:
-								#region arrow
-								if(server())
-									break; //running into issues making this work in multiplayer
-								NPC archer = Main.npc
-									.Where(npc => npc.type == NPCID.CultistArcherBlue || npc.type == NPCID.GoblinArcher)
-									.OrderBy(npc => Math.Abs(npc.Center.X - projectile.Center.X) + Math.Abs(npc.Center.Y - projectile.Center.Y))
-									.FirstOrDefault();
-								if(archer != null) {
-									WoMDNPC gNpc = archer.GetGlobalNPC<WoMDNPC>();
-									if(gNpc == null || !gNpc.painted)
-										break;
-									int projId = Projectile.NewProjectile(projectile.Center, projectile.velocity, ProjectileType<PaintArrow>(), projectile.damage, projectile.knockBack);
-									Projectile newArrow = getProjectile(projId);
-									if(newArrow == null)
-										break;
-									PaintArrow arrow = (PaintArrow)newArrow.modProjectile;
-									cloneProperties(projectile, arrow.projectile);
-									arrow.npcOwner = archer.whoAmI;
-									arrow.projectile.GetGlobalProjectile<WoMDProjectile>().setupPreAi = true;
-									projectile.timeLeft = 0;
+								if(true) {
 									if(server())
-										PaintingProjectile.sendProjNPCOwnerPacket(arrow);
+										break; //running into issues making this work in multiplayer
+									NPC archer = Main.npc
+										.Where(npc => npc.type == NPCID.CultistArcherBlue || npc.type == NPCID.GoblinArcher)
+										.OrderBy(npc => Math.Abs(npc.Center.X - projectile.Center.X) + Math.Abs(npc.Center.Y - projectile.Center.Y))
+										.FirstOrDefault();
+									if(archer != null) {
+										WoMDNPC gNpc = archer.GetGlobalNPC<WoMDNPC>();
+										if(gNpc == null || !gNpc.painted)
+											break;
+										int projId = Projectile.NewProjectile(projectile.Center, projectile.velocity, ProjectileType<PaintArrow>(), projectile.damage, projectile.knockBack);
+										Projectile newArrow = getProjectile(projId);
+										if(newArrow == null)
+											break;
+										PaintArrow arrow = (PaintArrow)newArrow.modProjectile;
+										cloneProperties(projectile, arrow.projectile);
+										arrow.npcOwner = archer.whoAmI;
+										arrow.projectile.GetGlobalProjectile<WoMDProjectile>().setupPreAi = true;
+										projectile.timeLeft = 0;
+										if(server())
+											PaintingProjectile.sendProjNPCOwnerPacket(arrow);
+									}
 								}
-								#endregion
 								break;
 							case ProjectileID.RainNimbus:
-								#region nimbus
-								NPC nimbus = Main.npc
-									.Where(npc => npc.type == NPCID.AngryNimbus)
-									.OrderBy(npc => Math.Abs(npc.Center.X - projectile.Center.X) + Math.Abs(npc.Center.Y - projectile.Center.Y))
-									.FirstOrDefault();
-								if(nimbus != null) {
-									applyPaintedFromNpc(projectile, nimbus);
+								if(true) {
+									NPC nimbus = Main.npc
+										.Where(npc => npc.type == NPCID.AngryNimbus)
+										.OrderBy(npc => Math.Abs(npc.Center.X - projectile.Center.X) + Math.Abs(npc.Center.Y - projectile.Center.Y))
+										.FirstOrDefault();
+									if(nimbus != null) {
+										applyPaintedFromNpc(projectile, nimbus);
+									}
 								}
-								#endregion
 								break;
 							case ProjectileID.SandnadoHostileMark:
 							case ProjectileID.SandnadoHostile:
-								#region sand elemental
-								NPC elemental = Main.npc
-									.Where(npc => npc.type == NPCID.SandElemental)
-									.OrderBy(npc => Math.Abs(npc.Center.X - projectile.Center.X) + Math.Abs(npc.Center.Y - projectile.Center.Y))
-									.FirstOrDefault();
-								if(elemental != null) {
-									applyPaintedFromNpc(projectile, elemental);
+								if(true) {
+									NPC elemental = Main.npc
+										.Where(npc => npc.type == NPCID.SandElemental)
+										.OrderBy(npc => Math.Abs(npc.Center.X - projectile.Center.X) + Math.Abs(npc.Center.Y - projectile.Center.Y))
+										.FirstOrDefault();
+									if(elemental != null) {
+										applyPaintedFromNpc(projectile, elemental);
+									}
 								}
-								#endregion
 								break;
 							case ProjectileID.BulletDeadeye:
-								#region bullet
 								if(true) {
 									NPC enemy = Main.npc
 										.Where(npc => new int[] { NPCID.TacticalSkeleton, NPCID.SantaNK1, NPCID.ElfCopter, NPCID.PirateDeadeye, NPCID.PirateCaptain }.Contains(npc.type))
 										.OrderBy(npc => Math.Abs(npc.Center.X - projectile.Center.X) + Math.Abs(npc.Center.Y - projectile.Center.Y))
 										.FirstOrDefault();
-									if(Math.Abs(enemy.Center.X - projectile.Center.X) + Math.Abs(enemy.Center.Y - projectile.Center.Y) < 16) {
+									Vector2 enemyPos = enemy.Center;
+									float range = 20;
+									switch(enemy.type) {
+										case NPCID.SantaNK1:
+											enemyPos = enemy.Center+(projectile.velocity * 2.75f);
+											range = 130;
+											break;
+										case NPCID.ElfCopter:
+											range = 30;
+											break;
+									}
+									float dist = Math.Abs(enemyPos.X - projectile.Center.X) + Math.Abs(enemyPos.Y - projectile.Center.Y);
+									if(dist < range) {
 										applyPaintedFromNpc(projectile, enemy);
 									}
 								}
-								#endregion
+								break;
+							case ProjectileID.HappyBomb:
+								if(true) {
+									NPC enemy = Main.npc
+										.Where(npc => npc.type == NPCID.Clown)
+										.OrderBy(npc => Math.Abs(npc.Center.X - projectile.Center.X) + Math.Abs(npc.Center.Y - projectile.Center.Y))
+										.FirstOrDefault();
+									if(enemy != null) {
+										float dist = Math.Abs(enemy.Center.X - projectile.Center.X) + Math.Abs(enemy.Center.Y - projectile.Center.Y);
+										if(dist < 64) 
+											applyPaintedFromNpc(projectile, enemy);
+									}
+								}
+								break;
+							case ProjectileID.InfernoHostileBolt:
+								if(true) {
+									NPC enemy = Main.npc
+										.Where(npc => npc.type == NPCID.DiabolistRed || npc.type == NPCID.DiabolistWhite)
+										.OrderBy(npc => Math.Abs(npc.Center.X - projectile.Center.X) + Math.Abs(npc.Center.Y - projectile.Center.Y))
+										.FirstOrDefault();
+									if(enemy != null) {
+										float dist = Math.Abs(enemy.Center.X - projectile.Center.X) + Math.Abs(enemy.Center.Y - projectile.Center.Y);
+										if(dist <= 20)
+											applyPaintedFromNpc(projectile, enemy);
+									}
+								}
+								break;
+							case ProjectileID.PaladinsHammerHostile:
+								if(true) {
+									NPC enemy = Main.npc
+										.Where(npc => npc.type == NPCID.Paladin)
+										.OrderBy(npc => Math.Abs(npc.Center.X - projectile.Center.X) + Math.Abs(npc.Center.Y - projectile.Center.Y))
+										.FirstOrDefault();
+									if(enemy != null) {
+										WoMDNPC gNpc = enemy.GetGlobalNPC<WoMDNPC>();
+										if(gNpc != null && gNpc.painted) {
+											float dist = Math.Abs(enemy.Center.X - projectile.Center.X) + Math.Abs(enemy.Center.Y - projectile.Center.Y);
+											if(dist <= 25) {
+												applyPaintedFromNpc(projectile, enemy);
+												projectile.Opacity = 0;
+												projectile.alpha = 0;
+											}
+										}
+									}
+								}
 								break;
 						}
 					}
@@ -198,11 +254,24 @@ namespace WeaponsOfMassDecoration.Projectiles {
 				sendProjectileColorPacket(proj, projectile);
 		}
 
+		private static void applyPaintedFromProjectile(Projectile dest, Projectile src) {
+			WoMDProjectile dProj = dest.GetGlobalProjectile<WoMDProjectile>();
+			WoMDProjectile sProj = src.GetGlobalProjectile<WoMDProjectile>();
+			if(dProj == null || sProj == null)
+				return;
+			dProj.painted = true;
+			dProj.paintColor = sProj.paintColor;
+			dProj.paintedTime = sProj.paintedTime;
+			dProj.customPaint = sProj.customPaint;
+			dProj.npcOwner = sProj.npcOwner;
+			if(server())
+				sendProjectileColorPacket(dProj, dest);
+		}
+
 		public override void PostAI(Projectile projectile) {
 			if(!projectile.friendly && (singlePlayer() || server()) && painted) {
 				switch(projectile.type) {
 					case ProjectileID.SandnadoHostile:
-						#region sand elemental
 						if(projectile.timeLeft > 930 && Main.rand.NextFloat() < .25f) {
 							float y = Main.rand.NextFloat(projectile.height * .6f, projectile.height);
 							Vector2 pos = new Vector2(projectile.position.X + projectile.width / 2f, projectile.position.Y + projectile.height - y);
@@ -219,12 +288,38 @@ namespace WeaponsOfMassDecoration.Projectiles {
 								}
 							}
 						}
-						#endregion
 						break;
 					case ProjectileID.BulletDeadeye:
-						#region bullet
 						paint(projectile.Center, paintColor, customPaint, new CustomPaintData(false, npcCyclingTimeScale, paintedTime, null));
-						#endregion
+						break;
+					case ProjectileID.PaladinsHammerHostile:
+						if(true) {
+							Color c = getColor(this);
+							Lighting.AddLight(projectile.Center, c.ToVector3() * .5f);
+							NPC npc = getNPC(npcOwner);
+							if(projectile.timeLeft % 30 == 0 && npc != null && projectile.timeLeft >= 3400) {
+								float dSquare = ((getNPC(npcOwner).Center - projectile.Center) / 16f).LengthSquared();
+								//1600 is 40 blocks away from paladin
+								//2500 is 50 blocks away from paladin
+								if(dSquare >= 1600 && dSquare <= 2500) {
+									CustomPaintData data = new CustomPaintData(false, npcCyclingTimeScale, paintedTime);
+									Vector2 hammerTop = projectile.Center + new Vector2(0, -16 * 9).RotatedBy(projectile.rotation);
+									List<Point> paintedTiles = new List<Point>();
+									paintBetweenPoints(projectile.Center, hammerTop, paintColor, customPaint, data, paintedTiles: paintedTiles);
+									Vector2 shaftOffset = (projectile.Center - hammerTop).SafeNormalize(default);
+									Vector2 headOffset = shaftOffset.RotatedBy(Math.PI / 2f) * 64;
+									for(int i = 0; i <= 64; i += 8) {
+										paintBetweenPoints(hammerTop + (shaftOffset * i) + headOffset, hammerTop + (shaftOffset * i) - headOffset, paintColor, customPaint, data, paintedTiles: paintedTiles);
+									}
+									foreach(Point p in paintedTiles) {
+										Dust d = Dust.NewDustPerfect(p.ToWorldCoordinates(), DustType<PaintDust>(), new Vector2(0, 0), default, c, 2f);
+										if(d != null && d.customData != null) {
+											((float[])d.customData)[0] = 0;
+										}
+									}
+								}
+							}
+						}
 						break;
 				}
 			}
@@ -232,6 +327,16 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public override bool PreKill(Projectile projectile, int timeLeft) {
+			if(painted) {
+				switch(projectile.type) {
+					case ProjectileID.HappyBomb:
+						explode(projectile.Center,100f,paintColor,customPaint,new CustomPaintData(false,npcCyclingTimeScale,paintedTime));
+						break;
+					case ProjectileID.InfernoHostileBolt:
+						splatter(projectile.Center, 150f, 7, paintColor, customPaint, new CustomPaintData(false, npcCyclingTimeScale, paintedTime));
+						break;
+				}
+			}
 			return base.PreKill(projectile, timeLeft);
 		}
 

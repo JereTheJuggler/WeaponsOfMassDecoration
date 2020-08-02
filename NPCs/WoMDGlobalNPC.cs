@@ -17,6 +17,7 @@ using static Terraria.ModLoader.ModContent;
 using WeaponsOfMassDecoration.Items;
 using WeaponsOfMassDecoration.Projectiles;
 using WeaponsOfMassDecoration.Constants;
+using WeaponsOfMassDecoration.Dusts;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.NPCs {
@@ -156,14 +157,125 @@ namespace WeaponsOfMassDecoration.NPCs {
                                 }
                                 break;
                         }
+                        switch(npc.type) {
+                            case NPCID.EyeofCthulhu:
+                                //the eye starts spinning when ai[0] == 1
+                                if(npc.ai[0] == 1 && npc.ai[1] >= 20 && npc.ai[1] % 2 == 0) {
+                                    //the eye stops spinning when ai[1] > 99 (ai[1] never == 100. it is immediately reset back to 0)
+                                    int count = npc.ai[1] >= 40 && npc.ai[1] <= 60 ? 2 : 1;
+                                    Vector2 dir = new Vector2(1, 0).RotatedBy(Main.rand.NextFloat(0, PI * 2));
+                                    Vector2 offset = dir * ((npc.width / 2f) * npc.scale);
+                                    float initialSpeed = ((float)Math.Pow(30 - Math.Abs(50 - npc.ai[1]), 2) / 900f) * 4f + 3f;
+                                    for(int i = 0; i < count; i++) {
+                                        if(i == 1) {
+                                            dir = dir.RotatedBy(PI);
+                                            offset *= -1;
+                                        }
+                                        float speed = initialSpeed;
+                                        if(dir.Y > .5f && dir.X <= 0)
+                                            speed += 2;
+                                        else if(dir.Y < 0 && dir.X < 0)
+                                            speed += 1;
+                                        Vector2 vel = dir.RotatedBy(PI / 2f) * speed;
+                                        Projectile p = Projectile.NewProjectileDirect(npc.Center + offset, vel, ProjectileType<PaintSplatter>(), 0, 0);
+                                        if(p != null) {
+                                            p.velocity = vel;
+                                            p.timeLeft = 100;
+                                            PaintingProjectile proj = p.modProjectile as PaintingProjectile;
+                                            if(proj != null) {
+                                                proj.npcOwner = npc.whoAmI;
+                                                if(server())
+                                                    PaintingProjectile.sendProjNPCOwnerPacket(proj);
+                                            }
+                                        }
+                                    }
+								}
+                                break;
+						}
                     }
                 }
             }
 		}
 
-        /// <summary>
-        /// Whether or not the spritebatch needs to be reset after drawing an NPC
-        /// </summary>
+		public override void NPCLoot(NPC npc) {
+            base.NPCLoot(npc);
+            if(painted && GetInstance<WoMDConfig>().chaosModeEnabled) {
+				switch(npc.type) {
+                    case NPCID.EyeofCthulhu:
+                    case NPCID.Spazmatism:
+                    case NPCID.Retinazer:
+                    case NPCID.Skeleton:
+                    case NPCID.SkeletronHand:
+                    case NPCID.SkeletronPrime:
+                    case NPCID.PrimeCannon:
+                    case NPCID.PrimeLaser:
+                    case NPCID.PrimeSaw:
+                    case NPCID.PrimeVice:
+                    case NPCID.BrainofCthulhu:
+                    case NPCID.KingSlime:
+                    case NPCID.Everscream:
+                    case NPCID.SantaNK1:
+                    case NPCID.IceQueen:
+                    case NPCID.Plantera:
+                    case NPCID.MourningWood:
+                    case NPCID.WallofFlesh:
+                    case NPCID.WallofFleshEye:
+                    case NPCID.DukeFishron:
+                    case NPCID.MoonLordCore:
+                        if(true) {
+                            Vector2 dir = new Vector2(1, 0);
+                            List<PaintingProjectile> projectiles = new List<PaintingProjectile>();
+                            for(int i = 0; i < 8; i++) {
+                                Vector2 rotatedDir = dir.RotatedBy((PI / 4f) * i);
+                                PaintSplatter p = createPaintSplatter(npc.whoAmI, npc.Center + rotatedDir * 48, rotatedDir * 10, 100, .5f, 2f);
+                                if(p != null)
+                                    projectiles.Add(p);
+                                rotatedDir = rotatedDir.RotatedBy(PI / 8f);
+                                PaintSplatter p2 = createPaintSplatter(npc.whoAmI, npc.Center + rotatedDir * 32, rotatedDir * 6, 100);
+                                if(p2 != null)
+                                    projectiles.Add(p2);
+                            }
+							if(singlePlayer()) {
+                                for(int i = 0; i < 20; i++) {
+                                    Dust d = Dust.NewDustDirect(npc.Center - npc.Size / 4f, npc.width / 2, npc.height / 2, DustType<PaintDust>(), 0, 0, 0, getColor(this), 2);
+                                    if(d != null) {
+                                        d.velocity = (d.position - npc.Center).SafeNormalize(new Vector2(1, 0)) * 5;
+                                        if(d.customData != null) {
+                                            ((float[])d.customData)[0] = 0;
+										}
+									}
+								}
+							}
+                            if(server())
+                                PaintingProjectile.sendMultiProjNPCOwnerPacket(projectiles);
+                        }
+                        break;
+				}
+            }
+            if(npc.townNPC && GetInstance<WoMDConfig>().chaosModeEnabled) {
+                splatter(npc.Center, 100f, 8, PaintID.DeepRed, null, new CustomPaintData(), useWorldGen: true);
+			}
+        }
+
+        private PaintSplatter createPaintSplatter(int npcOwner, Vector2 position, Vector2 velocity, int timeLeft = 30, float light = 0, float scale = 1f) {
+            Projectile p = Projectile.NewProjectileDirect(position, velocity, ProjectileType<PaintSplatter>(), 0, 0);
+            if(p != null) {
+                p.scale = scale;
+                p.velocity = velocity;
+                p.timeLeft = timeLeft;
+                p.light = light;
+                PaintSplatter proj = p.modProjectile as PaintSplatter;
+                if(proj != null) {
+                    proj.npcOwner = npcOwner;
+                    return proj;
+				}
+			}
+            return null;
+		}
+
+		/// <summary>
+		/// Whether or not the spritebatch needs to be reset after drawing an NPC
+		/// </summary>
 		private bool resetBatchInPost;
 		
         //This is where the shaders are applied to the NPCs to make them appear painted
@@ -185,6 +297,13 @@ namespace WeaponsOfMassDecoration.NPCs {
 				spriteBatch.End();
 				spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
 				resetBatchInPost = false;
+			}
+			if(painted) {
+				switch(npc.type) {
+                    case NPCID.Paladin:
+                        Lighting.AddLight(npc.Center, getColor(this).ToVector3() * .5f);
+                        break;
+				}
 			}
 		}
 
@@ -257,7 +376,6 @@ namespace WeaponsOfMassDecoration.NPCs {
             return false;
         }
     
-
         public void getPaintVars(out int paintColor, out CustomPaint customPaint) {
             paintColor = this.paintColor;
             customPaint = this.customPaint;
