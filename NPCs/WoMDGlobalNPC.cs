@@ -44,10 +44,9 @@ namespace WeaponsOfMassDecoration.NPCs {
 		public float paintedTime = 0;
 
         //Each entity needs their own set of the above variables
-        public override bool InstancePerEntity { get { return true; } }
-
+        public override bool InstancePerEntity => true;
         //Don't want instances to be cloned
-		public override bool CloneNewInstances { get { return false; } }
+		public override bool CloneNewInstances => false;
         
         public override void ResetEffects(NPC npc) {
             painted = false;
@@ -197,6 +196,7 @@ namespace WeaponsOfMassDecoration.NPCs {
             }
 		}
 
+        //This is used for controlling certain Chaos Mode functionality
 		public override void NPCLoot(NPC npc) {
             base.NPCLoot(npc);
             if(painted && GetInstance<WoMDConfig>().chaosModeEnabled) {
@@ -222,6 +222,12 @@ namespace WeaponsOfMassDecoration.NPCs {
                     case NPCID.WallofFleshEye:
                     case NPCID.DukeFishron:
                     case NPCID.MoonLordCore:
+                    case NPCID.QueenBee:
+                    case NPCID.DD2OgreT2:
+                    case NPCID.DD2OgreT3:
+                    case NPCID.DD2Betsy:
+                    case NPCID.DD2DarkMageT1:
+                    case NPCID.DD2DarkMageT3:
                         if(true) {
                             Vector2 dir = new Vector2(1, 0);
                             List<PaintingProjectile> projectiles = new List<PaintingProjectile>();
@@ -253,7 +259,21 @@ namespace WeaponsOfMassDecoration.NPCs {
 				}
             }
             if(npc.townNPC && GetInstance<WoMDConfig>().chaosModeEnabled) {
-                splatter(npc.Center, 100f, 8, PaintID.DeepRed, null, new CustomPaintData(), useWorldGen: true);
+                if(npc.type == NPCID.PartyGirl) {
+                    splatterColored(npc.Center, 8, new int[] { PaintID.DeepRed, PaintID.DeepRed, PaintID.DeepOrange, PaintID.DeepYellow, PaintID.DeepGreen, PaintID.DeepBlue, PaintID.DeepPurple });
+                    List<Color> colors = new List<Color> {
+                        PaintColors.Green,
+                        PaintColors.SkyBlue,
+                        PaintColors.Yellow,
+                        PaintColors.Pink
+                    };
+                    for(int i = 0; i < 10; i++) {
+                        Vector2 vel = new Vector2(Main.rand.NextFloat(2,3), 0).RotatedBy(Main.rand.NextFloat(PI * 2));
+                        Dust.NewDust(npc.Center - npc.Size / 4f, npc.width / 2, npc.height / 2, DustID.Confetti, vel.X, vel.Y,0,colors[Main.rand.Next(0,colors.Count)]);
+                    }
+                } else {
+                    splatter(npc.Center, 100f, 8, PaintID.DeepRed, null, new CustomPaintData(), useWorldGen: true);
+                }
 			}
         }
 

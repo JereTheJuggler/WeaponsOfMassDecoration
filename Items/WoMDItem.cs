@@ -138,8 +138,6 @@ namespace WeaponsOfMassDecoration.Items {
             return false;
         }
 
-        public bool isInRange(Player player, int xOffset, int yOffset, Item item) {
-            return Math.Abs(xOffset) <= player.lastTileRangeX + item.tileBoost && Math.Abs(yOffset) <= player.lastTileRangeY + item.tileBoost;
-        }
+        public bool isInRange(Player player, int xOffset, int yOffset, Item item) => Math.Abs(xOffset) <= player.lastTileRangeX + item.tileBoost && Math.Abs(yOffset) <= player.lastTileRangeY + item.tileBoost;
     }
 }

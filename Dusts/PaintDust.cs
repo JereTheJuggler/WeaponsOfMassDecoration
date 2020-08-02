@@ -32,9 +32,6 @@ namespace WeaponsOfMassDecoration.Dusts {
 				dust.noGravity = true;
                 trueColor = dust.color;
                 dust.noLight = true;
-				//dust.shader = GameShaders.Armor.GetShaderFromItemId(ItemID.SilverDye).UseColor(Color.White).UseSaturation(1f);
-				//dust.scale = 1f;
-				//dust.position += new Vector2(Main.rand.Nextint(-4f, 4f), Main.rand.Nextint(-4f, 4f));
 				dust.customData = new float[] { Main.rand.NextFloat(-.2f, .2f) , .03f};
 			}
         }

@@ -52,10 +52,10 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		public bool setupPreAi = false;
 
 		//All the above fields need to be stored per entity
-		public override bool InstancePerEntity { get { return true; } }
+		public override bool InstancePerEntity => true;
 
 		//Don't want new instances to be cloned either
-		public override bool CloneNewInstances { get { return false; } }
+		public override bool CloneNewInstances => false;
 
 		/// <summary>
 		/// Sends a packet to sync the variables regarding the rendering of the projectile
@@ -103,6 +103,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			}
 		}
 
+		//Handles assigning new projectiles npc owners
 		public override bool PreAI(Projectile projectile) {
 			if(server() || singlePlayer()) {
 				if(!projectile.friendly && !setupPreAi) {

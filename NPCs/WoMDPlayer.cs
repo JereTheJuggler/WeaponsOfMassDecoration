@@ -47,7 +47,13 @@ namespace WeaponsOfMassDecoration.NPCs {
         /// <summary>
         /// The paint method attached to the first painting tool found in the player's inventory
         /// </summary>
-        public PaintMethods paintMethod { get { return _paintMethod; } }
+        public PaintMethods paintMethod { 
+            get {
+                if(!_indexesSet)
+                    updateIndexes();
+                return _paintMethod; 
+            } 
+        }
 
         /// <summary>
         /// This is used to keep track of whether or not the current indexes for paint and paint tools has been updated during this game tick. Allows the indexes to not be set at all for ticks where they are not needed
@@ -61,11 +67,13 @@ namespace WeaponsOfMassDecoration.NPCs {
         /// <summary>
         /// The PaintID of the first paint found in the player's inventory. If a custom paint is the first paint found, then this will be -1
         /// </summary>
-        public int paintColor { get {
-            if(!_indexesSet)
-                updateIndexes();
-            return _paintColor; 
-        } }
+        public int paintColor { 
+            get {
+                if(!_indexesSet)
+                    updateIndexes();
+                return _paintColor; 
+            } 
+        }
         /// <summary>
         /// The CustomPaint instance for the first paint found in the player's inventory. If a vanilla paint is the first paint found, then this will be null
         /// </summary>
@@ -73,11 +81,13 @@ namespace WeaponsOfMassDecoration.NPCs {
         /// <summary>
         /// The CustomPaint instance for the first paint found in the player's inventory. If a vanilla paint is the first paint found, then this will be null
         /// </summary>
-        public CustomPaint customPaint { get {
-            if(!_indexesSet)
-                updateIndexes();
-            return _customPaint == null ? null : (CustomPaint)_customPaint.Clone(); 
-        } }
+        public CustomPaint customPaint { 
+            get {
+                if(!_indexesSet)
+                    updateIndexes();
+                return _customPaint == null ? null : (CustomPaint)_customPaint.Clone(); 
+            } 
+        }
         /// <summary>
         /// The color to use during rendering based on the first paint in the player's inventory. Combination of paintColor, customPaint, paintMethod, and interpolation between custom paint colors
         /// </summary>
@@ -85,11 +95,13 @@ namespace WeaponsOfMassDecoration.NPCs {
         /// <summary>
         /// The color to use during rendering based on the first paint in the player's inventory. Combination of paintColor, customPaint, paintMethod, and interpolation between custom paint colors
         /// </summary>
-        public Color renderColor { get {
-            if(!_indexesSet)
-                updateIndexes();
-            return new Color(_renderColor.ToVector3()); 
-        } }
+        public Color renderColor { 
+            get {
+                if(!_indexesSet)
+                    updateIndexes();
+                return new Color(_renderColor.ToVector3()); 
+            } 
+        }
 
         public bool buffPainted;
         public int buffPaintedTime;

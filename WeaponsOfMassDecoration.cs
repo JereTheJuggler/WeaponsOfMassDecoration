@@ -942,11 +942,41 @@ namespace WeaponsOfMassDecoration {
 			return count;
 		}
 
+		public static int explodeColored(Vector2 pos, IEnumerable<int> colors, PaintMethods method = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
+			int count = 0;
+			for(int currentLevel = 0; currentLevel < colors.Count(); currentLevel++) {
+				if(currentLevel == 0) {
+					if(paint(pos, colors.ElementAt(currentLevel), null, new CustomPaintData(), method, blocksAllowed, wallsAllowed))
+						count++;
+				} else {
+					for(int i = 0; i <= currentLevel * 2; i++) {
+						float xOffset;
+						float yOffset;
+						if(i <= currentLevel) {
+							xOffset = currentLevel;
+							yOffset = i;
+						} else {
+							xOffset = (currentLevel * 2 - i + 1);
+							yOffset = (currentLevel + 1);
+						}
+						Vector2 offsetVector = new Vector2(xOffset * 16f, yOffset * 16f);
+						if(offsetVector.Length() <= colors.Count() * 16f) {
+							for(int dir = 0; dir < 4; dir++) {
+								if(paint(pos + offsetVector.RotatedBy(dir * (Math.PI / 2)), colors.ElementAt(currentLevel), null, new CustomPaintData(), method, blocksAllowed, wallsAllowed, useWorldGen))
+									count++;
+							}
+						}
+					}
+				}
+			}
+			return count;
+		}
+
 		/// <summary>
 		/// Creates a splatter of paint
 		/// </summary>
 		/// <param name="pos">The position of the center of the splatter. Expects values in world coordinates</param>
-		/// <param name="radius">The length of the spokes coming out of the center of the splatter. 1 per tile</param>
+		/// <param name="radius">The length of the spokes coming out of the center of the splatter. Uses world distance</param>
 		/// <param name="spokes">The number of spokes to create</param>
 		/// <param name="paintColor">The PaintID to use for vanilla paints. -1 for custom paints</param>
 		/// <param name="customPaint">An instance of CustomPaint to use for painting. null for vanilla paints</param>
@@ -974,6 +1004,32 @@ namespace WeaponsOfMassDecoration {
 							(int)Math.Floor((pos.Y + Math.Sin(angles[s]) * offset)/16f)
 						);
 						if(paint(newPos.X,newPos.Y, paintColor, customPaint, data, method, blocksAllowed, wallsAllowed, useWorldGen))
+							count++;
+					}
+				}
+			}
+			return count;
+		}
+
+		public static int splatterColored(Vector2 pos, int spokes, IEnumerable<int> colors, PaintMethods method = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
+			int count = explodeColored(pos, new List<int> { colors.ElementAt(0), colors.ElementAt(1), colors.ElementAt(2) }, method, blocksAllowed, wallsAllowed);
+			float radius = 16 * colors.Count();
+			float angle = Main.rand.NextFloat((float)Math.PI);
+			float[] angles = new float[spokes];
+			float[] radii = new float[spokes];
+			for(int s = 0; s < spokes; s++) {
+				angles[s] = angle;
+				angle += Main.rand.NextFloat((float)Math.PI / 6, (float)(Math.PI * 2) / 3);
+				radii[s] = radius - (Main.rand.NextFloat(4) * 8);
+			}
+			for(int offset = 0; offset < radius; offset += 8) {
+				for(int s = 0; s < spokes; s++) {
+					if(offset <= radii[s]) {
+						Point newPos = new Point(
+							(int)Math.Floor((pos.X + Math.Cos(angles[s]) * offset) / 16f),
+							(int)Math.Floor((pos.Y + Math.Sin(angles[s]) * offset) / 16f)
+						);
+						if(paint(newPos.X, newPos.Y, colors.ElementAt((int)Math.Floor(offset/16f)), null, new CustomPaintData(), method, blocksAllowed, wallsAllowed, useWorldGen))
 							count++;
 					}
 				}
@@ -1087,6 +1143,10 @@ namespace WeaponsOfMassDecoration {
 		public static void sendTileFrame(int x, int y) {
 			NetMessage.SendTileSquare(-1, x, y, 1);
 		}
-	#endregion
+		#endregion
+
+		//Hamstar's Mod Helpers Integration
+		public static string GithubUserName => "JereTheJuggler";
+		public static string GithubProjectName => "WeaponsOfMassDecoration";
 	}
 }
