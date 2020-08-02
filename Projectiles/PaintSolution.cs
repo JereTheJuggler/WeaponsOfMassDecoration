@@ -31,7 +31,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.friendly = true;
             projectile.timeLeft = 50;
             projectile.alpha = 255;
-            projectile.light = .5f;
+            //projectile.light = .5f;
+            light = .5f;
             projectile.penetrate = -1;
             projectile.extraUpdates = 2;
             projectile.tileCollide = false;

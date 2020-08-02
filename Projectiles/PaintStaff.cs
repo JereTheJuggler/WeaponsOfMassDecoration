@@ -41,7 +41,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.ignoreWater = true;
             projectile.tileCollide = true;
             aiType = ProjectileID.DiamondBolt;
-            projectile.light = 1f;
+            light = 1f;
             projectile.alpha = 150;
         }
 

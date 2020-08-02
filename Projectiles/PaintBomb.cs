@@ -44,7 +44,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.extraUpdates = 1;
             aiType = ProjectileID.BouncyBomb;
             projectile.gfxOffY = 19;
-            projectile.light = .5f;
+            light = .5f;
         }
 
         public override bool PreAI() {

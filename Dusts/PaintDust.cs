@@ -35,7 +35,7 @@ namespace WeaponsOfMassDecoration.Dusts {
 				//dust.shader = GameShaders.Armor.GetShaderFromItemId(ItemID.SilverDye).UseColor(Color.White).UseSaturation(1f);
 				//dust.scale = 1f;
 				//dust.position += new Vector2(Main.rand.Nextint(-4f, 4f), Main.rand.Nextint(-4f, 4f));
-				dust.customData = new float[] { Main.rand.NextFloat(-.2f, .2f) };
+				dust.customData = new float[] { Main.rand.NextFloat(-.2f, .2f) , .03f};
 			}
         }
         public override bool MidUpdate(Dust dust) {
@@ -52,7 +52,8 @@ namespace WeaponsOfMassDecoration.Dusts {
             float rotSpeed = ((float[])dust.customData)[0];
             dust.rotation += rotSpeed;
             dust.alpha += 1;
-            dust.scale -= .03f;
+            dust.position += dust.velocity;
+            dust.scale -= ((float[])dust.customData)[1];
             if(dust.alpha >= 255 || dust.scale <= 0)
                 dust.active = false;
             return false;

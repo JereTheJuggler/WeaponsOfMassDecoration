@@ -42,7 +42,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.ignoreWater = true;
             projectile.tileCollide = true;
             aiType = ProjectileID.Bullet;
-            projectile.light = .5f;
+            light = .5f;
         }
 
         public override bool PreAI() {

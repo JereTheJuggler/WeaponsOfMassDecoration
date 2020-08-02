@@ -57,7 +57,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             aiType = ProjectileID.MagicDagger;
             projectile.damage = 20;
             projectile.Opacity = .75f;
-            projectile.light = .5f;
+            light = .5f;
             projectile.melee = true;
         }
 

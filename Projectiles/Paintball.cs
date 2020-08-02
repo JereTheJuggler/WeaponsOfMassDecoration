@@ -38,7 +38,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.tileCollide = true;
             projectile.extraUpdates = 1;
             aiType = ProjectileID.Bullet;
-            projectile.light = .5f;
+            light = .5f;
         }
 
         public override bool PreAI() {

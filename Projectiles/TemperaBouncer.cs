@@ -55,7 +55,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.tileCollide = true;
             projectile.Opacity = 1f;
 			projectile.scale = 1.3f;
-            projectile.light = .5f;
+            light = .5f;
         }
 
         public override bool PreAI() {

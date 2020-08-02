@@ -37,7 +37,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.ignoreWater = true;
             projectile.tileCollide = false;
             aiType = ProjectileID.DiamondBolt;
-            projectile.light = 1f;
+            light = .5f;
         }
 
         public override bool PreAI() {

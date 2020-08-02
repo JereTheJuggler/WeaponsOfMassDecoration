@@ -47,6 +47,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
         public float oldRotation = 0;
 
+        public float light = 0;
+
         /// <summary>
         /// Whether or not the projectile has a sprite
         /// </summary>
@@ -90,7 +92,9 @@ namespace WeaponsOfMassDecoration.Projectiles {
         /// </summary>
 		protected bool resetBatchInPost = false;
 
-		public PaintingProjectile() : base() { }
+		public PaintingProjectile() : base() {
+            projectile.light = 0;
+        }
 
 		public override void SetStaticDefaults() {
 			base.SetStaticDefaults();
@@ -249,6 +253,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
                 Vector2 vel = direction.RotatedBy((spreadAngle * Main.rand.NextFloat()) - (spreadAngle / 2));
                 Projectile p = getProjectile(Projectile.NewProjectile(position + vel * 2f, vel * speed, ProjectileType<PaintSplatter>(), 0, 0, projectile.owner, 1, ProjectileID.IchorSplash));
                 if(p != null) {
+                    ((PaintingProjectile)p.modProjectile).light = light;
                     p.timeLeft = timeLeft;
                     p.alpha = 125;
                 }
@@ -292,6 +297,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             if(!usesShader) {
                 updateColorFrame(method);
             }
+            createLight();
         }
     #endregion
 
@@ -382,6 +388,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
         public Rectangle getSourceRectangle(Texture2D texture) {
             int frameHeight = (texture.Height - (2 * (yFrameCount - 1))) / yFrameCount;
             int yFrame = (int)Math.Floor((float)frame / xFrameCount);
+            if(yFrame > yFrameCount)
+                yFrame = yFrameCount - 1;
             int startY = yFrame * (frameHeight + 2);
             int frameWidth = (texture.Width - (2 * (xFrameCount - 1))) / xFrameCount;
             int xFrame = frame % xFrameCount;
@@ -390,13 +398,9 @@ namespace WeaponsOfMassDecoration.Projectiles {
         }
 
 		public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor) {
-            if(!hasGraphics) {
-                createLight();
+            if(!hasGraphics)
                 return false;
-            }
             if(!usesShader) {
-                Color projLight = createLight();
-
                 Texture2D texture = Main.projectileTexture[projectile.type];
                 Rectangle sourceRectangle = getSourceRectangle(texture);
                 Vector2 origin = (sourceRectangle.Size() / 2) + drawOriginOffset;
@@ -424,20 +428,11 @@ namespace WeaponsOfMassDecoration.Projectiles {
                     float opacity = projectile.Opacity - (projectile.Opacity / (trailLength + 1)) * i;
                     float lightness = 1f - (.75f / (trailLength + 1)) * i;
 
-                    Color color;
-                    if(i == 0) {
-                        color = new Color(clamp(lightColor.R + projLight.R,0,255), clamp(lightColor.G + projLight.G, 0, 255), clamp(lightColor.B + projLight.B, 0, 255),lightColor.A);
-					} else {
-                        color = lightColor;
-					}
-                    color.A = (byte)Math.Round(opacity * 255);
-                    color = Color.Multiply(color, lightness);
-
                     if(shader != null) {
                         shader.UseOpacity(opacity).Apply();
 					}
 
-                    spriteBatch.Draw(texture, drawPos, sourceRectangle, color, rotation, origin, scale, SpriteEffects.None, 0f);
+                    spriteBatch.Draw(texture, drawPos, sourceRectangle, Color.Multiply(lightColor,lightness) , rotation, origin, scale, SpriteEffects.None, 0f);
 
                     if(shader != null && i > 0) {
                         spriteBatch.End();
@@ -448,8 +443,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			} else {
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
-
-                Color projLight = createLight();
 
                 resetBatchInPost = true;
 
@@ -475,7 +468,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
                     if(data != null)
                         data.UseOpacity(op).Apply();
 
-                    spriteBatch.Draw(texture, drawPos, sourceRectangle, new Color(lightness,lightness,lightness,1f), rotation, origin, scale, SpriteEffects.None, 0f);
+                    spriteBatch.Draw(texture, drawPos, sourceRectangle, Color.Multiply(lightColor,lightness), rotation, origin, scale, SpriteEffects.None, 0f);
 
                     if(i > 0) {
                         spriteBatch.End();
@@ -697,7 +690,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		/// Creates a light with the projectile's color. Uses the center of the projectile for position and projectile.light for brightness
 		/// </summary>
 		public Color createLight() {
-            return createLight(projectile.Center, projectile.light);
+            return createLight(projectile.Center, light);
 		}
 
         /// <summary>
@@ -707,9 +700,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
         /// <param name="brightness">The brightness of the light. Expects 0 to 1f</param>
         public Color createLight(Vector2 pos,float brightness) {
 			Color c = getColor(this);
-            Color adjustedColor = new Color((c.R / 255f) * brightness, (c.G / 255f) * brightness, (c.B / 255f) * brightness);
-            Lighting.AddLight(pos, adjustedColor.ToVector3());
-            return adjustedColor;
+            Lighting.AddLight(pos, (c.R / 255f) * brightness, (c.G / 255f) * brightness, (c.B / 255f) * brightness);
+            return c;
         }
     #endregion
     }

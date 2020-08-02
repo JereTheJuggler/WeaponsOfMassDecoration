@@ -41,7 +41,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
             aiType = ProjectileID.Dynamite;
             paintConsumptionChance = .5f;
             projectile.gfxOffY = 19;
-            projectile.light = .5f;
+            light = .5f;
         }
 
         public override bool PreAI() {

@@ -33,7 +33,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
             projectile.penetrate = 1;
             projectile.timeLeft = 600;
             projectile.alpha = 0;
-            projectile.light = 0f;
             projectile.ignoreWater = true;
             projectile.tileCollide = true;
         }
