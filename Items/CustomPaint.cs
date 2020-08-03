@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Terraria.ModLoader;
+﻿using Microsoft.Xna.Framework;
+using System;
 using Terraria;
 using Terraria.ID;
-using Steamworks;
-using Microsoft.Xna.Framework;
-using WeaponsOfMassDecoration.Constants;
+using Terraria.ModLoader;
+
 
 namespace WeaponsOfMassDecoration.Items {
 	/// <summary>
@@ -26,50 +21,6 @@ namespace WeaponsOfMassDecoration.Items {
 	/// </summary>
 	public interface ICyclingPaint { }
 
-	/// <summary>
-	/// A class that contains data that will be used to determine what color a custom paint will result in
-	/// </summary>
-	public struct CustomPaintData {
-		/// <summary>
-		/// How fast the paint will cycle through colors. Should be either WeaponsOfMassDecoration.paintCyclingTimeScale or WeaponsOfMassDecoration.npcCyclingTimeScale
-		/// </summary>
-		public float timeScale;
-		/// <summary>
-		/// An offset to use when calculating what color the paint will be. This allows the same custom paint to result in different colors at the same time
-		/// </summary>
-		public float timeOffset;
-		/// <summary>
-		/// The player to use when calculating what color the paint will be
-		/// </summary>
-		public Player player;
-		/// <summary>
-		/// Whether or not color should be forced. Color should be forced for anything that is not painting the world, including selecting frames, rendering shaders, and lights
-		/// </summary>
-		public bool forceColor;
-
-		/// <summary>
-		/// Creates an instance of CustomPaintData
-		/// </summary>
-		/// <param name="forceColor">Whether or not color should be forced. Color should be forced for anything that is not painting the world, including selecting frames, rendering shaders, and lights</param>
-		/// <param name="timeScale">How fast the paint will cycle through colors. Should be either WeaponsOfMassDecoration.paintCyclingTimeScale or WeaponsOfMassDecoration.npcCyclingTimeScale</param>
-		/// <param name="timeOffset">An offset to use when calculating what color the paint will be. This allows the same custom paint to result in different colors at the same time</param>
-		/// <param name="player">The player to use when calculating what color the paint will be</param>
-		public CustomPaintData(bool forceColor, float timeScale, float timeOffset = 0, Player player = null) {
-			this.forceColor = forceColor;
-			this.timeScale = timeScale;
-			this.timeOffset = timeOffset;
-			this.player = player;
-		}
-
-		/// <summary>
-		/// Creates an instance of CustomPaintData
-		/// </summary>
-		/// <param name="forceColor">Whether or not color should be forced. Color should be forced for anything that is not painting the world, including selecting frames, rendering shaders, and lights.</param>
-		/// <param name="timeScale">How fast the paint will cycle through colors. Should be either WeaponsOfMassDecoration.paintCyclingTimeScale or WeaponsOfMassDecoration.npcCyclingTimeScale</param>
-		/// <param name="player">The player to use when calculating what color the paint will be</param>
-		public CustomPaintData(bool forceColor, float timeScale, Player player) : this(forceColor, timeScale, default, player) { }
-	}
-
 	public abstract class CustomPaint : PaintingItem {
 		/// <summary>
 		/// The value assigned to item.paint for every instance of a CustomPaint
@@ -79,16 +30,16 @@ namespace WeaponsOfMassDecoration.Items {
 		/// <summary>
 		/// The chance that this paint will be consumed when used
 		/// </summary>
-		public virtual float paintConsumptionChance { get { return 1f; } }
+		public virtual float paintConsumptionChance => 1f;
 		/// <summary>
 		/// Whether or not the paint can be crafted from the items in paintItemIds
 		/// </summary>
-		protected virtual bool _includeVanillaRecipes { get { return true; } }
+		protected virtual bool _includeVanillaRecipes => true;
 
 		/// <summary>
 		/// The number of different colors a custom paint can produce. This is preferable to using paintItemIds.Length because it will not go through the process of converting base paint item ids to deep paint item ids first
 		/// </summary>
-		public int colorCount { get { return _paintItemIds.Length; } }
+		public int colorCount => _paintItemIds.Length;
 		/// <summary>
 		/// The item ids of the paints that the custom paint will use
 		/// </summary>
@@ -146,16 +97,23 @@ namespace WeaponsOfMassDecoration.Items {
 		/// </summary>
 		public bool cycleLoops = false;
 
+		/// <summary>
+		/// This is the base class of every custom paint in the mod. It handles all of the core functionality of the custom paints, including adding recipes, getting the current color of the paint, and getting the current rendering color for the paint (with interpolation between colors if necessary)
+		/// </summary>
 		public CustomPaint() : base() { }
+
 		public override void SetDefaults() {
 			item.paint = paintValue;
+			item.value = colorCount * 10;
+			if(this is IDeepPaint)
+				item.value *= 2;
 		}
 		public override void SetStaticDefaults() {
 			DisplayName.SetDefault(displayName);
 			string paintConsumptionText = "";
 			if(paintConsumptionChance < 1)
 				paintConsumptionText = Math.Round(100 * (1f - paintConsumptionChance)).ToString() + "% chance to not be consumed";
-			SetStaticDefaults(paintConsumptionText, "",false);
+			SetStaticDefaults(paintConsumptionText, "", false);
 		}
 
 		/* Required recipes:
@@ -225,7 +183,7 @@ namespace WeaponsOfMassDecoration.Items {
 				//using 2 of the base custom paint to create 1 item
 				//matches deep cycling, deep vanilla spray paints, and deep cycling spray paints
 				if(this is IDeepPaint && (this is ICyclingPaint || this is ISprayPaint)) {
-					ModRecipe recipe = new ModRecipe(mod); 
+					ModRecipe recipe = new ModRecipe(mod);
 					Type t = GetType().BaseType;
 					recipe.AddIngredient(mod.ItemType(t.Name), 2);
 					recipe.AddTile(TileID.DyeVat);
@@ -301,7 +259,7 @@ namespace WeaponsOfMassDecoration.Items {
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		public Color getColor(CustomPaintData data) {
+		public Color getColor(PaintData data) {
 			if(colorCount == 1)
 				return getColorFromIndex(0);
 			int index1 = getPaintIndex(data);
@@ -316,8 +274,8 @@ namespace WeaponsOfMassDecoration.Items {
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		public byte getPaintID(CustomPaintData data) {
-			if(!data.forceColor && this is ISprayPaint && Main.rand.NextFloat() <= .66f)
+		public byte getPaintID(PaintData data) {
+			if(this is ISprayPaint && Main.rand.NextFloat() <= .66f)
 				return 0;
 			if(colorCount == 1)
 				return getPaintIDFromIndex(0);
@@ -332,7 +290,7 @@ namespace WeaponsOfMassDecoration.Items {
 		/// <param name="data"></param>
 		/// <param name="offset">This can be used to offset the result. For example, to get the next index the paint will use the offset should be 1. This is useful for interpolating between the current and next color for the custom paint</param>
 		/// <returns></returns>
-		protected virtual int getPaintIndex(CustomPaintData data, int offset = 0) {
+		protected virtual int getPaintIndex(PaintData data, int offset = 0) {
 			int index;
 			if(cycleLoops) {
 				index = ((int)Math.Floor((Main.GlobalTime - data.timeOffset) / data.timeScale) + offset) % colorCount;
@@ -350,17 +308,14 @@ namespace WeaponsOfMassDecoration.Items {
 			}
 			return index;
 		}
-	
+
 		/// <summary>
 		/// Allows a custom paint to convert itself to a vanilla paint color before applying it to an npc. This is useful for a custom paint that is dependent on the current player, where the color of the paint could change after the buff is applied in a way that is not desirable
 		/// </summary>
 		/// <param name="paintColor">If the custom paint converts itself to a vanilla paint, this will be the color's PaintID. Will be -1 if the paint is not converted</param>
 		/// <param name="customPaint">If the custom paint is not converted, this will just be the same custom paint object</param>
 		/// <param name="data"></param>
-		public virtual void getPaintVarsForNpc(out int paintColor, out CustomPaint customPaint, CustomPaintData data) {
-			paintColor = -1;
-			customPaint = this;
-		}
+		public virtual void modifyPaintDataForNpc(ref PaintData data) { }
 	}
 
 	public class RainbowPaint : CustomPaint, ICyclingPaint {
@@ -539,21 +494,22 @@ namespace WeaponsOfMassDecoration.Items {
 		protected override string _colorName => "Negative";
 	}
 
-	public class TeamPaint : CustomPaint, ICyclingPaint{
-		protected override int[] _paintItemIds => new int[] { ItemID.WhitePaint, ItemID.RedPaint, ItemID.GreenPaint, ItemID.BluePaint, ItemID.YellowPaint,ItemID.PinkPaint};
+	public class TeamPaint : CustomPaint, ICyclingPaint {
+		protected override int[] _paintItemIds => new int[] { ItemID.WhitePaint, ItemID.RedPaint, ItemID.GreenPaint, ItemID.BluePaint, ItemID.YellowPaint, ItemID.PinkPaint };
 		protected override string _colorName => "Team";
 		protected override bool _includeVanillaRecipes => false;
 
-		protected override int getPaintIndex(CustomPaintData data, int offset = 0) {
+		protected override int getPaintIndex(PaintData data, int offset = 0) {
 			if(data.player == null)
 				return 0;
 			int team = data.player.team;
 			return team;
 		}
 
-		public override void getPaintVarsForNpc(out int paintColor, out CustomPaint customPaint, CustomPaintData data) {
-			customPaint = null;
-			paintColor = getPaintIDFromIndex(getPaintIndex(data));
+		public override void modifyPaintDataForNpc(ref PaintData data) {
+			data.customPaint = null;
+			data.paintColor = getPaintIDFromIndex(getPaintIndex(data));
+			data.sprayPaint = this is ISprayPaint;
 		}
 	}
 	public class DeepTeamPaint : TeamPaint, IDeepPaint { }

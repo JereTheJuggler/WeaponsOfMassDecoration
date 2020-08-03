@@ -1,55 +1,22 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Terraria.ID;
-using WeaponsOfMassDecoration.NPCs;
-using WeaponsOfMassDecoration.Items;
-using WeaponsOfMassDecoration.Projectiles;
-using WeaponsOfMassDecoration.Buffs;
-using WeaponsOfMassDecoration.Constants;
-using Terraria;
-using Terraria.Graphics.Effects;
-using Terraria.Graphics.Shaders;
-using Terraria.DataStructures;
-using Terraria.Localization;
-using Terraria.ModLoader;
-using static Terraria.ModLoader.ModContent;
-using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Terraria;
+using Terraria.Graphics.Shaders;
+using Terraria.ID;
+using Terraria.Localization;
+using Terraria.ModLoader;
+using WeaponsOfMassDecoration.Buffs;
+
+using WeaponsOfMassDecoration.Items;
+using WeaponsOfMassDecoration.NPCs;
+using WeaponsOfMassDecoration.Projectiles;
 using static Mono.Cecil.Cil.OpCodes;
 
 namespace WeaponsOfMassDecoration {
-	/// <summary>
-	/// The different methods that can be used for painting
-	/// </summary>
-	public enum PaintMethods{
-		/// <summary>
-		/// The method when the player has no painting tools in their inventory
-		/// </summary>
-		None,
-		/// <summary>
-		/// The method used by paint scrapers
-		/// </summary>
-		RemovePaint,
-		/// <summary>
-		/// The method used by paintbrushes
-		/// </summary>
-		Blocks,
-		/// <summary>
-		/// The method used by paint rollers
-		/// </summary>
-		Walls,
-		/// <summary>
-		/// The method used by painting multi-tools
-		/// </summary>
-		BlocksAndWalls
-	}
 
 	/// <summary>
 	/// Contains constants used to specify a message type of a ModPacket. One of these values should always be the first thing written when sending a ModPacket
@@ -75,16 +42,6 @@ namespace WeaponsOfMassDecoration {
 
 	public class WeaponsOfMassDecoration : Mod {
 		public const float PI = 3.14159265f;
-
-		/// <summary>
-		/// The speed that custom paints cycle through colors for painting tiles. Also applies to the colors for projectile shaders to line up with the color they are painting.
-		/// </summary>
-		public const float paintCyclingTimeScale = .25f;
-
-		/// <summary>
-		/// The speed that custom paints cycle through colors for npc shaders
-		/// </summary>
-		public const float npcCyclingTimeScale = 1f;
 
 		protected static Dictionary<string, Texture2D> extraTextures;
 
@@ -119,7 +76,7 @@ namespace WeaponsOfMassDecoration {
 			}
 		}
 
-	#region loading/unloading/textures
+		#region loading/unloading/textures
 		public override void Load() {
 			if(Main.netMode != NetmodeID.Server) {
 				#region load shaders
@@ -222,7 +179,7 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="filename">The file location + name for the texture. Extension should not be provided</param>
 		/// <param name="name">The key to use for this texture's dictionary entry</param>
-		private void loadExtraTexture(string filename,string name) {
+		private void loadExtraTexture(string filename, string name) {
 			try {
 				Texture2D texture = GetTexture(filename);
 				extraTextures.Add(name, texture);
@@ -278,9 +235,9 @@ namespace WeaponsOfMassDecoration {
 			});
 			RecipeGroup.RegisterGroup("WoMD:goldSword", goldSwordGroup);
 		}
-	#endregion
+		#endregion
 
-	#region data retrieval
+		#region data retrieval
 		/// <summary>
 		/// Safely gets a Dust object from Main.dust. If the provided index is out of range, null will be returned
 		/// </summary>
@@ -324,7 +281,7 @@ namespace WeaponsOfMassDecoration {
 				return null;
 			return Main.npc[index];
 		}
-	
+
 		/// <summary>
 		/// A shortcut for Main.netMode == NetmodeID.SinglePlayer
 		/// </summary>
@@ -404,251 +361,7 @@ namespace WeaponsOfMassDecoration {
 			}
 			return "None";
 		}
-	#endregion
-
-	#region shaders
-		/// <summary>
-		/// Applies a shader for the provided WoMDProjectile. Possible results are the Painted and PaintedNegative shaders.
-		/// </summary>
-		/// <param name="gProjectile"></param>
-		/// <returns></returns>
-		public static MiscShaderData applyShader(WoMDProjectile gProjectile) {
-			MiscShaderData shader = getShader(gProjectile);
-			if(shader != null)
-				shader.Apply();
-			return shader;
-		}
-		/// <summary>
-		/// Applies a shader for the provided WoMDNPC. Possible results are the Painted, SprayPainted, and PaintedNegative shaders.
-		/// </summary>
-		/// <param name="globalNpc"></param>
-		/// <param name="drawData">This is necessary for the SprayPainted shader to work</param>
-		/// <returns></returns>
-		public static MiscShaderData applyShader(WoMDNPC globalNpc, DrawData? drawData = null) {
-			MiscShaderData shader = getShader(globalNpc, out bool needsDrawData);
-			if(shader != null)
-				shader.Apply(needsDrawData ? drawData : null);
-			return shader;
-		}
-		/// <summary>
-		/// Applies a shader for the provided PaintingItem. Possible results are the GSPainted and PaintedNegative shader.
-		/// </summary>
-		/// <param name="item"></param>
-		/// <param name="player"></param>
-		/// <returns></returns>
-		public static MiscShaderData applyShader(PaintingItem item, out WoMDPlayer player) {
-			MiscShaderData shader = getShader(item, out player);
-			if(shader != null)
-				shader.Apply();
-			return shader;
-		}
-		/// <summary>
-		/// Applies a shader for the provided PaintingProjectile. Possible results are the Painted, GSPainted, and PaintedNegative shaders.
-		/// </summary>
-		/// <param name="projectile"></param>
-		/// <returns></returns>
-		public static MiscShaderData applyShader(PaintingProjectile projectile) {
-			MiscShaderData shader = getShader(projectile);
-			if(shader != null)
-				shader.Apply();
-			return shader;
-		}
-		/// <summary>
-		/// Gets a shader for the provided WoMDProjectile. Possible results are the Painted and PaintedNegative shaders.
-		/// </summary>
-		/// <param name="gProjectile"></param>
-		/// <returns></returns>
-		public static MiscShaderData getShader(WoMDProjectile gProjectile) {
-			if(!gProjectile.painted)
-				return null;
-			if(gProjectile.paintColor == PaintID.Negative || gProjectile.customPaint is NegativeSprayPaint)
-				return getNegativeShader();
-			Color color = getColor(gProjectile.paintColor, gProjectile.customPaint, npcCyclingTimeScale, gProjectile.paintedTime, null);
-			return getPaintedShader(color);
-		}
-		/// <summary>
-		/// Gets a shader for the provided WoMDNPC. Possible results are the Painted, SprayPainted, and PaintedNegative shaders.
-		/// </summary>
-		/// <param name="globalNpc"></param>
-		/// <param name="drawData">This is necessary for the SprayPainted shader to work</param>
-		/// <returns></returns>
-		public static MiscShaderData getShader(WoMDNPC globalNpc, out bool needsDrawData) {
-			needsDrawData = false;
-			if(!globalNpc.painted)
-				return null;
-			if(globalNpc.paintColor == PaintID.Negative || globalNpc.customPaint is NegativeSprayPaint)
-				return getNegativeShader();
-			Color color = getColor(globalNpc.paintColor, globalNpc.customPaint, npcCyclingTimeScale, globalNpc.paintedTime, null);
-			if(globalNpc.sprayPainted) {
-				needsDrawData = true;
-				return getSprayPaintedShader(color);
-			}
-			return getPaintedShader(color);
-		}
-		/// <summary>
-		/// Gets a shader for the provided PaintingItem. Possible results are the GSPainted and PaintedNegative shaders.
-		/// </summary>
-		/// <param name="item"></param>
-		/// <param name="player"></param>
-		/// <returns></returns>
-		public static MiscShaderData getShader(PaintingItem item, out WoMDPlayer player) {
-			player = null;
-			Player p = getPlayer(item.item.owner);
-			if(p == null)
-				return null;
-			player = p.GetModPlayer<WoMDPlayer>();
-			if(player == null)
-				return null;
-			if(player.paintColor == PaintID.Negative || player.customPaint is NegativeSprayPaint)
-				return getNegativeShader();
-			return getGSShader(player.renderColor);
-		}
-		/// <summary>
-		/// Gets a shader for the provided PaintingProjectile. Possible results are the Painted, GSPainted, and PaintedNegative shaders.
-		/// </summary>
-		/// <param name="projectile"></param>
-		/// <returns></returns>
-		public static MiscShaderData getShader(PaintingProjectile projectile) {
-			int paintColor;
-			CustomPaint customPaint;
-			float timeScale;
-			float timeOffset = 0;
-			Color renderColor = default;
-			if(projectile.npcOwner == -1) {
-				WoMDPlayer player = projectile.getModPlayer();
-				if(player == null)
-					return null;
-				paintColor = player.paintColor;
-				customPaint = player.customPaint;
-				timeScale = paintCyclingTimeScale;
-				if(player.paintMethod == PaintMethods.RemovePaint)
-					renderColor = PaintColors.list[0];
-				else
-					renderColor = player.renderColor;
-			} else {
-				NPC npc = getNPC(projectile.npcOwner);
-				if(npc == null)
-					return null;
-				WoMDNPC gNpc = npc.GetGlobalNPC<WoMDNPC>();
-				if(gNpc == null)
-					return null;
-				gNpc.getPaintVars(out paintColor, out customPaint);
-				timeScale = npcCyclingTimeScale;
-				timeOffset = gNpc.paintedTime;
-			}
-			if(paintColor == -1 && customPaint == null)
-				return null;
-			if(paintColor == PaintID.Negative || customPaint is NegativeSprayPaint) {
-				//if(projectile.usesGSShader)
-				//	return null;
-				return getNegativeShader();
-			}
-			if(projectile.npcOwner != -1) {
-				renderColor = getColor(paintColor, customPaint, timeScale, timeOffset);
-			}
-			if(projectile.usesGSShader) 
-				return getGSShader(renderColor);
-			return getPaintedShader(renderColor);
-		}
-		/// <summary>
-		/// Gets a shader for the provided WoMDItem. Possible results are the GSPainted and NegativePainted shaders.
-		/// </summary>
-		/// <param name="item"></param>
-		/// <param name="player"></param>
-		/// <returns></returns>
-		public static MiscShaderData getShader(WoMDItem item, WoMDPlayer player) {
-			if(player.paintColor == PaintID.Negative || player.customPaint is NegativeSprayPaint)
-				return getNegativeShader();
-			return getGSShader(player.renderColor);
-		}
-		/// <summary>
-		/// Gets the data for the PaintedNegative shader
-		/// </summary>
-		/// <returns></returns>
-		private static MiscShaderData getNegativeShader() {
-			MiscShaderData data = GameShaders.Misc["PaintedNegative"];
-			return data;
-		}
-		/// <summary>
-		/// Gets the data for the Painted shader using the provided color
-		/// </summary>
-		/// <param name="color"></param>
-		/// <returns></returns>
-		private static MiscShaderData getPaintedShader(Color color) {
-			MiscShaderData data = GameShaders.Misc["Painted"].UseColor(color).UseOpacity(1f);
-			return data;
-		}
-		/// <summary>
-		/// Gets the data for the SprayPainted shader using the provided color
-		/// </summary>
-		/// <param name="color"></param>
-		/// <param name="drawData"></param>
-		/// <returns></returns>
-		private static MiscShaderData getSprayPaintedShader(Color color, DrawData? drawData = null) {
-			MiscShaderData data = GameShaders.Misc["SprayPainted"].UseColor(color).UseImage("Images/Misc/noise").UseOpacity(1f);
-			return data;
-		}
-		/// <summary>
-		/// Gets the data for the GSPainted shader using the provided color
-		/// </summary>
-		/// <param name="color"></param>
-		/// <returns></returns>
-		private static MiscShaderData getGSShader(Color color) {
-			MiscShaderData data = GameShaders.Misc["GSPainted"].UseColor(color).UseOpacity(1f);
-			return data;
-		}
-
-		/// <summary>
-		/// Gets the color for the provided PaintingProjectile, based on properties from the projectile's Player or NPC owner
-		/// </summary>
-		/// <param name="projectile"></param>
-		/// <returns></returns>
-		public static Color getColor(PaintingProjectile projectile) {
-			int paintColor;
-			CustomPaint customPaint;
-			float timeScale;
-			float timeOffset = 0;
-			if(projectile.npcOwner == -1) {
-				WoMDPlayer player = projectile.getModPlayer();
-				if(player == null)
-					return PaintColors.list[0];
-				if(player.paintMethod == PaintMethods.RemovePaint)
-					return PaintColors.list[0];
-				return player.renderColor;
-			} else {
-				NPC npc = getNPC(projectile.npcOwner);
-				if(npc == null)
-					return Color.White;
-				WoMDNPC gNpc = npc.GetGlobalNPC<WoMDNPC>();
-				if(gNpc == null)
-					return Color.White;
-				gNpc.getPaintVars(out paintColor, out customPaint);
-				timeScale = npcCyclingTimeScale;
-				timeOffset = gNpc.paintedTime;
-			}
-			return getColor(paintColor, customPaint, timeScale, timeOffset, projectile.getOwner());
-		}
-
-		public static Color getColor(WoMDProjectile proj) {
-			if(!proj.painted)
-				return Color.White;
-			return getColor(proj.paintColor, proj.customPaint, npcCyclingTimeScale, proj.paintedTime);
-		}
-
-		public static Color getColor(WoMDNPC npc) {
-			if(!npc.painted)
-				return Color.White;
-			return getColor(npc.paintColor, npc.customPaint, npcCyclingTimeScale, npc.paintedTime);
-		}
-
-		private static Color getColor(int paintColor, CustomPaint customPaint, float timeScale, float timeOffset = 0, Player player = null) {
-			if(paintColor == -1 && customPaint == null)
-				return Color.White;
-			if(customPaint == null)
-				return PaintColors.list[paintColor];
-			return customPaint.getColor(new CustomPaintData(true, timeScale, timeOffset, player));
-		}
-	#endregion
+		#endregion
 
 		/// <summary>
 		/// Applies the painted buff to the provided npc, based on the paintColor and customPaint provided
@@ -658,7 +371,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="customPaint">The CustomPaint to use for painting the npc. Should be null when using a vanilla paint</param>
 		/// <param name="handledNpcs">Should not be provided</param>
 		/// <param name="preventRecursion">Should not be provided</param>
-		public static void applyPaintedToNPC(NPC npc, int paintColor, CustomPaint customPaint, CustomPaintData data, List<NPC> handledNpcs = null, bool preventRecursion = false) {
+		public static void applyPaintedToNPC(NPC npc, PaintData data, List<NPC> handledNpcs = null, bool preventRecursion = false) {
 			switch(npc.type) {
 				//cultist fight
 				case NPCID.CultistDragonBody1:
@@ -706,23 +419,19 @@ namespace WeaponsOfMassDecoration {
 
 			WoMDNPC globalNpc = npc.GetGlobalNPC<WoMDNPC>();
 
-			if(customPaint != null)
-				customPaint.getPaintVarsForNpc(out paintColor,out customPaint, data);
+			if(data.customPaint != null)
+				data.customPaint.modifyPaintDataForNpc(ref data);
 
-			float paintedTime;
-
-			globalNpc.painted = true;
-
-			if(!globalNpc.painted || (customPaint != null && (globalNpc.customPaint == null || globalNpc.customPaint.displayName != customPaint.displayName)) || (paintColor != -1 && globalNpc.paintColor != paintColor))
-				paintedTime = Main.GlobalTime;
-			else
-				paintedTime = globalNpc.paintedTime;
-
-			if(customPaint != null) {
-				globalNpc.setColors(npc, -1, (CustomPaint)customPaint.Clone(), customPaint is ISprayPaint, paintedTime);
-			} else {
-				globalNpc.setColors(npc, paintColor, null, false, paintedTime);
+			if(globalNpc.painted) {
+				PaintData existingData = globalNpc.paintData;
+				if(existingData.paintColor == data.paintColor &&
+				   (existingData.customPaint == null) == (data.customPaint == null) && //either both or neither are null
+				   existingData.customPaint.GetType().Equals(data.customPaint.GetType()) &&
+				   existingData.sprayPaint == data.sprayPaint)
+					return; //nothing needs to be updated
 			}
+
+			globalNpc.setPaintData(npc, data);
 
 			if(Main.netMode == NetmodeID.SinglePlayer) {
 				if(handledNpcs == null)
@@ -740,7 +449,7 @@ namespace WeaponsOfMassDecoration {
 								case NPCID.MoonLordHead:
 								case NPCID.MoonLordHand:
 								case NPCID.MoonLordCore:
-									applyPaintedToNPC(Main.npc[i], paintColor, customPaint, data ,null, true);
+									applyPaintedToNPC(Main.npc[i], data, null, true);
 									break;
 							}
 						}
@@ -764,7 +473,7 @@ namespace WeaponsOfMassDecoration {
 								if(prevSection.ai[1] == Math.Round(prevSection.ai[1])) {
 									NPC thisSection = getNPC((int)prevSection.ai[1]);
 									if(thisSection != null && thisSection.Equals(npc)) {
-										applyPaintedToNPC(prevSection, paintColor, customPaint, data, handledNpcs);
+										applyPaintedToNPC(prevSection, data, handledNpcs);
 									}
 								}
 							}
@@ -786,7 +495,7 @@ namespace WeaponsOfMassDecoration {
 								if(prevSection.ai[1] == Math.Round(prevSection.ai[1])) {
 									NPC thisSection = getNPC((int)prevSection.ai[1]);
 									if(thisSection != null && thisSection.Equals(npc)) {
-										applyPaintedToNPC(prevSection, paintColor, customPaint, data, handledNpcs);
+										applyPaintedToNPC(prevSection, data, handledNpcs);
 									}
 								}
 							}
@@ -808,7 +517,7 @@ namespace WeaponsOfMassDecoration {
 								if(nextSection.ai[0] == Math.Round(nextSection.ai[0])) {
 									NPC thisSection = getNPC((int)nextSection.ai[0]);
 									if(thisSection != null && thisSection.Equals(npc)) {
-										applyPaintedToNPC(nextSection, paintColor, customPaint, data, handledNpcs);
+										applyPaintedToNPC(nextSection, data, handledNpcs);
 									}
 								}
 							}
@@ -862,288 +571,6 @@ namespace WeaponsOfMassDecoration {
 				return max;
 			return value;
 		}
-
-	#region painting
-		/// <summary>
-		/// Paints tiles between the 2 provided world coordinates. Should not be used for projectiles controlled by the player, as paint will not be consumed
-		/// </summary>
-		/// <param name="start">The starting position of the line to paint. Expects values in world coordinates</param>
-		/// <param name="end">The ending position of the line to paint. Expects values in world coordinates</param>
-		/// <param name="paintColor">The PaintID to use for vanilla paints. -1 for custom paints</param>
-		/// <param name="customPaint">An instance of CustomPaint to use for painting. null for vanilla paints</param>
-		/// <param name="data">An instance of CustomPaintData to use for determining what color custom paints will output</param>
-		/// <param name="method">The painting method to use</param>
-		/// <param name="blocksAllowed">Can be set to false to prevent painting walls regardless of paint method</param>
-		/// <param name="wallsAllowed">Can be set to false to prevent painting tiles regardless of paint method</param>
-		/// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
-		/// <returns>The number of tiles that were updated</returns>
-		public static int paintBetweenPoints(Vector2 start, Vector2 end, int paintColor, CustomPaint customPaint, CustomPaintData data, PaintMethods method = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false, List<Point> paintedTiles = null) {
-			if(!(blocksAllowed || wallsAllowed))
-				return 0;
-			Vector2 unitVector = end - start;
-			float distance = unitVector.Length();
-			unitVector.Normalize();
-			int iterations = (int)Math.Ceiling(distance / 8f);
-			int count = 0;
-			for(int i = 0; i < iterations; i++) {
-				Vector2 pos = start + (unitVector * i * 8);
-				if(paint(pos, paintColor, customPaint, data, method, blocksAllowed, wallsAllowed, useWorldGen)) {
-					count++;
-					if(paintedTiles != null) {
-						Point tPos = pos.ToTileCoordinates();
-						if(!paintedTiles.Contains(tPos))
-							paintedTiles.Add(tPos);
-					}
-				}
-			}
-			return count;
-		}
-
-		/// <summary>
-		/// Creates a circle of paint. Should not be used for projectiles controlled by the player, as paint will not be consumed
-		/// </summary>
-		/// <param name="pos">The position of the center of the circle. Expects values in world coordinates</param>
-		/// <param name="radius">The radiues of the circle. 16 for each tile</param>
-		/// <param name="paintColor">The PaintID to use for vanilla paints. -1 for custom paints</param>
-		/// <param name="customPaint">An instance of CustomPaint to use for painting. null for vanilla paints</param>
-		/// <param name="data">An instance of CustomPaintData to use for determining what color custom paints will output</param>
-		/// <param name="method">The painting method to use</param>
-		/// <param name="blocksAllowed">Can be set to false to prevent painting walls regardless of paint method</param>
-		/// <param name="wallsAllowed">Can be set to false to prevent painting tiles regardless of paint method</param>
-		/// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
-		/// <returns>The number of tiles that were updated</returns>
-		public static int explode(Vector2 pos, float radius, int paintColor, CustomPaint customPaint, CustomPaintData data, PaintMethods method = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
-			int count = 0;
-			for(int currentLevel = 0; currentLevel < Math.Ceiling(radius / 16f); currentLevel++) {
-				if(currentLevel == 0) {
-					if(paint(pos, paintColor, customPaint, data, method, blocksAllowed, wallsAllowed))
-						count++;
-				} else {
-					for(int i = 0; i <= currentLevel * 2; i++) {
-						float xOffset;
-						float yOffset;
-						if(i <= currentLevel) {
-							xOffset = currentLevel;
-							yOffset = i;
-						} else {
-							xOffset = (currentLevel * 2 - i + 1);
-							yOffset = (currentLevel + 1);
-						}
-						Vector2 offsetVector = new Vector2(xOffset * 16f, yOffset * 16f);
-						if(offsetVector.Length() <= radius) {
-							for(int dir = 0; dir < 4; dir++) {
-								if(paint(pos + offsetVector.RotatedBy(dir * (Math.PI / 2)), paintColor, customPaint, data, method, blocksAllowed, wallsAllowed, useWorldGen))
-									count++;
-							}
-						}
-					}
-				}
-			}
-			return count;
-		}
-
-		public static int explodeColored(Vector2 pos, IEnumerable<int> colors, PaintMethods method = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
-			int count = 0;
-			for(int currentLevel = 0; currentLevel < colors.Count(); currentLevel++) {
-				if(currentLevel == 0) {
-					if(paint(pos, colors.ElementAt(currentLevel), null, new CustomPaintData(), method, blocksAllowed, wallsAllowed))
-						count++;
-				} else {
-					for(int i = 0; i <= currentLevel * 2; i++) {
-						float xOffset;
-						float yOffset;
-						if(i <= currentLevel) {
-							xOffset = currentLevel;
-							yOffset = i;
-						} else {
-							xOffset = (currentLevel * 2 - i + 1);
-							yOffset = (currentLevel + 1);
-						}
-						Vector2 offsetVector = new Vector2(xOffset * 16f, yOffset * 16f);
-						if(offsetVector.Length() <= colors.Count() * 16f) {
-							for(int dir = 0; dir < 4; dir++) {
-								if(paint(pos + offsetVector.RotatedBy(dir * (Math.PI / 2)), colors.ElementAt(currentLevel), null, new CustomPaintData(), method, blocksAllowed, wallsAllowed, useWorldGen))
-									count++;
-							}
-						}
-					}
-				}
-			}
-			return count;
-		}
-
-		/// <summary>
-		/// Creates a splatter of paint
-		/// </summary>
-		/// <param name="pos">The position of the center of the splatter. Expects values in world coordinates</param>
-		/// <param name="radius">The length of the spokes coming out of the center of the splatter. Uses world distance</param>
-		/// <param name="spokes">The number of spokes to create</param>
-		/// <param name="paintColor">The PaintID to use for vanilla paints. -1 for custom paints</param>
-		/// <param name="customPaint">An instance of CustomPaint to use for painting. null for vanilla paints</param>
-		/// <param name="data">An instance of CustomPaintData to use for determining what color custom paints will output</param>
-		/// <param name="method">The painting method to use</param>
-		/// <param name="blocksAllowed">Can be set to false to prevent painting walls regardless of paint method</param>
-		/// <param name="wallsAllowed">Can be set to false to prevent painting tiles regardless of paint method</param>
-		/// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
-		/// <returns>The total number of tiles that were updated</returns>
-		public static int splatter(Vector2 pos, float radius, int spokes, int paintColor, CustomPaint customPaint, CustomPaintData data, PaintMethods method = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
-			int count = explode(pos, 48f, paintColor, customPaint, data, method, blocksAllowed, wallsAllowed);
-			float angle = Main.rand.NextFloat((float)Math.PI);
-			float[] angles = new float[spokes];
-			float[] radii = new float[spokes];
-			for(int s = 0; s < spokes; s++) {
-				angles[s] = angle;
-				angle += Main.rand.NextFloat((float)Math.PI / 6, (float)(Math.PI * 2) / 3);
-				radii[s] = radius - (Main.rand.NextFloat(4) * 8);
-			}
-			for(int offset = 0; offset < radius; offset += 8) {
-				for(int s = 0; s < spokes; s++) {
-					if(offset <= radii[s]) {
-						Point newPos = new Point(
-							(int)Math.Floor((pos.X + Math.Cos(angles[s]) * offset)/16f),
-							(int)Math.Floor((pos.Y + Math.Sin(angles[s]) * offset)/16f)
-						);
-						if(paint(newPos.X,newPos.Y, paintColor, customPaint, data, method, blocksAllowed, wallsAllowed, useWorldGen))
-							count++;
-					}
-				}
-			}
-			return count;
-		}
-
-		public static int splatterColored(Vector2 pos, int spokes, IEnumerable<int> colors, PaintMethods method = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
-			int count = explodeColored(pos, new List<int> { colors.ElementAt(0), colors.ElementAt(1), colors.ElementAt(2) }, method, blocksAllowed, wallsAllowed);
-			float radius = 16 * colors.Count();
-			float angle = Main.rand.NextFloat((float)Math.PI);
-			float[] angles = new float[spokes];
-			float[] radii = new float[spokes];
-			for(int s = 0; s < spokes; s++) {
-				angles[s] = angle;
-				angle += Main.rand.NextFloat((float)Math.PI / 6, (float)(Math.PI * 2) / 3);
-				radii[s] = radius - (Main.rand.NextFloat(4) * 8);
-			}
-			for(int offset = 0; offset < radius; offset += 8) {
-				for(int s = 0; s < spokes; s++) {
-					if(offset <= radii[s]) {
-						Point newPos = new Point(
-							(int)Math.Floor((pos.X + Math.Cos(angles[s]) * offset) / 16f),
-							(int)Math.Floor((pos.Y + Math.Sin(angles[s]) * offset) / 16f)
-						);
-						if(paint(newPos.X, newPos.Y, colors.ElementAt((int)Math.Floor(offset/16f)), null, new CustomPaintData(), method, blocksAllowed, wallsAllowed, useWorldGen))
-							count++;
-					}
-				}
-			}
-			return count;
-		}
-
-		/// <summary>
-		/// Paints the tile at the given position
-		/// </summary>
-		/// <param name="pos">The position of the tile. Expects values in world coordinates</param>
-		/// <param name="paintColor">The PaintID to use for vanilla paints. -1 for custom paints</param>
-		/// <param name="customPaint">An instance of CustomPaint to use for painting. null for vanilla paints</param>
-		/// <param name="data">An instance of CustomPaintData to use for determining what color custom paints will output</param>
-		/// <param name="method">The painting method to use</param>
-		/// <param name="blocksAllowed">Can be set to false to prevent painting walls regardless of paint method</param>
-		/// <param name="wallsAllowed">Can be set to false to prevent painting tiles regardless of paint method</param>
-		/// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
-		/// <returns>Whether or not the tile was updated</returns>
-		public static bool paint(Vector2 pos, int paintColor, CustomPaint customPaint, CustomPaintData data, PaintMethods method = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
-			Point p = pos.ToTileCoordinates();
-			return paint(p.X, p.Y, paintColor, customPaint, data, method, blocksAllowed, wallsAllowed, useWorldGen);
-		}
-
-		/// <summary>
-		/// Paints the tile at the given position
-		/// </summary>
-		/// <param name="x">The x coordinate of the tile. Expects values in tile coordinates</param>
-		/// <param name="y">The y coordinate of the tile. Expects values in tile coordinates</param>
-		/// <param name="paintColor">The PaintID to use for vanilla paints. -1 for custom paints</param>
-		/// <param name="customPaint">An instance of CustomPaint to use for painting. null for vanilla paints</param>
-		/// <param name="data">An instance of CustomPaintData to use for determining what color custom paints will output</param>
-		/// <param name="method">The painting method to use</param>
-		/// <param name="blocksAllowed">Can be set to false to prevent painting walls regardless of paint method</param>
-		/// <param name="wallsAllowed">Can be set to false to prevent painting tiles regardless of paint method</param>
-		/// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
-		/// <returns>Whether or not the tile was updated</returns>
-		public static bool paint(int x, int y, int paintColor, CustomPaint customPaint, CustomPaintData data, PaintMethods method = PaintMethods.BlocksAndWalls,bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
-			if(!WorldGen.InWorld(x, y, 10))
-				return false;
-			if(paintColor == -1 && customPaint == null)
-				return false;
-			byte targetColor;
-			if(customPaint != null) {
-				targetColor = customPaint.getPaintID(data);
-			} else {
-				targetColor = (byte)paintColor;
-			}
-			return paint(x, y, targetColor, method, blocksAllowed, wallsAllowed, useWorldGen);
-		}
-
-		/// <summary>
-		/// Paints the tile at the given position
-		/// </summary>
-		/// <param name="pos">The position of the tile. Expects values in world coordinates</param>
-		/// <param name="color">The PaintID of the color to use</param>
-		/// <param name="method">The painting method to use</param>
-		/// <param name="blocksAllowed">Can be set to false to prevent painting walls regardless of paint method</param>
-		/// <param name="wallsAllowed">Can be set to false to prevent painting tiles regardless of paint method</param>
-		/// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
-		/// <returns>Whether or not the tile was updated</returns>
-		public static bool paint(Vector2 pos, byte color, PaintMethods method, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
-			Point p = pos.ToTileCoordinates();
-			return paint(p.X, p.Y, color, method, blocksAllowed, wallsAllowed, useWorldGen);
-		}
-
-		/// <summary>
-		/// Paints the tile at the given position
-		/// </summary>
-		/// <param name="x">The x coordinate of the tile. Expects values in tile coordinates</param>
-		/// <param name="y">The y coordinate of the tile. Expects values in tile coordinates</param>
-		/// <param name="color">The PaintID of the color to use</param>
-		/// <param name="method">The painting method to use</param>
-		/// <param name="blocksAllowed">Can be set to false to prevent painting walls regardless of paint method</param>
-		/// <param name="wallsAllowed">Can be set to false to prevent painting tiles regardless of paint method</param>
-		/// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
-		/// <returns>Whether or not the tile was updated</returns>
-		public static bool paint(int x, int y, byte color, PaintMethods method, bool blocksAllowed = true, bool wallsAllowed = true, bool useWorldGen = false) {
-			if(!WorldGen.InWorld(x, y, 10))
-				return false;
-			Tile t = Main.tile[x, y];
-			if(t == null)
-				return false;
-			bool updated = false;
-			if(blocksAllowed && t.active() && t.color() != color && (color != 0 || method == PaintMethods.RemovePaint)) {
-				if(useWorldGen)
-					WorldGen.paintTile(x, y, color, false);
-				else
-					t.color(color);
-				updated = true;
-			}
-			if(wallsAllowed && t.wall > 0 && t.wallColor() != color && (color != 0 || method == PaintMethods.RemovePaint)) {
-				if(useWorldGen)
-					WorldGen.paintWall(x, y, color, false);
-				else 
-					t.wallColor(color);
-				updated = true;
-			}
-			if(updated) {
-				if(server())
-					sendTileFrame(x, y);
-			}
-			return updated;
-		}
-
-		/// <summary>
-		/// Sends a net message to update the tile at the given position
-		/// </summary>
-		/// <param name="x">The tile's x coordinate. Expects values in tile coordinates</param>
-		/// <param name="y">The tile's y coordinate. Expects values in tile coordinates</param>
-		public static void sendTileFrame(int x, int y) {
-			NetMessage.SendTileSquare(-1, x, y, 1);
-		}
-		#endregion
 
 		//Hamstar's Mod Helpers Integration
 		public static string GithubUserName => "JereTheJuggler";

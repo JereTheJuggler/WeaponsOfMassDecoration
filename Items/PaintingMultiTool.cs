@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Terraria;
-using Terraria.ModLoader;
-using Terraria.ID;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using Terraria;
+using Terraria.ID;
+using Terraria.ModLoader;
 using WeaponsOfMassDecoration.NPCs;
+using static WeaponsOfMassDecoration.PaintUtils;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.Items {
@@ -80,19 +77,25 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override bool UseItem(Player player) {
+			WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
+			if(p == null)
+				return false;
 			soundTimer--;
 			if(soundTimer <= 0) {
 				Main.PlaySound(SoundID.Item, player.position);
 				soundTimer = soundFrequency;
 			}
-			Point mousePosition = Main.MouseWorld.ToTileCoordinates();//(Main.screenPosition + Main.MouseScreen*2)/16;//Main.scrnew Vector2(Terraria.GameInput.PlayerInput.MouseX, Terraria.GameInput.PlayerInput.MouseY);
+			Point mousePosition = Main.MouseWorld.ToTileCoordinates();
 			Point playerPos = player.position.ToTileCoordinates();
 			int xOffset = mousePosition.X - playerPos.X;
 			int yOffset = mousePosition.Y - playerPos.Y;
 			if(yOffset < 0)
 				yOffset--;
 			if(isInRange(player, xOffset, yOffset)) {
-				paint(mousePosition.X, mousePosition.Y);
+				PaintData data = new PaintData(p.paintData);
+				data.paintMethod = PaintMethods.BlocksAndWalls;
+				data.useWorldGen = true;
+				paint(mousePosition.X, mousePosition.Y, data);
 			}
 			return true;
 		}
@@ -102,13 +105,15 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		protected override Texture2D getTexture(WoMDPlayer player) {
-			if(player.paintColor == -1 && player.customPaint == null)
+			if(player.paintData.paintColor == -1 && player.paintData.customPaint == null)
 				return null;
-			return getExtraTexture(GetType().Name+"Painted");
+			return getExtraTexture(GetType().Name + "Painted");
 		}
+
+		public override PaintMethods overridePaintMethod(WoMDPlayer player) => PaintMethods.BlocksAndWalls;
 	}
 
-    public class SpectrePaintingMultiTool : PaintingMultiTool {
+	public class SpectrePaintingMultiTool : PaintingMultiTool {
 		public SpectrePaintingMultiTool() : base() {
 			hitboxExtension = 12;
 			soundFrequency = 7;
@@ -117,29 +122,29 @@ namespace WeaponsOfMassDecoration.Items {
 		public override void SetStaticDefaults() {
 			base.SetStaticDefaults();
 			DisplayName.SetDefault("Spectre Paint Multi-Tool");
-        }
+		}
 
-        public override void AddRecipes() {
-            ModRecipe recipe = new ModRecipe(mod);
-            recipe.AddIngredient(ItemID.SpectrePaintbrush);
-            recipe.AddIngredient(ItemID.SpectrePaintRoller);
-            recipe.AddTile(TileID.DyeVat);
-            recipe.SetResult(this);
-            recipe.AddRecipe();
-        }
+		public override void AddRecipes() {
+			ModRecipe recipe = new ModRecipe(mod);
+			recipe.AddIngredient(ItemID.SpectrePaintbrush);
+			recipe.AddIngredient(ItemID.SpectrePaintRoller);
+			recipe.AddTile(TileID.DyeVat);
+			recipe.SetResult(this);
+			recipe.AddRecipe();
+		}
 
-        public override void SetDefaults() {
+		public override void SetDefaults() {
 			base.SetDefaults();
-			
+
 			item.value = Item.buyPrice(0, 0, 0, 10);
-            item.rare = ItemRarityID.Green;
+			item.rare = ItemRarityID.Green;
 			item.damage = 70;
 			item.knockBack = 7f;
-            item.tileBoost = 3;
+			item.tileBoost = 3;
 			item.useTime = 3;
 			item.useAnimation = 7;
 			hitboxExtension = 6;
-        }
+		}
 
 		public override void UseStyle(Player player) {
 			rotation += .05f;

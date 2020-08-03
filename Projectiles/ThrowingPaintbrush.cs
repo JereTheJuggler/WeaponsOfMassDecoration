@@ -1,69 +1,62 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Terraria.ModLoader;
+﻿using Microsoft.Xna.Framework;
+using System;
 using Terraria;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Terraria.ID;
-using static Terraria.ModLoader.ModContent;
+using static WeaponsOfMassDecoration.PaintUtils;
 
 namespace WeaponsOfMassDecoration.Projectiles {
-    class ThrowingPaintbrush : PaintingProjectile{
-        public int splattersFlung = 0;
+	class ThrowingPaintbrush : PaintingProjectile {
+		public Vector2? lastPaintCoord = null;
 
-        public Vector2? lastPaintCoord = null;
+		public ThrowingPaintbrush() : base() {
+			dropsOnDeath = true;
+			dropCount = 6;
+			dropVelocity = 6f;
 
-        public ThrowingPaintbrush() : base() {
-            dropsOnDeath = true;
-            dropCount = 6;
-            dropVelocity = 6f;
+			explodesOnDeath = true;
+			explosionRadius = 45;
 
-            explodesOnDeath = true;
-            explosionRadius = 45;
+			usesGSShader = true;
 
-            usesGSShader = true;
-
-            xFrameCount = 1;
-            yFrameCount = 3;
+			xFrameCount = 1;
+			yFrameCount = 3;
 		}
 
-        public override void SetStaticDefaults() {
-            base.SetStaticDefaults();
-            DisplayName.SetDefault("Throwing Paintbrush");
-        }
+		public override void SetStaticDefaults() {
+			base.SetStaticDefaults();
+			DisplayName.SetDefault("Throwing Paintbrush");
+		}
 
-        public override void SetDefaults() {
-            base.SetDefaults();
-            projectile.CloneDefaults(ProjectileID.ThrowingKnife);
-            projectile.thrown = true;
-            projectile.light = 0;
+		public override void SetDefaults() {
+			base.SetDefaults();
+			projectile.CloneDefaults(ProjectileID.ThrowingKnife);
+			projectile.thrown = true;
+			projectile.light = 0;
 
-            aiType = ProjectileID.ThrowingKnife;
-        }
+			aiType = ProjectileID.ThrowingKnife;
+		}
 
-        public override bool PreAI() {
-            base.PreAI();
-            if(canPaint()) {
-                Vector2 coords = projectile.Center + new Vector2(0, 24).RotatedBy(projectile.rotation + Math.PI);
-                paint(coords);
-                if(Math.Abs(projectile.rotation - oldRotation) > Math.PI / 9) {
-                    paint(projectile.Center + new Vector2(0, 24).RotatedBy(projectile.rotation + Math.PI + (Math.PI / 9)));
-                    paint(projectile.Center + new Vector2(0, 24).RotatedBy(projectile.rotation + Math.PI - (Math.PI / 9)));
-                }
-                if(lastPaintCoord != null) {
-                    paintBetweenPoints((Vector2)lastPaintCoord, coords);
+		public override bool PreAI() {
+			base.PreAI();
+			if(canPaint()) {
+				PaintData data = getPaintData();
+				Vector2 coords = projectile.Center + new Vector2(0, 24).RotatedBy(projectile.rotation + Math.PI);
+				paint(coords, data);
+				if(Math.Abs(projectile.rotation - oldRotation) > Math.PI / 9) {
+					paint(projectile.Center + new Vector2(0, 24).RotatedBy(projectile.rotation + Math.PI + (Math.PI / 9)), data);
+					paint(projectile.Center + new Vector2(0, 24).RotatedBy(projectile.rotation + Math.PI - (Math.PI / 9)), data);
 				}
-                lastPaintCoord = coords;
-            }
-            return true;
-        }
+				if(lastPaintCoord != null) {
+					paintBetweenPoints((Vector2)lastPaintCoord, coords, data);
+				}
+				lastPaintCoord = coords;
+			}
+			return true;
+		}
 
-        public override bool OnTileCollide(Vector2 oldVelocity) {
-            Main.PlaySound(SoundID.Dig, projectile.Center);
-            return true;
-        }
-    }
+		public override bool OnTileCollide(Vector2 oldVelocity) {
+			Main.PlaySound(SoundID.Dig, projectile.Center);
+			return true;
+		}
+	}
 }

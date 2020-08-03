@@ -1,19 +1,11 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Terraria;
-using Terraria.ID;
+﻿using Terraria.ID;
 using Terraria.ModLoader;
-using WeaponsOfMassDecoration.NPCs;
 using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
 	public class EndlessPaintQuiver : PaintArrow {
 
-		public EndlessPaintQuiver() : base(){
+		public EndlessPaintQuiver() : base() {
 			textureCount = 1;
 		}
 
@@ -31,11 +23,11 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override void AddRecipes() {
-		    ModRecipe recipe = new ModRecipe(mod);
-		    recipe.AddIngredient(ItemType<PaintArrow>(), 999 * 4);
-		    recipe.AddTile(TileID.CrystalBall);
-		    recipe.SetResult(this, 1);
-		    recipe.AddRecipe();
+			ModRecipe recipe = new ModRecipe(mod);
+			recipe.AddIngredient(ItemType<PaintArrow>(), 999 * 4);
+			recipe.AddTile(TileID.CrystalBall);
+			recipe.SetResult(this, 1);
+			recipe.AddRecipe();
 		}
 	}
 }

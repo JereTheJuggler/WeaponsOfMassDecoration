@@ -1,7 +1,5 @@
 ﻿using Terraria.ID;
 using Terraria.ModLoader;
-using System;
-using Terraria;
 using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
@@ -18,11 +16,11 @@ namespace WeaponsOfMassDecoration.Items {
 			item.uniqueStack = true;
 		}
 
-		public override void AddRecipes(){
+		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
 			recipe.AddIngredient(ItemType<SplatterBullet>(), 999 * 4);
 			recipe.AddTile(TileID.CrystalBall);
-			recipe.SetResult(this,1);
+			recipe.SetResult(this, 1);
 			recipe.AddRecipe();
 		}
 	}

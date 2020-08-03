@@ -1,1 +1,9 @@
-This mod's goal is to provide methods of painting that are both faster and more fun to use. Many different painting weapons and ammunition are available to use, with each spreading paint in their own unique way. In addition to the weapons, there are custom paints, including rainbow, flame, blue flame, green flame, grayscale and more.
+This mod's goal is to provide methods of painting that are both faster and more fun to use! 
+
+Many different painting weapons and ammunition are available to use, with each spreading paint in their own unique way! 
+
+In addition to the weapons, there are custom paints, including rainbow, flame, blue flame, green flame, grayscale and more!
+
+Ever wondered what a purple Eye of Cthulhu, a negative Zombie, or a rainbow Duke Fishron would look like? Well now you do! And this mod will let you find out! Enemies that you hit with painting weapons will also become painting in whatever color of paint you're using!
+
+There's even an additional Chaos Mode that adds in many zany new features that will help spread paint far and wide! (Note: this is turned off by default and needs to be enabled in the mod's config)

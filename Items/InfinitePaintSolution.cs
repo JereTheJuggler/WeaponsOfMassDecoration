@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Terraria;
+﻿using Microsoft.Xna.Framework.Graphics;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Microsoft.Xna.Framework.Graphics;
 using WeaponsOfMassDecoration.NPCs;
-using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 using static Terraria.ModLoader.ModContent;
+using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.Items {
 	class InfinitePaintSolution : PaintSolution {
@@ -19,7 +13,7 @@ namespace WeaponsOfMassDecoration.Items {
 			DisplayName.SetDefault("Infinite Paint Solution");
 		}
 
-		public override void SetDefaults(){
+		public override void SetDefaults() {
 			base.SetDefaults();
 			item.uniqueStack = true;
 			item.maxStack = 1;
@@ -27,15 +21,15 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override void AddRecipes() {
-		    ModRecipe recipe = new ModRecipe(mod);
-		    recipe.AddIngredient(ItemType<PaintSolution>(), 999);
-		    recipe.AddTile(TileID.DyeVat);
-		    recipe.SetResult(this, 1);
-		    recipe.AddRecipe();
+			ModRecipe recipe = new ModRecipe(mod);
+			recipe.AddIngredient(ItemType<PaintSolution>(), 999);
+			recipe.AddTile(TileID.DyeVat);
+			recipe.SetResult(this, 1);
+			recipe.AddRecipe();
 		}
 
 		protected override Texture2D getTexture(WoMDPlayer player) {
-			if((player.paintColor == -1 && player.customPaint == null) || player.paintMethod == PaintMethods.RemovePaint)
+			if((player.paintData.paintColor == -1 && player.paintData.customPaint == null) || player.paintData.paintMethod == PaintMethods.RemovePaint)
 				return null;
 			return getExtraTexture("InfinitePaintSolutionPainted");
 		}

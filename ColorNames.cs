@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace WeaponsOfMassDecoration.Constants {
+﻿namespace WeaponsOfMassDecoration {
 	public static class ColorNames {
 		public static readonly string[] list = new string[] {
 			"None",
