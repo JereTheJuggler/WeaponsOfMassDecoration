@@ -126,9 +126,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			projectile.position.X = projectile.position.X - (projectile.width / 2);
 			projectile.position.Y = projectile.position.Y - (projectile.height / 2);
 
-			if(canPaint()) {
+			if(canPaint())
 				explode(projectile.Center, explosionRadius * 16, getPaintData());
-			}
 		}
 	}
 }

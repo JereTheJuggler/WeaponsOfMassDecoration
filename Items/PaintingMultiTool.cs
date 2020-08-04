@@ -92,10 +92,9 @@ namespace WeaponsOfMassDecoration.Items {
 			if(yOffset < 0)
 				yOffset--;
 			if(isInRange(player, xOffset, yOffset)) {
-				PaintData data = new PaintData(p.paintData);
+				PaintData data = p.paintData.clone();
 				data.paintMethod = PaintMethods.BlocksAndWalls;
-				data.useWorldGen = true;
-				paint(mousePosition.X, mousePosition.Y, data);
+				paint(mousePosition.X, mousePosition.Y, data, true);
 			}
 			return true;
 		}

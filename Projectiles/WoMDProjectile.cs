@@ -238,7 +238,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			WoMDProjectile proj = projectile.GetGlobalProjectile<WoMDProjectile>();
 			if(proj == null)
 				return;
-			proj._paintData = new PaintData(gNpc.paintData);
+			proj._paintData = gNpc.paintData.clone();
 			proj.npcOwner = npc.whoAmI;
 			if(server())
 				sendProjectileColorPacket(proj, projectile);
@@ -250,7 +250,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			if(dProj == null || sProj == null)
 				return;
 			dProj.painted = true;
-			dProj._paintData = new PaintData(sProj.paintData);
+			dProj._paintData = sProj.paintData.clone();
 			dProj.npcOwner = sProj.npcOwner;
 			if(server())
 				sendProjectileColorPacket(dProj, dest);

@@ -1,8 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
+using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
+using Terraria.ID;
 using WeaponsOfMassDecoration.NPCs;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
@@ -29,7 +31,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="end">The ending position of the line to paint. Expects values in world coordinates</param>
 		/// <param name="data">An instance of PaintData used to specify various settings for how painting should function</param>
 		/// <param name="paintedTiles">A list of all the tiles that were updated in this function</param>
-		public static void paintBetweenPoints(Vector2 start, Vector2 end, PaintData data, List<Point> paintedTiles = null) {
+		public static void paintBetweenPoints(Vector2 start, Vector2 end, PaintData data, List<Point> paintedTiles = null, bool useWorldGen = false) {
 			if(!(data.blocksAllowed || data.wallsAllowed))
 				return;
 			Vector2 unitVector = end - start;
@@ -39,7 +41,7 @@ namespace WeaponsOfMassDecoration {
 			int count = 0;
 			for(int i = 0; i < iterations; i++) {
 				Vector2 pos = start + (unitVector * i * 8);
-				if(paint(pos, data)) {
+				if(paint(pos, data, useWorldGen)) {
 					count++;
 					if(paintedTiles != null) {
 						Point tPos = pos.ToTileCoordinates();
@@ -56,10 +58,10 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="pos">The position of the center of the circle. Expects values in world coordinates</param>
 		/// <param name="radius">The radiues of the circle. 16 for each tile</param>
 		/// <param name="data">An instance of PaintData used to specify various settings for how painting should function</param>
-		public static void explode(Vector2 pos, float radius, PaintData data) {
+		public static void explode(Vector2 pos, float radius, PaintData data, bool useWorldGen = false) {
 			for(int currentLevel = 0; currentLevel < Math.Ceiling(radius / 16f); currentLevel++) {
 				if(currentLevel == 0) {
-					paint(pos, data);
+					paint(pos, data, useWorldGen);
 				} else {
 					for(int i = 0; i <= currentLevel * 2; i++) {
 						float xOffset;
@@ -74,7 +76,23 @@ namespace WeaponsOfMassDecoration {
 						Vector2 offsetVector = new Vector2(xOffset * 16f, yOffset * 16f);
 						if(offsetVector.Length() <= radius) {
 							for(int dir = 0; dir < 4; dir++) {
-								paint(pos + offsetVector.RotatedBy(dir * (Math.PI / 2)), data);
+								Vector2 transform;
+								switch(dir) {
+									case 0:
+									default:
+										transform = offsetVector;
+										break;
+									case 1:
+										transform = new Vector2(offsetVector.Y, offsetVector.X * -1);
+										break;
+									case 2:
+										transform = offsetVector * -1;
+										break;
+									case 3:
+										transform = new Vector2(offsetVector.Y * -1, offsetVector.X);
+										break;
+								}
+								paint(pos + transform, data, useWorldGen);
 							}
 						}
 					}
@@ -82,11 +100,11 @@ namespace WeaponsOfMassDecoration {
 			}
 		}
 
-		public static void explodeColored(Vector2 pos, IEnumerable<int> colors, PaintData data) {
+		public static void explodeColored(Vector2 pos, IEnumerable<byte> colors, PaintData data, bool useWorldGen = false) {
 			for(int currentLevel = 0; currentLevel < colors.Count(); currentLevel++) {
 				if(currentLevel == 0) {
 					data.paintColor = colors.ElementAt(currentLevel);
-					paint(pos, data);
+					paint(pos, data, useWorldGen);
 				} else {
 					for(int i = 0; i <= currentLevel * 2; i++) {
 						float xOffset;
@@ -101,8 +119,24 @@ namespace WeaponsOfMassDecoration {
 						Vector2 offsetVector = new Vector2(xOffset * 16f, yOffset * 16f);
 						if(offsetVector.Length() <= colors.Count() * 16f) {
 							for(int dir = 0; dir < 4; dir++) {
-								data.paintColor = colors.ElementAt(currentLevel);
-								paint(pos + offsetVector.RotatedBy(dir * (Math.PI / 2)), data);
+								Vector2 transform;
+								switch(dir) {
+									case 0:
+									default:
+										transform = offsetVector;
+										break;
+									case 1:
+										transform = new Vector2(offsetVector.Y, offsetVector.X * -1);
+										break;
+									case 2:
+										transform = offsetVector * -1;
+										break;
+									case 3:
+										transform = new Vector2(offsetVector.Y * -1, offsetVector.X);
+										break;
+								}
+								Point p = (pos + transform).ToTileCoordinates();
+								paint(p.X,p.Y, colors.ElementAt(currentLevel), data, useWorldGen);
 							}
 						}
 					}
@@ -117,8 +151,8 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="radius">The length of the spokes coming out of the center of the splatter. Uses world distance</param>
 		/// <param name="spokes">The number of spokes to create</param>
 		/// <param name="data">An instance of PaintData used to specify various settings for how painting should function</param>
-		public static void splatter(Vector2 pos, float radius, int spokes, PaintData data) {
-			explode(pos, 48f, data);
+		public static void splatter(Vector2 pos, float radius, int spokes, PaintData data, bool useWorldGen = false) {
+			explode(pos, 48f, data, useWorldGen);
 			float angle = Main.rand.NextFloat((float)Math.PI);
 			float[] angles = new float[spokes];
 			float[] radii = new float[spokes];
@@ -134,14 +168,14 @@ namespace WeaponsOfMassDecoration {
 							(int)Math.Floor((pos.X + Math.Cos(angles[s]) * offset) / 16f),
 							(int)Math.Floor((pos.Y + Math.Sin(angles[s]) * offset) / 16f)
 						);
-						paint(newPos.X, newPos.Y, data);
+						paint(newPos.X, newPos.Y, data, useWorldGen);
 					}
 				}
 			}
 		}
 
-		public static void splatterColored(Vector2 pos, int spokes, IEnumerable<int> colors, PaintData data) {
-			explodeColored(pos, new List<int> { colors.ElementAt(0), colors.ElementAt(1), colors.ElementAt(2) }, data);
+		public static void splatterColored(Vector2 pos, int spokes, IEnumerable<byte> colors, PaintData data, bool useWorldGen = false) {
+			explodeColored(pos, new List<byte> { colors.ElementAt(0), colors.ElementAt(1), colors.ElementAt(2) }, data, useWorldGen);
 			float radius = 16 * colors.Count();
 			float angle = Main.rand.NextFloat((float)Math.PI);
 			float[] angles = new float[spokes];
@@ -158,8 +192,7 @@ namespace WeaponsOfMassDecoration {
 							(int)Math.Floor((pos.X + Math.Cos(angles[s]) * offset) / 16f),
 							(int)Math.Floor((pos.Y + Math.Sin(angles[s]) * offset) / 16f)
 						);
-						data.paintColor = colors.ElementAt((int)Math.Floor(offset / 16f));
-						paint(newPos.X, newPos.Y, data);
+						paint(newPos.X, newPos.Y, colors.ElementAt((int)Math.Floor(offset / 16f)), data, useWorldGen);
 					}
 				}
 			}
@@ -171,9 +204,9 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="pos">The position of the tile. Expects values in world coordinates</param>
 		/// <param name="data">An instance of PaintData used to specify various settings for how painting should function</param>
 		/// <returns>Whether or not the tile was updated</returns>
-		public static bool paint(Vector2 pos, PaintData data) {
+		public static bool paint(Vector2 pos, PaintData data, bool useWorldGen = false) {
 			Point p = pos.ToTileCoordinates();
-			return paint(p.X, p.Y, data);
+			return paint(p.X, p.Y, data, useWorldGen);
 		}
 
 		/// <summary>
@@ -183,18 +216,18 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="y">The y coordinate of the tile. Expects values in tile coordinates</param>
 		/// <param name="data">An instance of PaintData used to specify various settings for how painting should function</param>
 		/// <returns>Whether or not the tile was updated</returns>
-		public static bool paint(int x, int y, PaintData data) {
+		public static bool paint(int x, int y, PaintData data, bool useWorldGen = false) {
 			if(!WorldGen.InWorld(x, y, 10))
 				return false;
 			if(data.paintColor == -1 && data.customPaint == null)
 				return false;
 			byte targetColor;
 			if(data.customPaint != null) {
-				targetColor = data.customPaint.getPaintID(data);
+				targetColor = (byte)data.customPaintColor;
 			} else {
 				targetColor = (byte)data.paintColor;
 			}
-			return paint(x, y, targetColor, data);
+			return paint(x, y, targetColor, data, useWorldGen);
 		}
 
 		/// <summary>
@@ -205,9 +238,15 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="color">The PaintID of the color to use</param>
 		/// <param name="data">An instance of PaintData used to specify various settings for how painting should function</param>
 		/// <returns>Whether or not the tile was updated</returns>
-		private static bool paint(int x, int y, byte color, PaintData data) {
+		private static bool paint(int x, int y, byte color, PaintData data, bool useWorldGen = false) {
 			if(data.paintMethod == PaintMethods.None)
 				return false;
+
+			if(data.sprayPaint) {
+				if(WorldGen.genRand.NextFloat() < .6f)
+					return false;
+			}
+
 			if(!WorldGen.InWorld(x, y, 10))
 				return false;
 			Tile t = Main.tile[x, y];
@@ -220,14 +259,14 @@ namespace WeaponsOfMassDecoration {
 			bool updated = false;
 
 			if(data.paintMethod != PaintMethods.Walls && data.blocksAllowed && t.active() && t.color() != color && (color != 0 || data.paintMethod == PaintMethods.RemovePaint)) {
-				if(data.useWorldGen)
+				if(useWorldGen)
 					WorldGen.paintTile(x, y, color, false);
 				else
 					t.color(color);
 				updated = true;
 			}
 			if(data.paintMethod != PaintMethods.Blocks && data.wallsAllowed && t.wall > 0 && t.wallColor() != color && (color != 0 || data.paintMethod == PaintMethods.RemovePaint)) {
-				if(data.useWorldGen)
+				if(useWorldGen)
 					WorldGen.paintWall(x, y, color, false);
 				else
 					t.wallColor(color);
@@ -239,7 +278,7 @@ namespace WeaponsOfMassDecoration {
 					if(player != null)
 						player.consumePaint(data);
 				}
-				if(server())
+				if(server() || multiplayer())
 					sendTileFrame(x, y);
 			}
 			return updated;

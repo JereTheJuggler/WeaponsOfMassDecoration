@@ -62,7 +62,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 		public override void Kill(double damage, int hitDirection, bool pvp, PlayerDeathReason damageSource) {
 			base.Kill(damage, hitDirection, pvp, damageSource);
 			if(GetInstance<WoMDConfig>().chaosModeEnabled)
-				splatter(player.Center, 130f, 6, new PaintData(PaintID.DeepRed, useWorldGen: true));
+				splatter(player.Center, 130f, 6, new PaintData(PaintID.DeepRed), true);
 		}
 
 		public override void PreUpdate() {
@@ -106,7 +106,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 							fartPosition.X + (fartAnimationFrame * fartDirection),
 							fartPosition.Y + (((height - 1) / -2) + i)
 						);
-						paint(coords.X, coords.Y, new PaintData(colors[fartAnimationFrame], useWorldGen: true));
+						paint(coords.X, coords.Y, new PaintData(colors[fartAnimationFrame]), true);
 					}
 					fartAnimationFrame++;
 					if(fartAnimationFrame >= heights.Length)

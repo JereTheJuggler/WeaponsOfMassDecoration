@@ -52,7 +52,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public override void AI() {
-			//projectile.VanillaAI();
 			base.AI();
 			if(Main.rand.NextFloat() <= .5f) {
 				Dust dust = Dust.NewDustPerfect(projectile.Center, DustType<PaintDust>(), new Vector2(2, 0).RotatedByRandom(Math.PI * 2), 0, getColor(getPaintData()), 1);
@@ -65,9 +64,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public override bool OnTileCollide(Vector2 oldVelocity) {
-			if(canPaint()) {
+			if(canPaint())
 				explode(projectile.Center, 45, getPaintData());
-			}
 			return true;
 		}
 	}

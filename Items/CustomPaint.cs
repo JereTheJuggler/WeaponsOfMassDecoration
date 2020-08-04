@@ -275,8 +275,6 @@ namespace WeaponsOfMassDecoration.Items {
 		/// <param name="data"></param>
 		/// <returns></returns>
 		public byte getPaintID(PaintData data) {
-			if(this is ISprayPaint && Main.rand.NextFloat() <= .66f)
-				return 0;
 			if(colorCount == 1)
 				return getPaintIDFromIndex(0);
 			return getPaintIDFromIndex(getPaintIndex(data));

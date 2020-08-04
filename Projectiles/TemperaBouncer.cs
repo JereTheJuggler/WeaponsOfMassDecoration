@@ -63,7 +63,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			return true;
 		}
 		public override bool OnTileCollide(Vector2 oldVelocity) {
-			explode(projectile.Center, 45, getPaintData());
+			if(canPaint())
+				explode(projectile.Center, 45, getPaintData());
 			if(projectile.penetrate < 0) {
 				return true;
 			}
@@ -89,8 +90,9 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		public override void AI() {
 			projectile.velocity.Y += .3f;
 			rotation += (float)Math.PI / 10f * projectile.direction;
+			PaintData data = getPaintData();
 			for(int i = 0; i < 1; i++) {
-				Dust dust = getDust(Dust.NewDust(projectile.Center - new Vector2(projectile.width / 2, projectile.height / 2), projectile.width, projectile.height, DustType<PaintDust>(), 0, 0, 0, getColor(getPaintData()), 1));
+				Dust dust = getDust(Dust.NewDust(projectile.Center - new Vector2(projectile.width / 2, projectile.height / 2), projectile.width, projectile.height, DustType<PaintDust>(), 0, 0, 0, data.renderColor, 1));
 				if(dust != null) {
 					dust.noGravity = true;
 					dust.velocity = new Vector2(1, 0).RotatedByRandom(Math.PI * 2);

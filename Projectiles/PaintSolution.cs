@@ -36,7 +36,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public override void AI() {
-			if(projectile.owner == Main.myPlayer) {
+			if(canPaint()) {
 				Vector2 playerPos = Main.player[Main.myPlayer].position;
 				Vector2 myPos = projectile.Center;
 				if(Math.Sqrt(Math.Pow(myPos.X - playerPos.X, 2) + Math.Pow(myPos.Y - playerPos.Y, 2)) > 32) {
@@ -59,6 +59,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 					dustScale = 0.8f;
 				}
 				projectile.ai[0] += 1f;
+				PaintData data = getPaintData();
 				for(int i = 0; i < 1; i++) {
 					Dust dust = getDust(Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, dustType, projectile.velocity.X * 0.2f, projectile.velocity.Y * 0.2f, 100, default, 1f));
 					if(dust != null) {
@@ -67,7 +68,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 						dust.velocity.X = dust.velocity.X * 2f;
 						dust.velocity.Y = dust.velocity.Y * 2f;
 						dust.scale *= dustScale;
-						dust.color = getColor(getPaintData());
+						dust.color = getColor(data);
 					}
 				}
 			} else {

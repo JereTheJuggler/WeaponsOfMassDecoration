@@ -132,6 +132,16 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		protected bool resetBatchInPost = false;
 
+		protected PaintData _paintData = null;
+		public PaintData paintData {
+			get {
+				if(_paintData == null) {
+					_paintData = getPaintData();
+				}
+				return _paintData;
+			}
+		}
+
 		public PaintingProjectile() : base() {
 			projectile.light = 0;
 		}
@@ -372,6 +382,7 @@ namespace WeaponsOfMassDecoration {
 
 		#region ai
 		public override bool PreAI() {
+			_paintData = null;
 			oldRotation = projectile.rotation;
 			if(startPosition.X == 0 && startPosition.Y == 0)
 				startPosition = projectile.position;
@@ -612,8 +623,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
 		/// <returns>The number of tiles that were updated</returns>
 		public void paintAlongOldVelocity(Vector2 oldVelocity, PaintData paintData) {
-			if(canPaint())
-				paintBetweenPoints(projectile.Center - oldVelocity, projectile.Center, paintData);
+			paintBetweenPoints(projectile.Center - oldVelocity, projectile.Center, paintData);
 		}
 
 		#region lights
@@ -630,13 +640,13 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="pos">The position for the light. Expects values using world coordinates</param>
 		/// <param name="brightness">The brightness of the light. Expects 0 to 1f</param>
 		public Color createLight(Vector2 pos, float brightness) {
-			Color c = getColor(getPaintData());
+			Color c = paintData.renderColor;
 			Lighting.AddLight(pos, (c.R / 255f) * brightness, (c.G / 255f) * brightness, (c.B / 255f) * brightness);
 			return c;
 		}
 		#endregion
 
-		public PaintData getPaintData() {
+		protected PaintData getPaintData() {
 			PaintData data = new PaintData(paintCyclingTimeScale, -1, null, false, 0);
 			if(npcOwner != -1) {
 				NPC npc = getNPC(npcOwner);

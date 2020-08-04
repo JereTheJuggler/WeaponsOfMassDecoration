@@ -42,7 +42,7 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override bool PreDrawInInventory(Item item, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale) {
-			PaintMethods method = PaintMethods.None;
+			PaintMethods method;
 			string itemName;
 			switch(item.type) {
 				case ItemID.Paintbrush:
@@ -70,21 +70,19 @@ namespace WeaponsOfMassDecoration.Items {
 			WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
 			if(player == null)
 				return true;
-			//if(player.paintColor == -1 && player.customPaint == null)
-			//    return true;
+
 			Texture2D texture = getTexture(itemName, player);
 			if(texture == null)
 				texture = Main.itemTexture[item.type];
 			MiscShaderData shader = null;
 
 			if(player.paintData.paintColor != -1 || player.paintData.customPaint != null) {
-				PaintData d = new PaintData(player.paintData);
+				PaintData d = player.paintData.clone();
 				if(method != PaintMethods.None)
 					d.paintMethod = method;
 				shader = getShader(item.GetGlobalItem<WoMDItem>(), d);
 			}
-			//if(shader == null)
-			//    return true;
+
 			spriteBatch.End();
 			spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, shader != null ? SamplerState.PointClamp : SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
 
@@ -108,7 +106,7 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override bool UseItem(Item item, Player player) {
-			PaintMethods method = PaintMethods.None;
+			PaintMethods method;
 			switch(item.type) {
 				case ItemID.Paintbrush:
 				case ItemID.SpectrePaintbrush:
@@ -122,29 +120,29 @@ namespace WeaponsOfMassDecoration.Items {
 				case ItemID.SpectrePaintScraper:
 					method = PaintMethods.RemovePaint;
 					break;
+				default: return false;
 			}
-			if(method != PaintMethods.None) {
-				WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
-				if(p == null)
-					return true;
-				Point coords;
-				if(Main.SmartCursorEnabled) {
-					coords = new Point(Main.SmartCursorX, Main.SmartCursorY);
-				} else {
-					coords = Main.MouseWorld.ToTileCoordinates();
-					Point playerPos = player.position.ToTileCoordinates();
-					int xOffset = coords.X - playerPos.X;
-					int yOffset = coords.Y - playerPos.Y;
-					if(yOffset < 0)
-						yOffset--;
-					if(!isInRange(player, xOffset, yOffset, item))
-						return false;
-				}
-				PaintData data = new PaintData(paintCyclingTimeScale, p.paintData.paintColor, p.paintData.customPaint, p.paintData.customPaint is ISprayPaint, paintMethod: method, player: player, useWorldGen: true);
-				paint(coords.X, coords.Y, data);
-				return false;
+			WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
+			if(p == null)
+				return true;
+			Point coords;
+			if(Main.SmartCursorEnabled) {
+				coords = new Point(Main.SmartCursorX, Main.SmartCursorY);
+			} else {
+				coords = Main.MouseWorld.ToTileCoordinates();
+				Point playerPos = player.position.ToTileCoordinates();
+				int xOffset = coords.X - playerPos.X;
+				int yOffset = coords.Y - playerPos.Y;
+				if(yOffset < 0)
+					yOffset--;
+				if(!isInRange(player, xOffset, yOffset, item))
+					return false;
 			}
-			return false;
+			PaintData data = p.paintData.clone();
+			data.timeScale = paintCyclingTimeScale;
+			data.paintMethod = method;
+			paint(coords.X, coords.Y, data, true);
+			return true;
 		}
 
 		public bool isInRange(Player player, int xOffset, int yOffset, Item item) => Math.Abs(xOffset) <= player.lastTileRangeX + item.tileBoost && Math.Abs(yOffset) <= player.lastTileRangeY + item.tileBoost;

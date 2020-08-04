@@ -46,7 +46,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 					PaintData data = getPaintData();
 					Vector2 playerPos = Main.player[Main.myPlayer].position;
 					Vector2 myPos = projectile.Center;
-					if(projectile.ai[1] > 0)
+					if(projectile.ai[1] > 0 && canPaint())
 						explode(projectile.Center, 16, data);
 					Vector2 displacement = new Vector2(projectile.ai[0], projectile.ai[1]) - projectile.Center;
 
@@ -61,13 +61,14 @@ namespace WeaponsOfMassDecoration.Projectiles {
 							dust.fadeIn = 3f;
 						}
 					}
-					paint(projectile.Center, data);
+					if(canPaint())
+						paint(projectile.Center, data);
 				}
 			}
 		}
 
 		public override bool OnTileCollide(Vector2 oldVelocity) {
-			PaintData data = new PaintData(getPaintData());
+			PaintData data = getPaintData().clone();
 			data.wallsAllowed = false;
 			explode(projectile.Center, 16, data);
 			return base.OnTileCollide(oldVelocity);

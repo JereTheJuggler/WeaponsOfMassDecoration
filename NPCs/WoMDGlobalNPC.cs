@@ -38,10 +38,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 		/// Sets the variables regarding the rendering of the NPC. Called in WeaponsOfMassDecoration.applyPaintedToNPC
 		/// </summary>
 		/// <param name="npc"></param>
-		/// <param name="paintColor"></param>
-		/// <param name="customPaint"></param>
-		/// <param name="sprayPainted"></param>
-		/// <param name="paintedTime"></param>
+		/// <param name="data"></param>
 		public void setPaintData(NPC npc, PaintData data) {
 			_paintData = data;
 			painted = true;
@@ -242,7 +239,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 			}
 			if(npc.townNPC && GetInstance<WoMDConfig>().chaosModeEnabled) {
 				if(npc.type == NPCID.PartyGirl) {
-					splatterColored(npc.Center, 8, new int[] { PaintID.DeepRed, PaintID.DeepRed, PaintID.DeepOrange, PaintID.DeepYellow, PaintID.DeepGreen, PaintID.DeepBlue, PaintID.DeepPurple }, new PaintData(0, useWorldGen: true));
+					splatterColored(npc.Center, 8, new byte[] { PaintID.DeepRed, PaintID.DeepRed, PaintID.DeepOrange, PaintID.DeepYellow, PaintID.DeepGreen, PaintID.DeepBlue, PaintID.DeepPurple }, new PaintData(1,PaintMethods.BlocksAndWalls),true);
 					List<Color> colors = new List<Color> {
 						PaintColors.Green,
 						PaintColors.SkyBlue,
@@ -254,8 +251,8 @@ namespace WeaponsOfMassDecoration.NPCs {
 						Dust.NewDust(npc.Center - npc.Size / 4f, npc.width / 2, npc.height / 2, DustID.Confetti, vel.X, vel.Y, 0, colors[Main.rand.Next(0, colors.Count)]);
 					}
 				} else {
-					PaintData data = new PaintData(PaintID.DeepRed, useWorldGen: true);
-					splatter(npc.Center, 100f, 8, data);
+					PaintData data = new PaintData(PaintID.DeepRed);
+					splatter(npc.Center, 100f, 8, data, true);
 				}
 			}
 		}

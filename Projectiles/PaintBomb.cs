@@ -73,8 +73,6 @@ namespace WeaponsOfMassDecoration.Projectiles {
 				return true;
 			}
 
-			explode(projectile.Center, bounceRadius, getPaintData());
-
 			projectile.penetrate--;
 
 			if(projectile.penetrate == 1) {
@@ -107,7 +105,10 @@ namespace WeaponsOfMassDecoration.Projectiles {
 						fire.velocity *= 2f;
 				}
 
-				explode(projectile.Center, explosionRadius, getPaintData());
+				if(canPaint())
+					explode(projectile.Center, explosionRadius, getPaintData());
+			} else if(canPaint()){
+				explode(projectile.Center, bounceRadius, getPaintData());
 			}
 			return false;
 		}

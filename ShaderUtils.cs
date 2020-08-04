@@ -3,7 +3,6 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
-
 using WeaponsOfMassDecoration.Items;
 using WeaponsOfMassDecoration.NPCs;
 using WeaponsOfMassDecoration.Projectiles;
@@ -108,7 +107,7 @@ namespace WeaponsOfMassDecoration {
 			WoMDPlayer modPlayer = player.GetModPlayer<WoMDPlayer>();
 			if(modPlayer == null)
 				return null;
-			PaintData data = new PaintData(modPlayer.paintData);
+			PaintData data = modPlayer.paintData.clone();
 			data.paintMethod = item.overridePaintMethod(modPlayer);
 			if(data.paintMethod == PaintMethods.RemovePaint)
 				return null;
@@ -183,11 +182,12 @@ namespace WeaponsOfMassDecoration {
 		public static Color getColor(PaintData data) {
 			if(data == null)
 				return Color.White;
-			if((data.paintColor == -1 && data.customPaint == null) || data.paintMethod == PaintMethods.RemovePaint)
+			return data.renderColor;
+			/*if((data.paintColor == -1 && data.customPaint == null) || data.paintMethod == PaintMethods.RemovePaint)
 				return Color.White;
 			if(data.customPaint == null)
 				return PaintColors.list[data.paintColor];
-			return data.customPaint.getColor(data);
+			return data.customPaint.getColor(data);*/
 		}
 	}
 }
