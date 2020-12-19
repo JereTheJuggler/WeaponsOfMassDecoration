@@ -103,6 +103,7 @@ namespace WeaponsOfMassDecoration.Items {
 		public CustomPaint() : base() { }
 
 		public override void SetDefaults() {
+			item.maxStack = 999;
 			item.paint = paintValue;
 			item.value = colorCount * 10;
 			if(this is IDeepPaint)
@@ -266,7 +267,7 @@ namespace WeaponsOfMassDecoration.Items {
 			int index2 = getPaintIndex(data, 1);
 			if(index1 == index2)
 				return getColorFromIndex(index1);
-			float lerpAmount = ((Main.GlobalTime - data.timeOffset) / data.timeScale) % 1;
+			float lerpAmount = ((Main.GlobalTime - data.TimeOffset) / data.TimeScale) % 1;
 			return Color.Lerp(getColorFromIndex(index1), getColorFromIndex(index2), lerpAmount);
 		}
 		/// <summary>
@@ -291,11 +292,11 @@ namespace WeaponsOfMassDecoration.Items {
 		protected virtual int getPaintIndex(PaintData data, int offset = 0) {
 			int index;
 			if(cycleLoops) {
-				index = ((int)Math.Floor((Main.GlobalTime - data.timeOffset) / data.timeScale) + offset) % colorCount;
+				index = ((int)Math.Floor((Main.GlobalTime - data.TimeOffset) / data.TimeScale) + offset) % colorCount;
 				if(index < 0)
 					index += colorCount;
 			} else {
-				index = ((int)Math.Floor((Main.GlobalTime - data.timeOffset) / data.timeScale) + offset) % (colorCount * 2 - 2);
+				index = ((int)Math.Floor((Main.GlobalTime - data.TimeOffset) / data.TimeScale) + offset) % (colorCount * 2 - 2);
 				if(index < 0)
 					index *= -1;
 				if(index >= colorCount)
@@ -505,8 +506,8 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override void modifyPaintDataForNpc(ref PaintData data) {
-			data.customPaint = null;
-			data.paintColor = getPaintIDFromIndex(getPaintIndex(data));
+			data.CustomPaint = null;
+			data.PaintColor = getPaintIDFromIndex(getPaintIndex(data));
 			data.sprayPaint = this is ISprayPaint;
 		}
 	}

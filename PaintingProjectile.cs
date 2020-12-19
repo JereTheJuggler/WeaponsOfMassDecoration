@@ -142,6 +142,13 @@ namespace WeaponsOfMassDecoration {
 			}
 		}
 
+		protected PaintData _overridePaintData = null;
+		public void setOverridePaintData(PaintData data) {
+			_overridePaintData = data;
+			if(multiplayer())
+				sendPPOverrideDataPacket(this);
+		}
+
 		public PaintingProjectile() : base() {
 			projectile.light = 0;
 		}
@@ -230,38 +237,58 @@ namespace WeaponsOfMassDecoration {
 				}
 			}
 		}
+
+		public static void sendPPOverrideDataPacket(PaintingProjectile p, int toClient = -1, int ignoreClient = -1) {
+			if(server() || multiplayer()) {
+				ModPacket packet = p.mod.GetPacket();
+				packet.Write(WoMDMessageTypes.SetPPOverrideData);
+				packet.Write(p.projectile.whoAmI);
+				packet.Write(p.projectile.type);
+				packet.Write(p._overridePaintData.PaintColor);
+				packet.Write(p._overridePaintData.CustomPaint == null ? "null" : p._overridePaintData.CustomPaint.GetType().Name);
+				packet.Write((double)p._overridePaintData.TimeScale);
+				packet.Write((double)p._overridePaintData.TimeOffset);
+				packet.Write(p._overridePaintData.sprayPaint);
+				packet.Write(p._overridePaintData.paintMethod.ToString("F"));
+				packet.Send(toClient, ignoreClient);
+			}
+		}
+
+		public static void readPPOverrideDataPacket(BinaryReader reader, out PaintingProjectile projectile) {
+			projectile = null;
+			int projId = reader.ReadInt32();
+			int projType = reader.ReadInt32();
+			int paintColor = reader.ReadInt32();
+			string customPaintName = reader.ReadString();
+			float timeScale = (float)reader.ReadDouble();
+			float timeOffset = (float)reader.ReadDouble();
+			bool sprayPaint = reader.ReadBoolean();
+			string method = reader.ReadString();
+			Projectile proj = getProjectile(projId);
+			if(proj != null && proj.type == projType) {
+				projectile = proj.modProjectile as PaintingProjectile;
+				if(projectile != null) {
+					CustomPaint customPaint = customPaintName == "null" ? null : (CustomPaint)Activator.CreateInstance(Type.GetType("WeaponsOfMassDecoration.Items." + customPaintName));
+					PaintMethods paintMethod = (PaintMethods)Enum.Parse(typeof(PaintMethods), method);
+					projectile._overridePaintData = new PaintData(timeScale, paintColor, customPaint, sprayPaint, timeOffset, paintMethod);
+				}
+			}
+		}
 		#endregion
 
 		#region getters / value conversion
-		/// <summary>
-		/// Safely attempts to get the Player of the projectile's owner. Returns null if the Player cannot be obtained
-		/// </summary>
-		/// <returns></returns>
-		public Player getOwner() {
-			return getPlayer(projectile.owner);
-		}
-
-		/// <summary>
-		/// Safely attempts to get the ModPlayer of the projectile's owner. Returns null if the ModPlayer cannot be obtained
-		/// </summary>
-		/// <returns></returns>
-		public WoMDPlayer getModPlayer() {
-			Player p = getOwner();
-			if(p == null)
-				return null;
-			return p.GetModPlayer<WoMDPlayer>();
-		}
-
 		/// <summary>
 		/// Determines whether or not the projectile is currently able to paint.
 		/// </summary>
 		/// <returns></returns>
 		public bool canPaint() {
+			if(_overridePaintData != null) 
+				return _overridePaintData.paintMethod != PaintMethods.None && (_overridePaintData.PaintColor != -1 || _overridePaintData.CustomPaint != null || _overridePaintData.paintMethod == PaintMethods.RemovePaint);
 			if(npcOwner != -1)
 				return true;
 			if(projectile.owner != Main.myPlayer)
 				return false;
-			WoMDPlayer player = getModPlayer();
+			WoMDPlayer player = getModPlayer(projectile.owner);
 			if(player == null)
 				return false;
 			return player.canPaint();
@@ -275,9 +302,11 @@ namespace WeaponsOfMassDecoration {
 		}
 
 		public PaintMethods getPaintMethod() {
+			if(_overridePaintData != null)
+				return _overridePaintData.paintMethod;
 			if(npcOwner != -1)
 				return PaintMethods.BlocksAndWalls;
-			WoMDPlayer p = getModPlayer();
+			WoMDPlayer p = getModPlayer(projectile.owner);
 			if(p == null)
 				return PaintMethods.BlocksAndWalls;
 			return p.paintData.paintMethod;
@@ -287,7 +316,7 @@ namespace WeaponsOfMassDecoration {
 		#region tile/npc interaction
 		public override void OnHitNPC(NPC target, int damage, float knockback, bool crit) {
 			WoMDNPC npc = target.GetGlobalNPC<WoMDNPC>();
-			WoMDPlayer player = getModPlayer();
+			WoMDPlayer player = getModPlayer(projectile.owner);
 			if(npc != null && player != null) {
 				PaintMethods method = player.paintData.paintMethod;
 				if(method != PaintMethods.None) {
@@ -297,7 +326,7 @@ namespace WeaponsOfMassDecoration {
 						if(index >= 0)
 							target.DelBuff(index);
 					} else {
-						applyPaintedToNPC(target, new PaintData(npcCyclingTimeScale, player.paintData.paintColor, player.paintData.customPaint, player.paintData.customPaint is ISprayPaint, Main.GlobalTime, player: player.player));
+						applyPaintedToNPC(target, new PaintData(npcCyclingTimeScale, player.paintData.PaintColor, player.paintData.CustomPaint, player.paintData.CustomPaint is ISprayPaint, Main.GlobalTime, player: player.player));
 					}
 				}
 			}
@@ -306,11 +335,11 @@ namespace WeaponsOfMassDecoration {
 		}
 
 		public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection) {
-			WoMDPlayer player = getModPlayer();
+			WoMDPlayer player = getModPlayer(projectile.owner);
 			if(player != null) {
 				if(player.paintData.paintMethod == PaintMethods.None ||
 				   player.paintData.paintMethod == PaintMethods.RemovePaint ||
-				   (player.paintData.paintColor == -1 && player.paintData.customPaint == null)) {
+				   (player.paintData.PaintColor == -1 && player.paintData.CustomPaint == null)) {
 					damage = (int)Math.Round(damage * .5f);
 				}
 			}
@@ -424,14 +453,14 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		public void updateColorFrame(PaintMethods method) {
 			if(npcOwner == -1) {
-				WoMDPlayer player = getModPlayer();
+				WoMDPlayer player = getModPlayer(projectile.owner);
 				if(player != null) {
-					if(player.paintData.paintColor == -1 && player.paintData.customPaint == null)
+					if(player.paintData.PaintColor == -1 && player.paintData.CustomPaint == null)
 						colorFrame = 0;
-					else if(player.paintData.customPaint == null)
-						colorFrame = (byte)player.paintData.paintColor;
+					else if(player.paintData.CustomPaint == null)
+						colorFrame = (byte)player.paintData.PaintColor;
 					else
-						colorFrame = player.paintData.customPaint.getPaintID(player.paintData);
+						colorFrame = player.paintData.CustomPaint.getPaintID(player.paintData);
 				}
 			} else {
 				NPC npc = getNPC(npcOwner);
@@ -444,12 +473,12 @@ namespace WeaponsOfMassDecoration {
 				if(data == null) {
 					colorFrame = 0;
 				} else {
-					if(data.paintColor == -1 && data.customPaint == null)
+					if(data.PaintColor == -1 && data.CustomPaint == null)
 						colorFrame = 0;
-					else if(data.customPaint == null)
-						colorFrame = (byte)data.paintColor;
+					else if(data.CustomPaint == null)
+						colorFrame = (byte)data.PaintColor;
 					else
-						colorFrame = data.customPaint.getPaintID(data);
+						colorFrame = data.CustomPaint.getPaintID(data);
 				}
 			}
 			updateFrame(method);
@@ -640,13 +669,15 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="pos">The position for the light. Expects values using world coordinates</param>
 		/// <param name="brightness">The brightness of the light. Expects 0 to 1f</param>
 		public Color createLight(Vector2 pos, float brightness) {
-			Color c = paintData.renderColor;
+			Color c = paintData.RenderColor;
 			Lighting.AddLight(pos, (c.R / 255f) * brightness, (c.G / 255f) * brightness, (c.B / 255f) * brightness);
 			return c;
 		}
 		#endregion
 
 		protected PaintData getPaintData() {
+			if(_overridePaintData != null)
+				return _overridePaintData;
 			PaintData data = new PaintData(paintCyclingTimeScale, -1, null, false, 0);
 			if(npcOwner != -1) {
 				NPC npc = getNPC(npcOwner);
@@ -655,7 +686,7 @@ namespace WeaponsOfMassDecoration {
 				WoMDNPC gNpc = npc.GetGlobalNPC<WoMDNPC>();
 				return gNpc.paintData;
 			}
-			WoMDPlayer player = getModPlayer();
+			WoMDPlayer player = getModPlayer(projectile.owner);
 			if(player == null)
 				return data;
 			return player.paintData;

@@ -22,7 +22,13 @@ namespace WeaponsOfMassDecoration.NPCs {
 		/// </summary>
 		public bool painted = false;
 
+		/// <summary>
+		/// The paint data that is currently used for rendering this npc
+		/// </summary>
 		protected PaintData _paintData = new PaintData(npcCyclingTimeScale, -1, null);
+		/// <summary>
+		/// The paint data that is currently used for rendering this npc
+		/// </summary>
 		public PaintData paintData => !painted ? new PaintData(npcCyclingTimeScale, -1, null) : _paintData;
 
 		//Each entity needs their own set of the above variables
@@ -63,10 +69,10 @@ namespace WeaponsOfMassDecoration.NPCs {
 				packet.Write(WoMDMessageTypes.SetNPCColors);
 				packet.Write(npc.whoAmI);
 				packet.Write(npc.type);
-				packet.Write(data.paintColor);
-				packet.Write(data.customPaint == null ? "null" : data.customPaint.GetType().Name);
+				packet.Write(data.PaintColor);
+				packet.Write(data.CustomPaint == null ? "null" : data.CustomPaint.GetType().Name);
 				packet.Write(data.sprayPaint);
-				packet.Write((double)data.timeOffset);
+				packet.Write((double)data.TimeOffset);
 				packet.Send(toClient, ignoreClient);
 			}
 		}
@@ -89,87 +95,85 @@ namespace WeaponsOfMassDecoration.NPCs {
 			if(npc != null && npc.type == npcType && gNpc != null && npc.active) {
 				gNpc.painted = true;
 				PaintData data = new PaintData();
-				data.paintColor = paintColor;
+				data.PaintColor = paintColor;
 				if(customPaintName == "null") {
-					data.customPaint = null;
+					data.CustomPaint = null;
 				} else {
-					data.customPaint = (CustomPaint)Activator.CreateInstance(Type.GetType("WeaponsOfMassDecoration.Items." + customPaintName));
-					data.timeScale = npcCyclingTimeScale;
+					data.CustomPaint = (CustomPaint)Activator.CreateInstance(Type.GetType("WeaponsOfMassDecoration.Items." + customPaintName));
+					data.TimeScale = npcCyclingTimeScale;
 				}
 				data.sprayPaint = sprayPainted;
-				data.timeOffset = paintedTime;
+				data.TimeOffset = paintedTime;
 			}
 		}
 
 		//This is used for controlling certain Chaos Mode functionality
 		public override void PostAI(NPC npc) {
 			base.PostAI(npc);
-			if(Main.netMode == NetmodeID.SinglePlayer || Main.netMode == NetmodeID.Server) {
-				if(GetInstance<WoMDConfig>().chaosModeEnabled) {
-					if(painted) {
-						switch(npc.aiStyle) {
-							case 1: //slime
-								if(npc.oldVelocity.Y > 2 && npc.velocity.Y == 0 && Main.rand.NextFloat() < .5f) {
-									Point minTile = npc.BottomLeft.ToTileCoordinates();
-									Point maxTile = npc.BottomRight.ToTileCoordinates();
-									if(!(WorldGen.InWorld(minTile.X, minTile.Y + 1, 10) && WorldGen.InWorld(maxTile.X, maxTile.Y + 1, 10)))
-										break;
-									bool foundGround = false;
-									for(int i = minTile.X; i <= maxTile.X && !foundGround; i++) {
-										if(WorldGen.SolidOrSlopedTile(i, minTile.Y + 1))
-											foundGround = true;
+			if((Main.netMode == NetmodeID.SinglePlayer || Main.netMode == NetmodeID.Server) && chaosMode()) {
+				if(painted) {
+					switch(npc.aiStyle) {
+						case 1: //slime
+							if(npc.oldVelocity.Y > 2 && npc.velocity.Y == 0 && Main.rand.NextFloat() < .5f) {
+								Point minTile = npc.BottomLeft.ToTileCoordinates();
+								Point maxTile = npc.BottomRight.ToTileCoordinates();
+								if(!(WorldGen.InWorld(minTile.X, minTile.Y + 1, 10) && WorldGen.InWorld(maxTile.X, maxTile.Y + 1, 10)))
+									break;
+								bool foundGround = false;
+								for(int i = minTile.X; i <= maxTile.X && !foundGround; i++) {
+									if(WorldGen.SolidOrSlopedTile(i, minTile.Y + 1))
+										foundGround = true;
+								}
+								if(!foundGround)
+									break;
+								Vector2 startVector = new Vector2(0, -6).RotatedBy(Math.PI / -3);
+								int numSplatters = 7;
+								for(int i = 0; i < numSplatters; i++) {
+									Projectile p = Projectile.NewProjectileDirect(npc.Bottom - new Vector2(0, 8), startVector.RotatedBy(((Math.PI * 2f / 3f) / (numSplatters - 1)) * i), ProjectileType<PaintSplatter>(), 0, 0);
+									if(p != null) {
+										PaintingProjectile proj = (PaintingProjectile)p.modProjectile;
+										proj.npcOwner = npc.whoAmI;
+										p.timeLeft = 60;
+										PaintingProjectile.sendProjNPCOwnerPacket(proj);
 									}
-									if(!foundGround)
-										break;
-									Vector2 startVector = new Vector2(0, -6).RotatedBy(Math.PI / -3);
-									int numSplatters = 7;
-									for(int i = 0; i < numSplatters; i++) {
-										Projectile p = Projectile.NewProjectileDirect(npc.Bottom - new Vector2(0, 8), startVector.RotatedBy(((Math.PI * 2f / 3f) / (numSplatters - 1)) * i), ProjectileType<PaintSplatter>(), 0, 0);
-										if(p != null) {
-											PaintingProjectile proj = (PaintingProjectile)p.modProjectile;
+								}
+							}
+							break;
+					}
+					switch(npc.type) {
+						case NPCID.EyeofCthulhu:
+							//the eye starts spinning when ai[0] == 1
+							if(npc.ai[0] == 1 && npc.ai[1] >= 20 && npc.ai[1] % 2 == 0) {
+								//the eye stops spinning when ai[1] > 99 (ai[1] never == 100. it is immediately reset back to 0)
+								int count = npc.ai[1] >= 40 && npc.ai[1] <= 60 ? 2 : 1;
+								Vector2 dir = new Vector2(1, 0).RotatedBy(Main.rand.NextFloat(0, PI * 2));
+								Vector2 offset = dir * ((npc.width / 2f) * npc.scale);
+								float initialSpeed = ((float)Math.Pow(30 - Math.Abs(50 - npc.ai[1]), 2) / 900f) * 4f + 3f;
+								for(int i = 0; i < count; i++) {
+									if(i == 1) {
+										dir = dir.RotatedBy(PI);
+										offset *= -1;
+									}
+									float speed = initialSpeed;
+									if(dir.Y > .5f && dir.X <= 0)
+										speed += 2;
+									else if(dir.Y < 0 && dir.X < 0)
+										speed += 1;
+									Vector2 vel = dir.RotatedBy(PI / 2f) * speed;
+									Projectile p = Projectile.NewProjectileDirect(npc.Center + offset, vel, ProjectileType<PaintSplatter>(), 0, 0);
+									if(p != null) {
+										p.velocity = vel;
+										p.timeLeft = 100;
+										PaintingProjectile proj = p.modProjectile as PaintingProjectile;
+										if(proj != null) {
 											proj.npcOwner = npc.whoAmI;
-											p.timeLeft = 60;
-											PaintingProjectile.sendProjNPCOwnerPacket(proj);
+											if(server())
+												PaintingProjectile.sendProjNPCOwnerPacket(proj);
 										}
 									}
 								}
-								break;
-						}
-						switch(npc.type) {
-							case NPCID.EyeofCthulhu:
-								//the eye starts spinning when ai[0] == 1
-								if(npc.ai[0] == 1 && npc.ai[1] >= 20 && npc.ai[1] % 2 == 0) {
-									//the eye stops spinning when ai[1] > 99 (ai[1] never == 100. it is immediately reset back to 0)
-									int count = npc.ai[1] >= 40 && npc.ai[1] <= 60 ? 2 : 1;
-									Vector2 dir = new Vector2(1, 0).RotatedBy(Main.rand.NextFloat(0, PI * 2));
-									Vector2 offset = dir * ((npc.width / 2f) * npc.scale);
-									float initialSpeed = ((float)Math.Pow(30 - Math.Abs(50 - npc.ai[1]), 2) / 900f) * 4f + 3f;
-									for(int i = 0; i < count; i++) {
-										if(i == 1) {
-											dir = dir.RotatedBy(PI);
-											offset *= -1;
-										}
-										float speed = initialSpeed;
-										if(dir.Y > .5f && dir.X <= 0)
-											speed += 2;
-										else if(dir.Y < 0 && dir.X < 0)
-											speed += 1;
-										Vector2 vel = dir.RotatedBy(PI / 2f) * speed;
-										Projectile p = Projectile.NewProjectileDirect(npc.Center + offset, vel, ProjectileType<PaintSplatter>(), 0, 0);
-										if(p != null) {
-											p.velocity = vel;
-											p.timeLeft = 100;
-											PaintingProjectile proj = p.modProjectile as PaintingProjectile;
-											if(proj != null) {
-												proj.npcOwner = npc.whoAmI;
-												if(server())
-													PaintingProjectile.sendProjNPCOwnerPacket(proj);
-											}
-										}
-									}
-								}
-								break;
-						}
+							}
+							break;
 					}
 				}
 			}
@@ -178,81 +182,77 @@ namespace WeaponsOfMassDecoration.NPCs {
 		//This is used for controlling certain Chaos Mode functionality
 		public override void NPCLoot(NPC npc) {
 			base.NPCLoot(npc);
-			if(painted && GetInstance<WoMDConfig>().chaosModeEnabled) {
-				switch(npc.type) {
-					case NPCID.EyeofCthulhu:
-					case NPCID.Spazmatism:
-					case NPCID.Retinazer:
-					case NPCID.Skeleton:
-					case NPCID.SkeletronHand:
-					case NPCID.SkeletronPrime:
-					case NPCID.PrimeCannon:
-					case NPCID.PrimeLaser:
-					case NPCID.PrimeSaw:
-					case NPCID.PrimeVice:
-					case NPCID.BrainofCthulhu:
-					case NPCID.KingSlime:
-					case NPCID.Everscream:
-					case NPCID.SantaNK1:
-					case NPCID.IceQueen:
-					case NPCID.Plantera:
-					case NPCID.MourningWood:
-					case NPCID.WallofFlesh:
-					case NPCID.WallofFleshEye:
-					case NPCID.DukeFishron:
-					case NPCID.MoonLordCore:
-					case NPCID.QueenBee:
-					case NPCID.DD2OgreT2:
-					case NPCID.DD2OgreT3:
-					case NPCID.DD2Betsy:
-					case NPCID.DD2DarkMageT1:
-					case NPCID.DD2DarkMageT3:
-						if(true) {
-							Vector2 dir = new Vector2(1, 0);
-							List<PaintingProjectile> projectiles = new List<PaintingProjectile>();
-							for(int i = 0; i < 8; i++) {
-								Vector2 rotatedDir = dir.RotatedBy((PI / 4f) * i);
-								PaintSplatter p = createPaintSplatter(npc.whoAmI, npc.Center + rotatedDir * 48, rotatedDir * 10, 100, .5f, 2f);
-								if(p != null)
-									projectiles.Add(p);
-								rotatedDir = rotatedDir.RotatedBy(PI / 8f);
-								PaintSplatter p2 = createPaintSplatter(npc.whoAmI, npc.Center + rotatedDir * 32, rotatedDir * 6, 100);
-								if(p2 != null)
-									projectiles.Add(p2);
-							}
-							if(singlePlayer()) {
-								for(int i = 0; i < 20; i++) {
-									Dust d = Dust.NewDustDirect(npc.Center - npc.Size / 4f, npc.width / 2, npc.height / 2, DustType<PaintDust>(), 0, 0, 0, getColor(_paintData), 2);
-									if(d != null) {
-										d.velocity = (d.position - npc.Center).SafeNormalize(new Vector2(1, 0)) * 5;
-										if(d.customData != null) {
-											((float[])d.customData)[0] = 0;
+			if(chaosMode()) {
+				if(painted) {
+					switch(npc.type) {
+						case NPCID.EyeofCthulhu:
+						case NPCID.Spazmatism:
+						case NPCID.Retinazer:
+						case NPCID.Skeleton:
+						case NPCID.SkeletronHand:
+						case NPCID.SkeletronPrime:
+						case NPCID.PrimeCannon:
+						case NPCID.PrimeLaser:
+						case NPCID.PrimeSaw:
+						case NPCID.PrimeVice:
+						case NPCID.BrainofCthulhu:
+						case NPCID.KingSlime:
+						case NPCID.Everscream:
+						case NPCID.SantaNK1:
+						case NPCID.IceQueen:
+						case NPCID.Plantera:
+						case NPCID.MourningWood:
+						case NPCID.WallofFlesh:
+						case NPCID.WallofFleshEye:
+						case NPCID.DukeFishron:
+						case NPCID.MoonLordCore:
+						case NPCID.QueenBee:
+						case NPCID.DD2OgreT2:
+						case NPCID.DD2OgreT3:
+						case NPCID.DD2Betsy:
+						case NPCID.DD2DarkMageT1:
+						case NPCID.DD2DarkMageT3:
+							if(true) {
+								Vector2 dir = new Vector2(1, 0);
+								List<PaintingProjectile> projectiles = new List<PaintingProjectile>();
+								for(int i = 0; i < 8; i++) {
+									Vector2 rotatedDir = dir.RotatedBy((PI / 4f) * i);
+									PaintSplatter p = createPaintSplatter(npc.whoAmI, npc.Center + rotatedDir * 48, rotatedDir * 10, 100, .5f, 2f);
+									if(p != null)
+										projectiles.Add(p);
+									rotatedDir = rotatedDir.RotatedBy(PI / 8f);
+									PaintSplatter p2 = createPaintSplatter(npc.whoAmI, npc.Center + rotatedDir * 32, rotatedDir * 6, 100);
+									if(p2 != null)
+										projectiles.Add(p2);
+								}
+								if(singlePlayer()) {
+									for(int i = 0; i < 20; i++) {
+										Dust d = Dust.NewDustDirect(npc.Center - npc.Size / 4f, npc.width / 2, npc.height / 2, DustType<PaintDust>(), 0, 0, 0, getColor(_paintData), 2);
+										if(d != null) {
+											d.velocity = (d.position - npc.Center).SafeNormalize(new Vector2(1, 0)) * 5;
+											if(d.customData != null) {
+												((float[])d.customData)[0] = 0;
+											}
 										}
 									}
 								}
+								if(server())
+									PaintingProjectile.sendMultiProjNPCOwnerPacket(projectiles);
 							}
-							if(server())
-								PaintingProjectile.sendMultiProjNPCOwnerPacket(projectiles);
-						}
-						break;
-				}
-			}
-			if(npc.townNPC && GetInstance<WoMDConfig>().chaosModeEnabled) {
-				if(npc.type == NPCID.PartyGirl) {
-					splatterColored(npc.Center, 8, new byte[] { PaintID.DeepRed, PaintID.DeepRed, PaintID.DeepOrange, PaintID.DeepYellow, PaintID.DeepGreen, PaintID.DeepBlue, PaintID.DeepPurple }, new PaintData(1,PaintMethods.BlocksAndWalls),true);
-					List<Color> colors = new List<Color> {
-						PaintColors.Green,
-						PaintColors.SkyBlue,
-						PaintColors.Yellow,
-						PaintColors.Pink
-					};
-					for(int i = 0; i < 10; i++) {
-						Vector2 vel = new Vector2(Main.rand.NextFloat(2, 3), 0).RotatedBy(Main.rand.NextFloat(PI * 2));
-						Dust.NewDust(npc.Center - npc.Size / 4f, npc.width / 2, npc.height / 2, DustID.Confetti, vel.X, vel.Y, 0, colors[Main.rand.Next(0, colors.Count)]);
+							break;
 					}
-				} else {
-					PaintData data = new PaintData(PaintID.DeepRed);
-					splatter(npc.Center, 100f, 8, data, true);
+				}
+				if(npc.townNPC) {
+					if(npc.type == NPCID.PartyGirl) {
+						splatterColored(npc.Center, 8, new byte[] { PaintID.DeepRed, PaintID.DeepRed, PaintID.DeepOrange, PaintID.DeepYellow, PaintID.DeepGreen, PaintID.DeepBlue, PaintID.DeepPurple }, new PaintData(1, PaintMethods.BlocksAndWalls), true);
+						for(int i = 0; i < 10; i++) {
+							Vector2 vel = new Vector2(Main.rand.NextFloat(2, 3), 0).RotatedBy(Main.rand.NextFloat(PI * 2));
+							Dust.NewDust(npc.Center - npc.Size / 4f, npc.width / 2, npc.height / 2, DustID.Confetti + Main.rand.Next(0,4), vel.X, vel.Y, 0);
+						}
+					} else {
+						PaintData data = new PaintData(PaintID.DeepRed);
+						splatter(npc.Center, 100f, 8, data, true);
+					}
 				}
 			}
 		}

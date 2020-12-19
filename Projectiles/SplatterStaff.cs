@@ -81,7 +81,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			Main.PlaySound(SoundID.Item14, projectile.position);
 			//smoke dust
 			for(int i = 0; i < 15; i++) {
-				Dust d = getDust(Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, 31, 0f, 0f, 100, data.renderColor, 2f));
+				Dust d = getDust(Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, 31, 0f, 0f, 100, data.RenderColor, 2f));
 				if(d != null)
 					d.velocity *= 1.4f;
 			}

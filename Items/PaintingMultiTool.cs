@@ -104,7 +104,7 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		protected override Texture2D getTexture(WoMDPlayer player) {
-			if(player.paintData.paintColor == -1 && player.paintData.customPaint == null)
+			if(player.paintData.PaintColor == -1 && player.paintData.CustomPaint == null)
 				return null;
 			return getExtraTexture(GetType().Name + "Painted");
 		}

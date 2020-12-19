@@ -70,7 +70,7 @@ namespace WeaponsOfMassDecoration {
 				if(tooltips[i].text.StartsWith("Current Tool: ")) {
 					tooltips[i].text = "Current Tool: " + getPaintToolName(player.paintData.paintMethod);
 				} else if(tooltips[i].text.StartsWith("Current Paint: ")) {
-					tooltips[i].text = "Current Paint: " + getPaintColorName(player.paintData.paintColor, player.paintData.customPaint);
+					tooltips[i].text = "Current Paint: " + getPaintColorName(player.paintData);
 				}
 			}
 			base.ModifyTooltips(tooltips);
@@ -85,10 +85,10 @@ namespace WeaponsOfMassDecoration {
 			if(player == null)
 				return true;
 			MiscShaderData shader = getShader(this, p);
-			if((usesGSShader || ((player.paintData.paintColor == PaintID.Negative || player.paintData.customPaint is NegativeSprayPaint) && !(this is CustomPaint)))) {
+			if((usesGSShader || ((player.paintData.PaintColor == PaintID.Negative || player.paintData.CustomPaint is NegativeSprayPaint) && !(this is CustomPaint)))) {
 				if(shader != null) {
 					spriteBatch.End();
-					spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, (player.paintData.paintColor == PaintID.Negative || player.paintData.customPaint is NegativeSprayPaint) ? SamplerState.LinearClamp : SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
+					spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, (player.paintData.PaintColor == PaintID.Negative || player.paintData.CustomPaint is NegativeSprayPaint) ? SamplerState.LinearClamp : SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
 
 					shader.Apply();
 				}
@@ -112,13 +112,13 @@ namespace WeaponsOfMassDecoration {
 			//default handling based on conventions with texture counts and texture names
 			switch(textureCount) {
 				case 2: //expects a default version with no paint, and a version with paint
-					if((player.paintData.paintColor == -1 && player.paintData.customPaint == null) || player.paintData.paintMethod == PaintMethods.RemovePaint)
+					if((player.paintData.PaintColor == -1 && player.paintData.CustomPaint == null) || player.paintData.paintMethod == PaintMethods.RemovePaint)
 						return null;
 					return getExtraTexture(GetType().Name + "Painted");
 				case 3: //expects a default version with no paint, and versions with paint and as a paint scraper
 					if(player.paintData.paintMethod == PaintMethods.RemovePaint)
 						return getExtraTexture(GetType().Name + "Scraper");
-					if(player.paintData.paintColor == -1 && player.paintData.customPaint == null)
+					if(player.paintData.PaintColor == -1 && player.paintData.CustomPaint == null)
 						return null;
 					return getExtraTexture(GetType().Name + "Painted");
 			}
@@ -150,7 +150,7 @@ namespace WeaponsOfMassDecoration {
 						if(index >= 0)
 							target.DelBuff(index);
 					} else {
-						applyPaintedToNPC(target, new PaintData(npcCyclingTimeScale, player.paintData.paintColor, player.paintData.customPaint, player.paintData.customPaint is ISprayPaint, Main.GlobalTime, player: player.player));
+						applyPaintedToNPC(target, new PaintData(npcCyclingTimeScale, player.paintData.PaintColor, player.paintData.CustomPaint, player.paintData.CustomPaint is ISprayPaint, Main.GlobalTime, player: player.player));
 					}
 				}
 			}

@@ -51,7 +51,7 @@ namespace WeaponsOfMassDecoration.Items {
 
 			ModRecipe recipe2 = new ModRecipe(mod);
 			recipe2.AddIngredient(ItemID.TopazStaff);
-			recipe.AddRecipeGroup("WoMD:hmBar1", 5);
+			recipe2.AddRecipeGroup("WoMD:hmBar1", 5);
 			recipe2.AddIngredient(ItemID.Paintbrush);
 			recipe2.AddIngredient(ItemID.PaintRoller);
 			recipe2.AddIngredient(ItemID.PaintScraper);

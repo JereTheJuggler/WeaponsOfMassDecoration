@@ -30,6 +30,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="start">The starting position of the line to paint. Expects values in world coordinates</param>
 		/// <param name="end">The ending position of the line to paint. Expects values in world coordinates</param>
 		/// <param name="data">An instance of PaintData used to specify various settings for how painting should function</param>
+		/// <param name="useWorldGen">Whether or not WorldGen.paintTile and WorldGen.paintWall should be used, or if the tile should just be modified directly. Using WorldGen causes additional visual effects</param>
 		/// <param name="paintedTiles">A list of all the tiles that were updated in this function</param>
 		public static void paintBetweenPoints(Vector2 start, Vector2 end, PaintData data, List<Point> paintedTiles = null, bool useWorldGen = false) {
 			if(!(data.blocksAllowed || data.wallsAllowed))
@@ -58,6 +59,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="pos">The position of the center of the circle. Expects values in world coordinates</param>
 		/// <param name="radius">The radiues of the circle. 16 for each tile</param>
 		/// <param name="data">An instance of PaintData used to specify various settings for how painting should function</param>
+		/// <param name="useWorldGen">Whether or not WorldGen.paintTile and WorldGen.paintWall should be used, or if the tile should just be modified directly. Using WorldGen causes additional visual effects</param>
 		public static void explode(Vector2 pos, float radius, PaintData data, bool useWorldGen = false) {
 			for(int currentLevel = 0; currentLevel < Math.Ceiling(radius / 16f); currentLevel++) {
 				if(currentLevel == 0) {
@@ -103,7 +105,7 @@ namespace WeaponsOfMassDecoration {
 		public static void explodeColored(Vector2 pos, IEnumerable<byte> colors, PaintData data, bool useWorldGen = false) {
 			for(int currentLevel = 0; currentLevel < colors.Count(); currentLevel++) {
 				if(currentLevel == 0) {
-					data.paintColor = colors.ElementAt(currentLevel);
+					data.PaintColor = colors.ElementAt(currentLevel);
 					paint(pos, data, useWorldGen);
 				} else {
 					for(int i = 0; i <= currentLevel * 2; i++) {
@@ -151,6 +153,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="radius">The length of the spokes coming out of the center of the splatter. Uses world distance</param>
 		/// <param name="spokes">The number of spokes to create</param>
 		/// <param name="data">An instance of PaintData used to specify various settings for how painting should function</param>
+		/// <param name="useWorldGen">Whether or not WorldGen.paintTile and WorldGen.paintWall should be used, or if the tile should just be modified directly. Using WorldGen causes additional visual effects</param>
 		public static void splatter(Vector2 pos, float radius, int spokes, PaintData data, bool useWorldGen = false) {
 			explode(pos, 48f, data, useWorldGen);
 			float angle = Main.rand.NextFloat((float)Math.PI);
@@ -203,6 +206,7 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="pos">The position of the tile. Expects values in world coordinates</param>
 		/// <param name="data">An instance of PaintData used to specify various settings for how painting should function</param>
+		/// <param name="useWorldGen">Whether or not WorldGen.paintTile and WorldGen.paintWall should be used, or if the tile should just be modified directly. Using WorldGen causes additional visual effects</param>
 		/// <returns>Whether or not the tile was updated</returns>
 		public static bool paint(Vector2 pos, PaintData data, bool useWorldGen = false) {
 			Point p = pos.ToTileCoordinates();
@@ -212,22 +216,26 @@ namespace WeaponsOfMassDecoration {
 		/// <summary>
 		/// Paints the tile at the given position
 		/// </summary>
+		/// <param name="pos">The position of the tile. Expects values in tile coordinates</param>
+		/// <param name="data">An instance of PaintData used to specify various settings for how painting should function</param>
+		/// <param name="useWorldGen">Whether or not WorldGen.paintTile and WorldGen.paintWall should be used, or if the tile should just be modified directly. Using WorldGen causes additional visual effects</param>
+		/// <returns>Whether or not the tile was updated</returns>
+		public static bool paint(Point pos, PaintData data, bool useWorldGen = false) => paint(pos.X, pos.Y, data, useWorldGen);
+
+		/// <summary>
+		/// Paints the tile at the given position
+		/// </summary>
 		/// <param name="x">The x coordinate of the tile. Expects values in tile coordinates</param>
 		/// <param name="y">The y coordinate of the tile. Expects values in tile coordinates</param>
 		/// <param name="data">An instance of PaintData used to specify various settings for how painting should function</param>
+		/// <param name="useWorldGen">Whether or not WorldGen.paintTile and WorldGen.paintWall should be used, or if the tile should just be modified directly. Using WorldGen causes additional visual effects</param>
 		/// <returns>Whether or not the tile was updated</returns>
 		public static bool paint(int x, int y, PaintData data, bool useWorldGen = false) {
 			if(!WorldGen.InWorld(x, y, 10))
 				return false;
-			if(data.paintColor == -1 && data.customPaint == null)
+			if(data.PaintColor == -1 && data.CustomPaint == null)
 				return false;
-			byte targetColor;
-			if(data.customPaint != null) {
-				targetColor = (byte)data.customPaintColor;
-			} else {
-				targetColor = (byte)data.paintColor;
-			}
-			return paint(x, y, targetColor, data, useWorldGen);
+			return paint(x, y, data.TruePaintColor, data, useWorldGen);
 		}
 
 		/// <summary>
@@ -237,6 +245,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="y">The y coordinate of the tile. Expects values in tile coordinates</param>
 		/// <param name="color">The PaintID of the color to use</param>
 		/// <param name="data">An instance of PaintData used to specify various settings for how painting should function</param>
+		/// <param name="useWorldGen">Whether or not WorldGen.paintTile and WorldGen.paintWall should be used, or if the tile should just be modified directly. Using WorldGen causes additional visual effects</param>
 		/// <returns>Whether or not the tile was updated</returns>
 		private static bool paint(int x, int y, byte color, PaintData data, bool useWorldGen = false) {
 			if(data.paintMethod == PaintMethods.None)

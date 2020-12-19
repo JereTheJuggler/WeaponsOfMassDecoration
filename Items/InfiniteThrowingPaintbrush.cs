@@ -31,7 +31,7 @@ namespace WeaponsOfMassDecoration.Items {
 			//Needs to be overridden in this class, because the texture names do not follow the convention of <Class name>Painted and <Class name>Scraper
 			if(player.paintData.paintMethod == PaintMethods.RemovePaint)
 				return getExtraTexture("ThrowingPaintbrushScraper");
-			if(player.paintData.paintColor == -1 && player.paintData.customPaint == null)
+			if(player.paintData.PaintColor == -1 && player.paintData.CustomPaint == null)
 				return null;
 			return getExtraTexture("ThrowingPaintbrushPainted");
 		}

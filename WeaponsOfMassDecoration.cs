@@ -4,6 +4,7 @@ using MonoMod.Cil;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Resources;
 using Terraria;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
@@ -38,10 +39,16 @@ namespace WeaponsOfMassDecoration {
 		/// Specifies that the packet is for syncing the npcOwner property of multiple PaintingProjectile objects
 		/// </summary>
 		public const byte SetMultiProjNPCOwner = 4;
+		/// <summary>
+		/// Specifies that the packet is for syncing the _overridePaintData property of a PaintingProjectile
+		/// </summary>
+		public const byte SetPPOverrideData = 5;
 	}
 
 	public class WeaponsOfMassDecoration : Mod {
 		public const float PI = 3.14159265f;
+
+		public const int paintedBuffDuration = 60 * 60; //1 minute
 
 		protected static Dictionary<string, Texture2D> extraTextures;
 
@@ -56,9 +63,11 @@ namespace WeaponsOfMassDecoration {
 		public override void HandlePacket(BinaryReader reader, int whoAmI) {
 			switch(reader.ReadByte()) {
 				case WoMDMessageTypes.SetNPCColors:
-					WoMDNPC.readColorPacket(reader, out WoMDNPC gNpc, out NPC npc);
-					if(server()) {
-						WoMDNPC.sendColorPacket(gNpc, npc);
+					if(multiplayer() || server()) {
+						WoMDNPC.readColorPacket(reader, out WoMDNPC gNpc, out NPC npc);
+						if(server()) {
+							WoMDNPC.sendColorPacket(gNpc, npc);
+						}
 					}
 					break;
 				case WoMDMessageTypes.SetProjectileColor:
@@ -72,6 +81,14 @@ namespace WeaponsOfMassDecoration {
 				case WoMDMessageTypes.SetMultiProjNPCOwner:
 					if(multiplayer())
 						PaintingProjectile.readMultiProjNPCOwnerPacket(reader);
+					break;
+				case WoMDMessageTypes.SetPPOverrideData:
+					if(multiplayer() || server()) {
+						PaintingProjectile.readPPOverrideDataPacket(reader, out PaintingProjectile proj);
+						if(server() && proj != null) {
+							PaintingProjectile.sendPPOverrideDataPacket(proj);
+						}
+					}
 					break;
 			}
 		}
@@ -261,6 +278,20 @@ namespace WeaponsOfMassDecoration {
 		}
 
 		/// <summary>
+		/// Safely gets a WoMDProjectile object from Main.projectile. If the provided index is out of range, null will be returned
+		/// </summary>
+		/// <param name="index">The index of the projectile in Main.projectile</param>
+		/// <returns></returns>
+		public static WoMDProjectile getGlobalProjectile(int index) {
+			if(index < 0 || index >= Main.projectile.Length - 1)
+				return null;
+			Projectile p = Main.projectile[index];
+			if(p == null)
+				return null;
+			return p.GetGlobalProjectile<WoMDProjectile>();
+		}
+
+		/// <summary>
 		/// Safely gets a Player object from Main.player. If the provided index is out of range, null will be returned
 		/// </summary>
 		/// <param name="index">The index of the player in Main.player</param>
@@ -269,6 +300,20 @@ namespace WeaponsOfMassDecoration {
 			if(index < 0 || index >= Main.player.Length - 1)
 				return null;
 			return Main.player[index];
+		}
+
+		/// <summary>
+		/// Safely gets a WoMDPlayer object from Main.player. If the provided index is out of range, null will be returned
+		/// </summary>
+		/// <param name="index">The index of the player in Main.player</param>
+		/// <returns></returns>
+		public static WoMDPlayer getModPlayer(int index) {
+			if(index < 0 || index >= Main.player.Length - 1)
+				return null;
+			Player p = Main.player[index];
+			if(p == null)
+				return null;
+			return p.GetModPlayer<WoMDPlayer>();
 		}
 
 		/// <summary>
@@ -281,6 +326,32 @@ namespace WeaponsOfMassDecoration {
 				return null;
 			return Main.npc[index];
 		}
+		
+		/// <summary>
+		/// Safely gets a WoMDNPC object from Main.npc. If the provided index is out of range, null will be returned
+		/// </summary>
+		/// <param name="index">The index of the npc in Main.npc</param>
+		/// <returns></returns>
+		public static WoMDNPC getGlobalNPC(int index) {
+			if(index < 0 || index >= Main.npc.Length - 1)
+				return null;
+			NPC npc = Main.npc[index];
+			if(npc == null)
+				return null;
+			return npc.GetGlobalNPC<WoMDNPC>();
+		}
+
+		/// <summary>
+		/// Gets an instance of WoMDWorld
+		/// </summary>
+		/// <returns></returns>
+		public static WoMDWorld getWorld() => ModContent.GetInstance<WoMDWorld>();
+
+		/// <summary>
+		/// Returns whether or not Chaos Mode is enabled
+		/// </summary>
+		/// <returns></returns>
+		public static bool chaosMode() => ModContent.GetInstance<WoMDConfig>().chaosModeEnabled;
 
 		/// <summary>
 		/// A shortcut for Main.netMode == NetmodeID.SinglePlayer
@@ -350,14 +421,15 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="paintColor">Specifies a value from PaintID. -1 for custom paints</param>
 		/// <param name="customPaint">Specifies an instance of CustomPaint to use. null for vanilla paints</param>
 		/// <returns></returns>
-		public static string getPaintColorName(int paintColor, CustomPaint customPaint) {
-			if(paintColor == -1 && customPaint == null)
+		public static string getPaintColorName(PaintData paintData) {
+			//TODO: Make this get the display names from the vanilla paints instead of hardcoded values. Maybe add in translations for custom paints
+			if(paintData.PaintColor == -1 && paintData.CustomPaint == null)
 				return "None";
-			if(customPaint != null) {
-				return customPaint.displayName;
+			if(paintData.CustomPaint != null) {
+				return paintData.CustomPaint.displayName;
 			} else {
-				if(paintColor < ColorNames.list.Length)
-					return ColorNames.list[paintColor];
+				if(paintData.PaintColor < ColorNames.list.Length)
+					return ColorNames.list[paintData.PaintColor];
 			}
 			return "None";
 		}
@@ -415,25 +487,26 @@ namespace WeaponsOfMassDecoration {
 			if(preventRecursion)
 				return;
 
-			npc.AddBuff(ModContent.BuffType<Painted>(), 6000);
+			npc.AddBuff(ModContent.BuffType<Painted>(), paintedBuffDuration);
 
 			WoMDNPC globalNpc = npc.GetGlobalNPC<WoMDNPC>();
 
-			if(data.customPaint != null)
-				data.customPaint.modifyPaintDataForNpc(ref data);
+			if(data.CustomPaint != null)
+				data.CustomPaint.modifyPaintDataForNpc(ref data);
 
 			if(globalNpc.painted) {
 				PaintData existingData = globalNpc.paintData;
-				if(existingData.paintColor == data.paintColor &&
-				   (existingData.customPaint == null) == (data.customPaint == null) && //either both or neither are null
-				   existingData.customPaint.GetType().Equals(data.customPaint.GetType()) &&
+				if(existingData.PaintColor == data.PaintColor &&
+				   (existingData.CustomPaint == null) == (data.CustomPaint == null) && //either both or neither are null
+				   existingData.CustomPaint.GetType().Equals(data.CustomPaint.GetType()) &&
 				   existingData.sprayPaint == data.sprayPaint)
 					return; //nothing needs to be updated
 			}
 
 			globalNpc.setPaintData(npc, data);
 
-			if(Main.netMode == NetmodeID.SinglePlayer) {
+			if(singlePlayer()) {
+				//TODO: do this whole section better
 				if(handledNpcs == null)
 					handledNpcs = new List<NPC>();
 				handledNpcs.Add(npc);
@@ -525,51 +598,6 @@ namespace WeaponsOfMassDecoration {
 						break;
 				}
 			}
-		}
-
-		/// <summary>
-		/// Clamps a value between a min and max value
-		/// </summary>
-		/// <param name="value"></param>
-		/// <param name="min"></param>
-		/// <param name="max"></param>
-		/// <returns></returns>
-		public static float clamp(float value, float min, float max) {
-			if(value < min)
-				return min;
-			if(value > max)
-				return max;
-			return value;
-		}
-
-		/// <summary>
-		/// Clamps a value between a min and max value
-		/// </summary>
-		/// <param name="value"></param>
-		/// <param name="min"></param>
-		/// <param name="max"></param>
-		/// <returns></returns>
-		public static int clamp(int value, int min, int max) {
-			if(value < min)
-				return min;
-			if(value > max)
-				return max;
-			return value;
-		}
-
-		/// <summary>
-		/// Clamps a value between a min and max value
-		/// </summary>
-		/// <param name="value"></param>
-		/// <param name="min"></param>
-		/// <param name="max"></param>
-		/// <returns></returns>
-		public static double clamp(double value, double min, double max) {
-			if(value < min)
-				return min;
-			if(value > max)
-				return max;
-			return value;
 		}
 
 		//Hamstar's Mod Helpers Integration

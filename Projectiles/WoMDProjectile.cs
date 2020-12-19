@@ -60,9 +60,9 @@ namespace WeaponsOfMassDecoration.Projectiles {
 				packet.Write(WoMDMessageTypes.SetProjectileColor);
 				packet.Write(proj.whoAmI);
 				packet.Write(proj.type);
-				packet.Write(data.paintColor);
-				packet.Write(data.customPaint == null ? "null" : data.customPaint.GetType().Name);
-				packet.Write((double)data.timeOffset);
+				packet.Write(data.PaintColor);
+				packet.Write(data.CustomPaint == null ? "null" : data.CustomPaint.GetType().Name);
+				packet.Write((double)data.TimeOffset);
 				packet.Send(toClient, ignoreClient);
 			}
 		}
@@ -84,13 +84,13 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			if(proj != null && proj.type == projType && gProj != null && proj.active) {
 				gProj.painted = true;
 				PaintData data = new PaintData();
-				data.paintColor = paintColor;
+				data.PaintColor = paintColor;
 				if(customPaintName == "null") {
-					data.customPaint = null;
+					data.CustomPaint = null;
 				} else {
-					data.customPaint = (CustomPaint)Activator.CreateInstance(Type.GetType("WeaponsOfMassDecoration.Items." + customPaintName));
+					data.CustomPaint = (CustomPaint)Activator.CreateInstance(Type.GetType("WeaponsOfMassDecoration.Items." + customPaintName));
 				}
-				data.timeOffset = paintedTime;
+				data.TimeOffset = paintedTime;
 				gProj._paintData = data;
 			}
 		}
@@ -256,8 +256,18 @@ namespace WeaponsOfMassDecoration.Projectiles {
 				sendProjectileColorPacket(dProj, dest);
 		}
 
+		public static void applyPainted(Projectile projectile, PaintData paintData) {
+			WoMDProjectile proj = projectile.GetGlobalProjectile<WoMDProjectile>();
+			if(proj == null)
+				return;
+			proj.painted = true;
+			proj._paintData = paintData.clone();
+			if(server())
+				sendProjectileColorPacket(proj, projectile);
+		}
+
 		public override void PostAI(Projectile projectile) {
-			if(!projectile.friendly && (singlePlayer() || server()) && painted) {
+			if((singlePlayer() || server()) && painted) {
 				switch(projectile.type) {
 					case ProjectileID.SandnadoHostile:
 						if(projectile.timeLeft > 930 && Main.rand.NextFloat() < .25f) {
@@ -303,6 +313,18 @@ namespace WeaponsOfMassDecoration.Projectiles {
 											((float[])d.customData)[0] = 0;
 										}
 									}
+								}
+							}
+						}
+						break;
+					case ProjectileID.Boulder:
+						if(true) {
+							Point bl = projectile.BottomLeft.ToTileCoordinates();
+							for(byte i = 0; i <= 1; i++) {
+								for(byte j = 0; j <= 2; j++) {
+									Point p = new Point(bl.X + i, bl.Y - j);
+									if(j != 0 || WorldGen.SolidOrSlopedTile(p.X, p.Y))
+										paint(p, paintData, true);
 								}
 							}
 						}
@@ -375,14 +397,14 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		protected bool resetBatchInPost = false;
 
 		public override bool PreDraw(Projectile projectile, SpriteBatch spriteBatch, Color lightColor) {
-			/*if(painted && Main.netMode != NetmodeID.Server && (paintColor != -1 || customPaint != null)) {
+			if(painted && !server() && (_paintData.PaintColor != -1 || _paintData.CustomPaint != null)) {
 				resetBatchInPost = true;
 
 				spriteBatch.End();
 				spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
 
-				applyShader(this);
-			}*/
+				applyShader(this,_paintData);
+			}
 			return true;
 		}
 

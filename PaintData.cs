@@ -6,7 +6,7 @@ using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 namespace WeaponsOfMassDecoration {
 	public class PaintData {
 		protected int _paintColor = -1;
-		public int paintColor {
+		public int PaintColor {
 			get => _paintColor;
 			set {
 				if(value == _paintColor)
@@ -17,7 +17,7 @@ namespace WeaponsOfMassDecoration {
 			}
 		}
 		protected CustomPaint _customPaint = null;
-		public CustomPaint customPaint {
+		public CustomPaint CustomPaint {
 			get => _customPaint;
 			set {
 				if((_customPaint == null) == (value == null) && (_customPaint == null || _customPaint.GetType().Equals(value.GetType())))
@@ -29,7 +29,7 @@ namespace WeaponsOfMassDecoration {
 		}
 
 		protected float _timeOffset = 0;
-		public float timeOffset {
+		public float TimeOffset {
 			get => _timeOffset;
 			set {
 				if(value == _timeOffset)
@@ -43,7 +43,7 @@ namespace WeaponsOfMassDecoration {
 			}
 		}
 		protected float _timeScale = 1f;
-		public float timeScale {
+		public float TimeScale {
 			get => _timeScale; 
 			set {
 				if(value == _timeScale)
@@ -63,23 +63,25 @@ namespace WeaponsOfMassDecoration {
 		public bool consumePaint = true;
 		public bool sprayPaint = false;
 		private Color? _renderColor;
-		public Color renderColor {
+		public Color RenderColor {
 			get {
+				validateCachedProperties();
 				if(_renderColor == null) {
-					if((paintColor == -1 && customPaint == null) || paintMethod == PaintMethods.RemovePaint) {
+					if((_paintColor == -1 && _customPaint == null) || paintMethod == PaintMethods.RemovePaint) {
 						_renderColor = Color.White;
-					} else if(paintColor != -1) {
-						_renderColor = PaintColors.list[paintColor];
+					} else if(_paintColor != -1) {
+						_renderColor = PaintColors.list[_paintColor];
 					} else {
-						_renderColor = customPaint.getColor(this);
+						_renderColor = _customPaint.getColor(this);
 					}
 				}
 				return (Color)_renderColor;
 			}
 		}
 		private int? _customPaintColor = null;
-		public int customPaintColor {
+		public int CustomPaintColor {
 			get {
+				validateCachedProperties();
 				if(_customPaintColor == null) {
 					if(_customPaint == null) {
 						_customPaintColor = -1;
@@ -88,6 +90,28 @@ namespace WeaponsOfMassDecoration {
 					}
 				}
 				return (int)_customPaintColor;
+			}
+		}
+		
+		private uint lastUpdateTick = 0;
+		private void validateCachedProperties() {
+			if(Main.GameUpdateCount != lastUpdateTick) {
+				_customPaintColor = null;
+				_renderColor = null;
+				lastUpdateTick = Main.GameUpdateCount;
+			}
+		}
+
+		/// <summary>
+		/// The current paint color for this set of data, whether it comes from a vanilla paint or a custom paint. Paint method and spray paint do not factor in here.
+		/// </summary>
+		public byte TruePaintColor {
+			get {
+				if(_paintColor == -1 && _customPaint == null)
+					return 0;
+				if(_paintColor != -1)
+					return (byte)_paintColor;
+				return (byte)CustomPaintColor;
 			}
 		}
 

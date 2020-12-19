@@ -36,7 +36,7 @@ namespace WeaponsOfMassDecoration.Items {
 					WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
 					if(player == null)
 						return;
-					tooltips.Add(new TooltipLine(player.mod, "CurrentPaintColor", "Current Color: " + getPaintColorName(player.paintData.paintColor, player.paintData.customPaint)));
+					tooltips.Add(new TooltipLine(player.mod, "CurrentPaintColor", "Current Color: " + getPaintColorName(player.paintData)));
 					break;
 			}
 		}
@@ -76,7 +76,7 @@ namespace WeaponsOfMassDecoration.Items {
 				texture = Main.itemTexture[item.type];
 			MiscShaderData shader = null;
 
-			if(player.paintData.paintColor != -1 || player.paintData.customPaint != null) {
+			if(player.paintData.PaintColor != -1 || player.paintData.CustomPaint != null) {
 				PaintData d = player.paintData.clone();
 				if(method != PaintMethods.None)
 					d.paintMethod = method;
@@ -100,7 +100,7 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		protected Texture2D getTexture(string itemname, WoMDPlayer player) {
-			if(player.paintData.paintColor == -1 && player.paintData.customPaint == null)
+			if(player.paintData.PaintColor == -1 && player.paintData.CustomPaint == null)
 				return null;
 			return getExtraTexture(itemname + "Painted");
 		}
@@ -139,7 +139,7 @@ namespace WeaponsOfMassDecoration.Items {
 					return false;
 			}
 			PaintData data = p.paintData.clone();
-			data.timeScale = paintCyclingTimeScale;
+			data.TimeScale = paintCyclingTimeScale;
 			data.paintMethod = method;
 			paint(coords.X, coords.Y, data, true);
 			return true;

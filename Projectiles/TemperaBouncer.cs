@@ -92,7 +92,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			rotation += (float)Math.PI / 10f * projectile.direction;
 			PaintData data = getPaintData();
 			for(int i = 0; i < 1; i++) {
-				Dust dust = getDust(Dust.NewDust(projectile.Center - new Vector2(projectile.width / 2, projectile.height / 2), projectile.width, projectile.height, DustType<PaintDust>(), 0, 0, 0, data.renderColor, 1));
+				Dust dust = getDust(Dust.NewDust(projectile.Center - new Vector2(projectile.width / 2, projectile.height / 2), projectile.width, projectile.height, DustType<PaintDust>(), 0, 0, 0, data.RenderColor, 1));
 				if(dust != null) {
 					dust.noGravity = true;
 					dust.velocity = new Vector2(1, 0).RotatedByRandom(Math.PI * 2);
