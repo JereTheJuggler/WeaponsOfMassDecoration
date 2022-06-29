@@ -1,4 +1,5 @@
-﻿using Terraria.ID;
+﻿using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using static Terraria.ModLoader.ModContent;
 
@@ -17,17 +18,16 @@ namespace WeaponsOfMassDecoration.Items {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-			item.consumable = false;
-			item.maxStack = 1;
-			item.uniqueStack = true;
+			Item.consumable = false;
+			Item.maxStack = 1;
+			Item.uniqueStack = true;
 		}
 
 		public override void AddRecipes() {
-			ModRecipe recipe = new ModRecipe(mod);
+			Recipe recipe = CreateRecipe(1);
 			recipe.AddIngredient(ItemType<Paintball>(), 999 * 4);
 			recipe.AddTile(TileID.CrystalBall);
-			recipe.SetResult(this, 1);
-			recipe.AddRecipe();
+			recipe.Register();
 		}
 	}
 }

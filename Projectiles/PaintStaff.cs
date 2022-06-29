@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
+using Terraria.ModLoader;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.PaintUtils;
 using static WeaponsOfMassDecoration.ShaderUtils;
@@ -25,30 +27,30 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public override void SetDefaults() {
-			projectile.width = 10;
-			projectile.height = 10;
-			projectile.aiStyle = 0;
-			projectile.friendly = true;
-			projectile.hostile = false;
-			projectile.magic = true;
-			projectile.penetrate = 1;
-			projectile.timeLeft = 3600;
-			projectile.alpha = 200;
-			projectile.ignoreWater = true;
-			projectile.tileCollide = true;
-			aiType = ProjectileID.DiamondBolt;
+			Projectile.width = 10;
+			Projectile.height = 10;
+			Projectile.aiStyle = 0;
+			Projectile.friendly = true;
+			Projectile.hostile = false;
+			Projectile.DamageType = DamageClass.Magic;
+			Projectile.penetrate = 1;
+			Projectile.timeLeft = 3600;
+			Projectile.alpha = 200;
+			Projectile.ignoreWater = true;
+			Projectile.tileCollide = true;
+			AIType = ProjectileID.DiamondBolt;
 			light = 1f;
-			projectile.alpha = 150;
+			Projectile.alpha = 150;
 		}
 
 		public override bool PreAI() {
 			base.PreAI();
 			if(canPaint()) {
-				Point coords = new Point((int)Math.Floor(projectile.Center.X / 16), (int)Math.Floor(projectile.Center.Y / 16));
+				Point coords = new Point((int)Math.Floor(Projectile.Center.X / 16), (int)Math.Floor(Projectile.Center.Y / 16));
 				PaintData data = getPaintData();
 				paint(coords.X, coords.Y, data);
 				for(int d = 0; d < 2; d++) {
-					Dust dust = getDust(Dust.NewDust(projectile.position, 0, 0, DustType<Dusts.PaintDust>(), 0, 0, 200, getColor(data), .75f));
+					Dust dust = getDust(Dust.NewDust(Projectile.position, 0, 0, DustType<Dusts.PaintDust>(), 0, 0, 200, getColor(data), .75f));
 					if(dust != null) {
 						dust.noGravity = true;
 						dust.velocity = new Vector2(1, 0).RotatedByRandom(Math.PI * 2);
@@ -58,12 +60,12 @@ namespace WeaponsOfMassDecoration.Projectiles {
 					}
 				}
 			}
-			projectile.ai[0] += .2f;
+			Projectile.ai[0] += .2f;
 			return true;
 		}
 
 		public override bool OnTileCollide(Vector2 oldVelocity) {
-			Main.PlaySound(SoundID.Item10, projectile.Center);
+			SoundEngine.PlaySound(SoundID.Item10, Projectile.Center);
 			return base.OnTileCollide(oldVelocity);
 		}
 	}

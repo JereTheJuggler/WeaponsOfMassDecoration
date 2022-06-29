@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 using WeaponsOfMassDecoration.NPCs;
@@ -26,29 +27,29 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override void SetDefaults() {
-			item.CloneDefaults(ItemID.Paintbrush);
-			item.holdStyle = 0;
-			item.useAnimation = 30;
-			item.RebuildTooltip();
-			item.useStyle = ItemUseStyleID.HoldingOut;
-			item.width = 29;
-			item.height = 30;
-			item.maxStack = 1;
-			item.noUseGraphic = false;
-			item.noMelee = false;
-			item.melee = true;
-			item.damage = 4;
-			item.knockBack = 3f;
-			item.autoReuse = true;
-			item.value = Item.buyPrice(0, 0, 0, 10);
-			item.rare = ItemRarityID.Green;
-			item.useTime = 15;
+			Item.CloneDefaults(ItemID.Paintbrush);
+			Item.holdStyle = 0;
+			Item.useAnimation = 30;
+			Item.RebuildTooltip();
+			Item.useStyle = ItemUseStyleID.Shoot;
+			Item.width = 29;
+			Item.height = 30;
+			Item.maxStack = 1;
+			Item.noUseGraphic = false;
+			Item.noMelee = false;
+			Item.DamageType = DamageClass.Melee;
+			Item.damage = 4;
+			Item.knockBack = 3f;
+			Item.autoReuse = true;
+			Item.value = Item.buyPrice(0, 0, 0, 10);
+			Item.rare = ItemRarityID.Green;
+			Item.useTime = 15;
 		}
 
 		public override Vector2? HoldoutOffset() {
 			return new Vector2(-26, 2).RotatedBy(rotation);
 		}
-		public override void HoldStyle(Player player) {
+		public override void HoldStyle(Player player, Rectangle heldItemFrame) {
 			rotation = 0;
 		}
 
@@ -61,28 +62,27 @@ namespace WeaponsOfMassDecoration.Items {
 			);
 		}
 
-		public override void UseStyle(Player player) {
+		public override void UseStyle(Player player, Rectangle heldItemFrame) {
 			rotation += .2f;
 			player.itemRotation = rotation * player.direction;
 			player.itemLocation += new Vector2(7 * player.direction, 5);
 		}
 
 		public override void AddRecipes() {
-			ModRecipe recipe = new ModRecipe(mod);
+			Recipe recipe = CreateRecipe();
 			recipe.AddIngredient(ItemID.Paintbrush);
 			recipe.AddIngredient(ItemID.PaintRoller);
 			recipe.AddTile(TileID.DyeVat);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			recipe.Register();
 		}
 
-		public override bool UseItem(Player player) {
+		public override bool? UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */ {
 			WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
 			if(p == null)
 				return false;
 			soundTimer--;
 			if(soundTimer <= 0) {
-				Main.PlaySound(SoundID.Item, player.position);
+				SoundEngine.PlaySound(SoundID.Item, player.position);
 				soundTimer = soundFrequency;
 			}
 			Point mousePosition = Main.MouseWorld.ToTileCoordinates();
@@ -100,7 +100,7 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public bool isInRange(Player player, int xOffset, int yOffset) {
-			return Math.Abs(xOffset) <= player.lastTileRangeX + item.tileBoost && Math.Abs(yOffset) <= player.lastTileRangeY + item.tileBoost;
+			return Math.Abs(xOffset) <= player.lastTileRangeX + Item.tileBoost && Math.Abs(yOffset) <= player.lastTileRangeY + Item.tileBoost;
 		}
 
 		protected override Texture2D getTexture(WoMDPlayer player) {
@@ -124,30 +124,29 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override void AddRecipes() {
-			ModRecipe recipe = new ModRecipe(mod);
+			Recipe recipe = CreateRecipe();
 			recipe.AddIngredient(ItemID.SpectrePaintbrush);
 			recipe.AddIngredient(ItemID.SpectrePaintRoller);
 			recipe.AddTile(TileID.DyeVat);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			recipe.Register();
 		}
 
 		public override void SetDefaults() {
 			base.SetDefaults();
 
-			item.value = Item.buyPrice(0, 0, 0, 10);
-			item.rare = ItemRarityID.Green;
-			item.damage = 70;
-			item.knockBack = 7f;
-			item.tileBoost = 3;
-			item.useTime = 3;
-			item.useAnimation = 7;
+			Item.value = Item.buyPrice(0, 0, 0, 10);
+			Item.rare = ItemRarityID.Green;
+			Item.damage = 70;
+			Item.knockBack = 7f;
+			Item.tileBoost = 3;
+			Item.useTime = 3;
+			Item.useAnimation = 7;
 			hitboxExtension = 6;
 		}
 
-		public override void UseStyle(Player player) {
+		public override void UseStyle(Player player, Rectangle heldItemFrame) {
 			rotation += .05f;
-			base.UseStyle(player);
+			base.UseStyle(player,heldItemFrame);
 		}
 	}
 }

@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -30,13 +31,13 @@ namespace WeaponsOfMassDecoration.Items {
 				case ItemID.SpectrePaintbrush:
 				case ItemID.PaintRoller:
 				case ItemID.SpectrePaintRoller:
-					Player p = getPlayer(item.owner);
+					Player p = getPlayer(item.playerIndexTheItemIsReservedFor);
 					if(p == null)
 						return;
 					WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
 					if(player == null)
 						return;
-					tooltips.Add(new TooltipLine(player.mod, "CurrentPaintColor", "Current Color: " + getPaintColorName(player.paintData)));
+					tooltips.Add(new TooltipLine(player.Mod, "CurrentPaintColor", "Current Color: " + getPaintColorName(player.paintData)));
 					break;
 			}
 		}
@@ -64,7 +65,7 @@ namespace WeaponsOfMassDecoration.Items {
 				default:
 					return true;
 			}
-			Player p = getPlayer(item.owner);
+			Player p = getPlayer(item.playerIndexTheItemIsReservedFor);
 			if(p == null)
 				return true;
 			WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
@@ -73,7 +74,7 @@ namespace WeaponsOfMassDecoration.Items {
 
 			Texture2D texture = getTexture(itemName, player);
 			if(texture == null)
-				texture = Main.itemTexture[item.type];
+				texture = TextureAssets.Item[item.type].Value;
 			MiscShaderData shader = null;
 
 			if(player.paintData.PaintColor != -1 || player.paintData.CustomPaint != null) {
@@ -87,14 +88,14 @@ namespace WeaponsOfMassDecoration.Items {
 			spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, shader != null ? SamplerState.PointClamp : SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
 
 			if(shader != null) {
-				shader.Apply();
+				//shader.Apply();
 			}
 
 			spriteBatch.Draw(texture, position, frame, drawColor, 0, new Vector2(0, 0), scale, SpriteEffects.None, 0);
 
 			if(shader != null) {
-				spriteBatch.End();
-				spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix);
+				//spriteBatch.End();
+				//spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix);
 			}
 			return false;
 		}
@@ -105,7 +106,7 @@ namespace WeaponsOfMassDecoration.Items {
 			return getExtraTexture(itemname + "Painted");
 		}
 
-		public override bool UseItem(Item item, Player player) {
+		public override bool? UseItem(Item item, Player player)/* tModPorter Suggestion: Return null instead of false */ {
 			PaintMethods method;
 			switch(item.type) {
 				case ItemID.Paintbrush:
@@ -126,7 +127,7 @@ namespace WeaponsOfMassDecoration.Items {
 			if(p == null)
 				return true;
 			Point coords;
-			if(Main.SmartCursorEnabled) {
+			if(Main.SmartCursorIsUsed) {
 				coords = new Point(Main.SmartCursorX, Main.SmartCursorY);
 			} else {
 				coords = Main.MouseWorld.ToTileCoordinates();

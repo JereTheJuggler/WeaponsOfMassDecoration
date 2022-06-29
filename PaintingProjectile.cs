@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -12,6 +13,7 @@ using WeaponsOfMassDecoration.Buffs;
 using WeaponsOfMassDecoration.Items;
 using WeaponsOfMassDecoration.NPCs;
 using WeaponsOfMassDecoration.Projectiles;
+using Terraria.DataStructures;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.PaintUtils;
 using static WeaponsOfMassDecoration.ShaderUtils;
@@ -150,15 +152,16 @@ namespace WeaponsOfMassDecoration {
 		}
 
 		public PaintingProjectile() : base() {
-			projectile.light = 0;
+			if(Projectile != null)
+				Projectile.light = 0;
 		}
 
 		public override void SetStaticDefaults() {
 			base.SetStaticDefaults();
-			Main.projFrames[projectile.type] = yFrameCount * xFrameCount;
-			ProjectileID.Sets.TrailCacheLength[projectile.type] = trailLength;
+			Main.projFrames[Projectile.type] = yFrameCount * xFrameCount;
+			ProjectileID.Sets.TrailCacheLength[Projectile.type] = trailLength;
 			if(trailLength > 1) {
-				ProjectileID.Sets.TrailingMode[projectile.type] = 0;
+				ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
 			}
 		}
 
@@ -171,10 +174,10 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="ignoreClient"></param>
 		public static void sendProjNPCOwnerPacket(PaintingProjectile p, int toClient = -1, int ignoreClient = -1) {
 			if(server() || multiplayer()) {
-				ModPacket packet = p.mod.GetPacket();
+				ModPacket packet = p.Mod.GetPacket();
 				packet.Write(WoMDMessageTypes.SetProjNPCOwner);
-				packet.Write(p.projectile.whoAmI);
-				packet.Write(p.projectile.type);
+				packet.Write(p.Projectile.whoAmI);
+				packet.Write(p.Projectile.type);
 				packet.Write(p.npcOwner);
 				packet.Send(toClient, ignoreClient);
 			}
@@ -190,7 +193,7 @@ namespace WeaponsOfMassDecoration {
 			int owner = reader.ReadInt32();
 			Projectile proj = getProjectile(projId);
 			if(proj != null && proj.type == projType && proj.active) {
-				PaintingProjectile p = proj.modProjectile as PaintingProjectile;
+				PaintingProjectile p = proj.ModProjectile as PaintingProjectile;
 				if(p != null) {
 					p.npcOwner = owner;
 				}
@@ -212,8 +215,8 @@ namespace WeaponsOfMassDecoration {
 				packet.Write(WoMDMessageTypes.SetMultiProjNPCOwner);
 				packet.Write(projectiles.Count());
 				foreach(PaintingProjectile p in projectiles) {
-					packet.Write(p.projectile.whoAmI);
-					packet.Write(p.projectile.type);
+					packet.Write(p.Projectile.whoAmI);
+					packet.Write(p.Projectile.type);
 				}
 				packet.Send(toClient, ignoreClient);
 			}
@@ -231,7 +234,7 @@ namespace WeaponsOfMassDecoration {
 				int projType = reader.ReadInt32();
 				Projectile p = getProjectile(projId);
 				if(p != null && p.type == projType) {
-					PaintingProjectile proj = p.modProjectile as PaintingProjectile;
+					PaintingProjectile proj = p.ModProjectile as PaintingProjectile;
 					if(proj != null)
 						proj.npcOwner = owner;
 				}
@@ -240,10 +243,10 @@ namespace WeaponsOfMassDecoration {
 
 		public static void sendPPOverrideDataPacket(PaintingProjectile p, int toClient = -1, int ignoreClient = -1) {
 			if(server() || multiplayer()) {
-				ModPacket packet = p.mod.GetPacket();
+				ModPacket packet = p.Mod.GetPacket();
 				packet.Write(WoMDMessageTypes.SetPPOverrideData);
-				packet.Write(p.projectile.whoAmI);
-				packet.Write(p.projectile.type);
+				packet.Write(p.Projectile.whoAmI);
+				packet.Write(p.Projectile.type);
 				packet.Write(p._overridePaintData.PaintColor);
 				packet.Write(p._overridePaintData.CustomPaint == null ? "null" : p._overridePaintData.CustomPaint.GetType().Name);
 				packet.Write((double)p._overridePaintData.TimeScale);
@@ -266,9 +269,9 @@ namespace WeaponsOfMassDecoration {
 			string method = reader.ReadString();
 			Projectile proj = getProjectile(projId);
 			if(proj != null && proj.type == projType) {
-				projectile = proj.modProjectile as PaintingProjectile;
+				projectile = proj.ModProjectile as PaintingProjectile;
 				if(projectile != null) {
-					CustomPaint customPaint = customPaintName == "null" ? null : (CustomPaint)Activator.CreateInstance(Type.GetType("WeaponsOfMassDecoration.Items." + customPaintName));
+					CustomPaint customPaint = customPaintName == "null" ? null : (CustomPaint)Activator.CreateInstance(System.Type.GetType("WeaponsOfMassDecoration.Items." + customPaintName));
 					PaintMethods paintMethod = (PaintMethods)Enum.Parse(typeof(PaintMethods), method);
 					projectile._overridePaintData = new PaintData(timeScale, paintColor, customPaint, sprayPaint, timeOffset, paintMethod);
 				}
@@ -286,9 +289,9 @@ namespace WeaponsOfMassDecoration {
 				return _overridePaintData.paintMethod != PaintMethods.None && (_overridePaintData.PaintColor != -1 || _overridePaintData.CustomPaint != null || _overridePaintData.paintMethod == PaintMethods.RemovePaint);
 			if(npcOwner != -1)
 				return true;
-			if(projectile.owner != Main.myPlayer)
+			if(Projectile.owner != Main.myPlayer)
 				return false;
-			WoMDPlayer player = getModPlayer(projectile.owner);
+			WoMDPlayer player = getModPlayer(Projectile.owner);
 			if(player == null)
 				return false;
 			return player.canPaint();
@@ -306,7 +309,7 @@ namespace WeaponsOfMassDecoration {
 				return _overridePaintData.paintMethod;
 			if(npcOwner != -1)
 				return PaintMethods.BlocksAndWalls;
-			WoMDPlayer p = getModPlayer(projectile.owner);
+			WoMDPlayer p = getModPlayer(Projectile.owner);
 			if(p == null)
 				return PaintMethods.BlocksAndWalls;
 			return p.paintData.paintMethod;
@@ -316,7 +319,7 @@ namespace WeaponsOfMassDecoration {
 		#region tile/npc interaction
 		public override void OnHitNPC(NPC target, int damage, float knockback, bool crit) {
 			WoMDNPC npc = target.GetGlobalNPC<WoMDNPC>();
-			WoMDPlayer player = getModPlayer(projectile.owner);
+			WoMDPlayer player = getModPlayer(Projectile.owner);
 			if(npc != null && player != null) {
 				PaintMethods method = player.paintData.paintMethod;
 				if(method != PaintMethods.None) {
@@ -326,16 +329,16 @@ namespace WeaponsOfMassDecoration {
 						if(index >= 0)
 							target.DelBuff(index);
 					} else {
-						applyPaintedToNPC(target, new PaintData(npcCyclingTimeScale, player.paintData.PaintColor, player.paintData.CustomPaint, player.paintData.CustomPaint is ISprayPaint, Main.GlobalTime, player: player.player));
+						applyPaintedToNPC(target, new PaintData(npcCyclingTimeScale, player.paintData.PaintColor, player.paintData.CustomPaint, player.paintData.CustomPaint is ISprayPaint, Main.GlobalTimeWrappedHourly, player: player.Player));
 					}
 				}
 			}
-			if(projectile.penetrate == 1)
+			if(Projectile.penetrate == 1)
 				onKillOnNPC(target);
 		}
 
 		public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection) {
-			WoMDPlayer player = getModPlayer(projectile.owner);
+			WoMDPlayer player = getModPlayer(Projectile.owner);
 			if(player != null) {
 				if(player.paintData.paintMethod == PaintMethods.None ||
 				   player.paintData.paintMethod == PaintMethods.RemovePaint ||
@@ -383,13 +386,13 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="spreadAngle"></param>
 		/// <param name="speed"></param>
 		/// <param name="timeLeft"></param>
-		public void createDrops(int count, Vector2 position, Vector2 direction, float spreadAngle, float speed = 1f, int timeLeft = 30) {
+		public void createDrops(IEntitySource source, int count, Vector2 position, Vector2 direction, float spreadAngle, float speed = 1f, int timeLeft = 30) {
 			direction.Normalize();
 			for(int i = 0; i < count; i++) {
 				Vector2 vel = direction.RotatedBy((spreadAngle * Main.rand.NextFloat()) - (spreadAngle / 2));
-				Projectile p = getProjectile(Projectile.NewProjectile(position + vel * 2f, vel * speed, ProjectileType<PaintSplatter>(), 0, 0, projectile.owner, 1, ProjectileID.IchorSplash));
+				Projectile p = getProjectile(Projectile.NewProjectile(source, position + vel * 2f, vel * speed, ProjectileType<PaintSplatter>(), 0, 0, Projectile.owner, 1, ProjectileID.IchorSplash));
 				if(p != null) {
-					((PaintingProjectile)p.modProjectile).light = light;
+					((PaintingProjectile)p.ModProjectile).light = light;
 					p.timeLeft = timeLeft;
 					p.alpha = 125;
 				}
@@ -397,13 +400,13 @@ namespace WeaponsOfMassDecoration {
 		}
 
 		public override bool PreKill(int timeLeft) {
-			if(server() || singlePlayer() || (multiplayer() && projectile.owner == Main.myPlayer)) {
+			if(server() || singlePlayer() || (multiplayer() && Projectile.owner == Main.myPlayer)) {
 				if(dropsOnDeath)
-					createDrops(dropCount, projectile.Center, projectile.oldVelocity * -1, dropCone, dropVelocity);
+					createDrops(Projectile.GetSource_FromThis(), dropCount, Projectile.Center, Projectile.oldVelocity * -1, dropCone, dropVelocity);
 				if(explodesOnDeath) {
 					PaintData d = getPaintData();
 					if(d != null)
-						explode(projectile.Center, explosionRadius, d);
+						explode(Projectile.Center, explosionRadius, d);
 				}
 			}
 			return base.PreKill(timeLeft);
@@ -412,9 +415,9 @@ namespace WeaponsOfMassDecoration {
 		#region ai
 		public override bool PreAI() {
 			_paintData = null;
-			oldRotation = projectile.rotation;
+			oldRotation = Projectile.rotation;
 			if(startPosition.X == 0 && startPosition.Y == 0)
-				startPosition = projectile.position;
+				startPosition = Projectile.position;
 			return true;
 		}
 
@@ -424,21 +427,21 @@ namespace WeaponsOfMassDecoration {
 
 		public override void PostAI() {
 			base.PostAI();
-			if(projectile.light != 0) {
-				light = projectile.light;
-				projectile.light = 0;
+			if(Projectile.light != 0) {
+				light = Projectile.light;
+				Projectile.light = 0;
 			}
 			if(manualRotation)
-				projectile.rotation = rotation;
+				Projectile.rotation = rotation;
 			if(trailLength > 1) {
 				for(int i = trailLength - 1; i > 0; i--)
-					projectile.oldRot[i] = projectile.oldRot[i - 1];
+					Projectile.oldRot[i] = Projectile.oldRot[i - 1];
 			}
 			if(trailLength > 0) {
-				projectile.oldRot[0] = projectile.rotation;
+				Projectile.oldRot[0] = Projectile.rotation;
 			}
 			PaintMethods method = getPaintMethod();
-			if(xFrameCount > 1 && (animationFrameDuration == 0 || projectile.timeLeft % animationFrameDuration == 0))
+			if(xFrameCount > 1 && (animationFrameDuration == 0 || Projectile.timeLeft % animationFrameDuration == 0))
 				nextFrame(method);
 			if(!usesShader) {
 				updateColorFrame(method);
@@ -453,7 +456,7 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		public void updateColorFrame(PaintMethods method) {
 			if(npcOwner == -1) {
-				WoMDPlayer player = getModPlayer(projectile.owner);
+				WoMDPlayer player = getModPlayer(Projectile.owner);
 				if(player != null) {
 					if(player.paintData.PaintColor == -1 && player.paintData.CustomPaint == null)
 						colorFrame = 0;
@@ -547,17 +550,18 @@ namespace WeaponsOfMassDecoration {
 			return new Rectangle(startX, startY, frameWidth, frameHeight);
 		}
 
-		public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor) {
+		/*
+		public override bool PreDraw(ref Color lightColor) {
 			if(server())
 				return false;
 			//TODO: make this function a little more organized
 			if(!hasGraphics)
 				return false;
 			if(!usesShader) {
-				Texture2D texture = Main.projectileTexture[projectile.type];
+				Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
 				Rectangle sourceRectangle = getSourceRectangle(texture);
 				Vector2 origin = (sourceRectangle.Size() / 2) + drawOriginOffset;
-				float scale = projectile.scale;
+				float scale = Projectile.scale;
 
 				MiscShaderData shader = null;
 				if(usesGSShader) {
@@ -575,12 +579,12 @@ namespace WeaponsOfMassDecoration {
 					if(i == 1)
 						continue;
 
-					Vector2 projectilePos = (i == 0 ? projectile.Center : projectile.oldPos[i - 1] + (new Vector2(projectile.width / 2f, projectile.height / 2f) * projectile.scale));
-					Vector2 drawPos = projectilePos - Main.screenPosition + new Vector2(0f, projectile.gfxOffY);
+					Vector2 projectilePos = (i == 0 ? Projectile.Center : Projectile.oldPos[i - 1] + (new Vector2(Projectile.width / 2f, Projectile.height / 2f) * Projectile.scale));
+					Vector2 drawPos = projectilePos - Main.screenPosition + new Vector2(0f, Projectile.gfxOffY);
 
-					float rotation = (i == 0 ? projectile.rotation : projectile.oldRot[i - 1]);
+					float rotation = (i == 0 ? Projectile.rotation : Projectile.oldRot[i - 1]);
 
-					float opacity = projectile.Opacity - (projectile.Opacity / (trailLength + 1)) * i;
+					float opacity = Projectile.Opacity - (Projectile.Opacity / (trailLength + 1)) * i;
 					float lightness = 1f - (.75f / (trailLength + 1)) * i;
 
 					if(shader != null) {
@@ -604,21 +608,21 @@ namespace WeaponsOfMassDecoration {
 					resetBatchInPost = true;
 				}
 
-				Texture2D texture = Main.projectileTexture[projectile.type];
+				Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
 				Rectangle sourceRectangle = getSourceRectangle(texture);
 				Vector2 origin = (sourceRectangle.Size() / 2) + drawOriginOffset;
-				float scale = projectile.scale;
+				float scale = Projectile.scale;
 
 				for(int i = trailLength; i >= 0; i--) {
 					if(i == 1)
 						continue;
 
-					Vector2 projectilePos = (i == 0 ? projectile.Center : projectile.oldPos[i - 1] + (new Vector2(projectile.width / 2f, projectile.height / 2f)));
-					Vector2 drawPos = projectilePos - Main.screenPosition + new Vector2(0f, projectile.gfxOffY);
+					Vector2 projectilePos = (i == 0 ? Projectile.Center : Projectile.oldPos[i - 1] + (new Vector2(Projectile.width / 2f, Projectile.height / 2f)));
+					Vector2 drawPos = projectilePos - Main.screenPosition + new Vector2(0f, Projectile.gfxOffY);
 
-					float rotation = (i == 0 ? projectile.rotation : projectile.oldRot[i - 1]);
+					float rotation = (i == 0 ? Projectile.rotation : Projectile.oldRot[i - 1]);
 
-					float op = projectile.Opacity - (projectile.Opacity / (trailLength + 1)) * i;
+					float op = Projectile.Opacity - (Projectile.Opacity / (trailLength + 1)) * i;
 					float lightness = 1f - (.75f / (trailLength + 1)) * i;
 
 					if(data != null)
@@ -634,13 +638,14 @@ namespace WeaponsOfMassDecoration {
 			}
 			return false;
 		}
-		public override void PostDraw(SpriteBatch spriteBatch, Color lightColor) {
+		public override void PostDraw(Color lightColor) {
 			if(resetBatchInPost) {
 				spriteBatch.End();
 				spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
 				resetBatchInPost = false;
 			}
 		}
+		*/
 		#endregion
 
 		/// <summary>
@@ -652,7 +657,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="useWorldGen">Can be set to true to use WorldGen.paintTile and WorldGen.paintWall instead of modifying the tile directly. Using WorldGen causes additional visuals to be created when changing a tile's color</param>
 		/// <returns>The number of tiles that were updated</returns>
 		public void paintAlongOldVelocity(Vector2 oldVelocity, PaintData paintData) {
-			paintBetweenPoints(projectile.Center - oldVelocity, projectile.Center, paintData);
+			paintBetweenPoints(Projectile.Center - oldVelocity, Projectile.Center, paintData);
 		}
 
 		#region lights
@@ -660,7 +665,7 @@ namespace WeaponsOfMassDecoration {
 		/// Creates a light with the projectile's color. Uses the center of the projectile for position and projectile.light for brightness
 		/// </summary>
 		public Color createLight() {
-			return createLight(projectile.Center, light);
+			return createLight(Projectile.Center, light);
 		}
 
 		/// <summary>
@@ -686,7 +691,7 @@ namespace WeaponsOfMassDecoration {
 				WoMDNPC gNpc = npc.GetGlobalNPC<WoMDNPC>();
 				return gNpc.paintData;
 			}
-			WoMDPlayer player = getModPlayer(projectile.owner);
+			WoMDPlayer player = getModPlayer(Projectile.owner);
 			if(player == null)
 				return data;
 			return player.paintData;

@@ -68,7 +68,7 @@ namespace WeaponsOfMassDecoration.Items {
 			int index = Array.IndexOf(PaintItemID.list, type);
 			if(index == -1)
 				return type;
-			if(index >= PaintID.Red && index <= PaintID.Pink)
+			if(index >= PaintID.RedPaint && index <= PaintID.PinkPaint)
 				return PaintItemID.list[index + 12];
 			return type;
 		}
@@ -103,11 +103,11 @@ namespace WeaponsOfMassDecoration.Items {
 		public CustomPaint() : base() { }
 
 		public override void SetDefaults() {
-			item.maxStack = 999;
-			item.paint = paintValue;
-			item.value = colorCount * 10;
+			Item.maxStack = 999;
+			Item.paint = paintValue;
+			Item.value = colorCount * 10;
 			if(this is IDeepPaint)
-				item.value *= 2;
+				Item.value *= 2;
 		}
 		public override void SetStaticDefaults() {
 			DisplayName.SetDefault(displayName);
@@ -158,13 +158,12 @@ namespace WeaponsOfMassDecoration.Items {
 				//matches all paints
 				if(_includeVanillaRecipes) {
 					//using the public paintItemIds so base custom paints use base items and deep custom paints use deep items
-					ModRecipe recipe = new ModRecipe(mod);
+					Recipe recipe = CreateRecipe(colorCount);
 					int[] itemIds = paintItemIds; //store it so it doesn't need to convert multiple times
 					for(int p = 0; p < colorCount; p++)
 						recipe.AddIngredient(itemIds[p], 1);
 					recipe.AddTile(TileID.DyeVat);
-					recipe.SetResult(this, colorCount);
-					recipe.AddRecipe();
+					recipe.Register();
 				}
 
 				//case (2)
@@ -172,24 +171,22 @@ namespace WeaponsOfMassDecoration.Items {
 				//matchs all deep paints
 				if(_includeVanillaRecipes && this is IDeepPaint) {
 					//using the protected _paintItemIds so only base items are used
-					ModRecipe recipe = new ModRecipe(mod);
+					Recipe recipe = CreateRecipe(colorCount);
 					for(int p = 0; p < _paintItemIds.Length; p++)
 						recipe.AddIngredient(_paintItemIds[p], 2);
 					recipe.AddTile(TileID.DyeVat);
-					recipe.SetResult(this, colorCount);
-					recipe.AddRecipe();
+					recipe.Register();
 				}
 
 				//case (3)
 				//using 2 of the base custom paint to create 1 item
 				//matches deep cycling, deep vanilla spray paints, and deep cycling spray paints
 				if(this is IDeepPaint && (this is ICyclingPaint || this is ISprayPaint)) {
-					ModRecipe recipe = new ModRecipe(mod);
+					Recipe recipe = CreateRecipe(1);
 					Type t = GetType().BaseType;
-					recipe.AddIngredient(mod.ItemType(t.Name), 2);
+					recipe.AddIngredient(Mod.Find<ModItem>(t.Name).Type, 2);
 					recipe.AddTile(TileID.DyeVat);
-					recipe.SetResult(this, 1);
-					recipe.AddRecipe();
+					recipe.Register();
 				}
 
 				//case (4)
@@ -197,25 +194,23 @@ namespace WeaponsOfMassDecoration.Items {
 				//matches cycling spray paints
 				//same as case (3), but only takes 1 of the base item
 				if(this is ISprayPaint && this is ICyclingPaint && !(this is IDeepPaint)) {
-					ModRecipe recipe = new ModRecipe(mod);
+					Recipe recipe = CreateRecipe(1);
 					Type t = GetType().BaseType;
-					recipe.AddIngredient(mod.ItemType(t.Name), 1);
+					recipe.AddIngredient(Mod.Find<ModItem>(t.Name).Type, 1);
 					recipe.AddTile(TileID.DyeVat);
-					recipe.SetResult(this, 1);
-					recipe.AddRecipe();
+					recipe.Register();
 				}
 
 				//case (5)
 				//using 1 of each base/deep spray paint to create 1 * the number of items used
 				//matches cycling spray paints and deep cycling spray paints
 				if(_includeVanillaRecipes && this is ISprayPaint && this is ICyclingPaint) {
-					ModRecipe recipe = new ModRecipe(mod);
+					Recipe recipe = CreateRecipe(colorCount);
 					int[] itemIds = paintItemIds; //store it so it doesn't need to convert multiple times for deep paints
 					for(int p = 0; p < colorCount; p++)
-						recipe.AddIngredient(mod.ItemType(ColorNames.list[Array.IndexOf(PaintItemID.list, itemIds[p])].Replace(" ", "") + "SprayPaint"), 1);
+						recipe.AddIngredient(Mod.Find<ModItem>(ColorNames.list[Array.IndexOf(PaintItemID.list, itemIds[p])].Replace(" ", "") + "SprayPaint").Type, 1);
 					recipe.AddTile(TileID.DyeVat);
-					recipe.SetResult(this, colorCount);
-					recipe.AddRecipe();
+					recipe.Register();
 				}
 
 				//case (6)
@@ -224,32 +219,29 @@ namespace WeaponsOfMassDecoration.Items {
 				if(this is IDeepPaint && this is ICyclingPaint && this is ISprayPaint) {
 					//case (6a)
 					//using 2 of the base cycling paint to create 1 deep cycling spray paint
-					ModRecipe recipeA = new ModRecipe(mod);
+					Recipe recipeA = CreateRecipe(1);
 					Type sprayType = GetType().BaseType;
 					Type t = sprayType.BaseType;
-					recipeA.AddIngredient(mod.ItemType(t.Name), 2);
+					recipeA.AddIngredient(Mod.Find<ModItem>(t.Name).Type, 2);
 					recipeA.AddTile(TileID.DyeVat);
-					recipeA.SetResult(this, 1);
-					recipeA.AddRecipe();
+					recipeA.Register();
 
 					//case (6b)
 					//using 1 of the deep cycling paint to create 1 deep cycling spray paint
-					ModRecipe recipeB = new ModRecipe(mod);
-					recipeB.AddIngredient(mod.ItemType("Deep" + t.Name), 1);
+					Recipe recipeB = CreateRecipe(1);
+					recipeB.AddIngredient(Mod.Find<ModItem>("Deep" + t.Name).Type, 1);
 					recipeB.AddTile(TileID.DyeVat);
-					recipeB.SetResult(this, 1);
-					recipeB.AddRecipe();
+					recipeB.Register();
 
 					//case (6c)
 					//using 2 of the base spray paints to create .5 * the number of items used
 					//using protected _paintItemIds to get only base paints
 					if(_includeVanillaRecipes) {
-						ModRecipe recipeC = new ModRecipe(mod);
+						Recipe recipeC = CreateRecipe(colorCount);
 						for(int p = 0; p < colorCount; p++)
-							recipeC.AddIngredient(mod.ItemType("Deep" + ColorNames.list[Array.IndexOf(PaintItemID.list, _paintItemIds[p])].Replace(" ", "") + "SprayPaint"), 2);
+							recipeC.AddIngredient(Mod.Find<ModItem>("Deep" + ColorNames.list[Array.IndexOf(PaintItemID.list, _paintItemIds[p])].Replace(" ", "") + "SprayPaint").Type, 2);
 						recipeC.AddTile(TileID.DyeVat);
-						recipeC.SetResult(this, colorCount);
-						recipeC.AddRecipe();
+						recipeC.Register();
 					}
 				}
 			}
@@ -267,7 +259,7 @@ namespace WeaponsOfMassDecoration.Items {
 			int index2 = getPaintIndex(data, 1);
 			if(index1 == index2)
 				return getColorFromIndex(index1);
-			float lerpAmount = ((Main.GlobalTime - data.TimeOffset) / data.TimeScale) % 1;
+			float lerpAmount = ((Main.GlobalTimeWrappedHourly - data.TimeOffset) / data.TimeScale) % 1;
 			return Color.Lerp(getColorFromIndex(index1), getColorFromIndex(index2), lerpAmount);
 		}
 		/// <summary>
@@ -292,11 +284,11 @@ namespace WeaponsOfMassDecoration.Items {
 		protected virtual int getPaintIndex(PaintData data, int offset = 0) {
 			int index;
 			if(cycleLoops) {
-				index = ((int)Math.Floor((Main.GlobalTime - data.TimeOffset) / data.TimeScale) + offset) % colorCount;
+				index = ((int)Math.Floor((Main.GlobalTimeWrappedHourly - data.TimeOffset) / data.TimeScale) + offset) % colorCount;
 				if(index < 0)
 					index += colorCount;
 			} else {
-				index = ((int)Math.Floor((Main.GlobalTime - data.TimeOffset) / data.TimeScale) + offset) % (colorCount * 2 - 2);
+				index = ((int)Math.Floor((Main.GlobalTimeWrappedHourly - data.TimeOffset) / data.TimeScale) + offset) % (colorCount * 2 - 2);
 				if(index < 0)
 					index *= -1;
 				if(index >= colorCount)

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using static WeaponsOfMassDecoration.PaintUtils;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
@@ -25,27 +26,27 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-			projectile.width = 8;
-			projectile.height = 8;
-			projectile.aiStyle = 1;
-			projectile.friendly = true;
-			projectile.hostile = false;
-			projectile.penetrate = -1;
-			projectile.timeLeft = 420;
-			projectile.alpha = 0;
-			projectile.ignoreWater = true;
-			projectile.tileCollide = true;
-			projectile.extraUpdates = 1;
-			aiType = ProjectileID.Dynamite;
-			projectile.gfxOffY = 19;
+			Projectile.width = 8;
+			Projectile.height = 8;
+			Projectile.aiStyle = 1;
+			Projectile.friendly = true;
+			Projectile.hostile = false;
+			Projectile.penetrate = -1;
+			Projectile.timeLeft = 420;
+			Projectile.alpha = 0;
+			Projectile.ignoreWater = true;
+			Projectile.tileCollide = true;
+			Projectile.extraUpdates = 1;
+			AIType = ProjectileID.Dynamite;
+			Projectile.gfxOffY = 19;
 			light = .5f;
 		}
 
 		public override bool PreAI() {
 			base.PreAI();
-			if(projectile.velocity.Y == 0 && Math.Abs(projectile.velocity.X) > 0)
-				projectile.velocity.X *= .98f;
-			rotation += projectile.velocity.X * .05f;
+			if(Projectile.velocity.Y == 0 && Math.Abs(Projectile.velocity.X) > 0)
+				Projectile.velocity.X *= .98f;
+			rotation += Projectile.velocity.X * .05f;
 			return true;
 		}
 
@@ -57,42 +58,42 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public override bool OnTileCollide(Vector2 oldVelocity) {
-			if(projectile.ai[1] != 0)
+			if(Projectile.ai[1] != 0)
 				return true;
-			projectile.soundDelay = 20;
-			if(projectile.velocity.X != oldVelocity.X && Math.Abs(oldVelocity.X) > 1f)
-				projectile.velocity.X = oldVelocity.X * -.4f;
-			if(projectile.velocity.Y != oldVelocity.Y && Math.Abs(oldVelocity.Y) > 1f)
-				projectile.velocity.Y = oldVelocity.Y * -.35f;
-			projectile.velocity.X *= .9f;
+			Projectile.soundDelay = 20;
+			if(Projectile.velocity.X != oldVelocity.X && Math.Abs(oldVelocity.X) > 1f)
+				Projectile.velocity.X = oldVelocity.X * -.4f;
+			if(Projectile.velocity.Y != oldVelocity.Y && Math.Abs(oldVelocity.Y) > 1f)
+				Projectile.velocity.Y = oldVelocity.Y * -.35f;
+			Projectile.velocity.X *= .9f;
 			return false;
 		}
 
 		public override void AI() {
-			if(projectile.owner == Main.myPlayer && projectile.timeLeft <= 3) {
-				projectile.tileCollide = false;
-				projectile.alpha = 255;
-				projectile.position.X = projectile.position.X + (projectile.width / 2);
-				projectile.position.Y = projectile.position.Y + (projectile.height / 2);
-				projectile.width = (int)Math.Round(32 * explosionRadius);
-				projectile.height = (int)Math.Round(32 * explosionRadius);
-				projectile.position.X = projectile.position.X - (projectile.width / 2);
-				projectile.position.Y = projectile.position.Y - (projectile.height / 2);
-				projectile.damage = 120;
+			if(Projectile.owner == Main.myPlayer && Projectile.timeLeft <= 3) {
+				Projectile.tileCollide = false;
+				Projectile.alpha = 255;
+				Projectile.position.X = Projectile.position.X + (Projectile.width / 2);
+				Projectile.position.Y = Projectile.position.Y + (Projectile.height / 2);
+				Projectile.width = (int)Math.Round(32 * explosionRadius);
+				Projectile.height = (int)Math.Round(32 * explosionRadius);
+				Projectile.position.X = Projectile.position.X - (Projectile.width / 2);
+				Projectile.position.Y = Projectile.position.Y - (Projectile.height / 2);
+				Projectile.damage = 120;
 			} else {
-				if(Main.rand.Next(2) == 0) {
-					Dust smoke = getDust(Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, DustID.Smoke, 0f, 0f, 100, default, 1f));
+				if(Main.rand.NextBool(2)) {
+					Dust smoke = getDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Smoke, 0f, 0f, 100, default, 1f));
 					if(smoke != null) {
 						smoke.scale = .1f + Main.rand.Next(5) * .1f;
 						smoke.fadeIn = 1.5f + Main.rand.Next(5) * .1f;
 						smoke.noGravity = true;
-						smoke.position = projectile.Center + new Vector2(0f, (-(float)projectile.height / 2 - 12)).RotatedBy(rotation, default) * 1.1f;
+						smoke.position = Projectile.Center + new Vector2(0f, (-(float)Projectile.height / 2 - 12)).RotatedBy(rotation, default) * 1.1f;
 					}
-					Dust fire = getDust(Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, DustID.Fire, 0f, 0f, 100, default, 1f));
+					Dust fire = getDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Torch, 0f, 0f, 100, default, 1f));
 					if(fire != null) {
 						fire.scale = 1f + Main.rand.Next(5) * .1f;
 						fire.noGravity = true;
-						fire.position = projectile.Center + new Vector2(0f, (-(float)projectile.height / 2 - 12)).RotatedBy(rotation, default) * 1.1f;
+						fire.position = Projectile.Center + new Vector2(0f, (-(float)Projectile.height / 2 - 12)).RotatedBy(rotation, default) * 1.1f;
 					}
 				}
 			}
@@ -100,34 +101,34 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public override void Kill(int timeLeft) {
-			Main.PlaySound(SoundID.Item14, projectile.position);
+			SoundEngine.PlaySound(SoundID.Item14, Projectile.position);
 			//smoke dust
 			for(int i = 0; i < 15; i++) {
-				Dust smoke = getDust(Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, DustID.Smoke, 0f, 0f, 100, default, 2f));
+				Dust smoke = getDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Smoke, 0f, 0f, 100, default, 2f));
 				if(smoke != null)
 					smoke.velocity *= 1.4f;
 			}
 			//fire dust
 			for(int i = 0; i < 30; i++) {
-				Dust dust = getDust(Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, 3, 0f, 0f, 100, default, 1f));
+				Dust dust = getDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Grass, 0f, 0f, 100, default, 1f));
 				if(dust != null) {
 					dust.noGravity = true;
 					dust.velocity *= 2f;
 				}
-				Dust fire = getDust(Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, DustID.Fire, 0f, 0f, 100, default, 2f));
+				Dust fire = getDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Torch, 0f, 0f, 100, default, 2f));
 				if(fire != null)
 					fire.velocity *= 2f;
 			}
 			//reset size
-			projectile.position.X = projectile.position.X + (projectile.width / 2);
-			projectile.position.Y = projectile.position.Y + (projectile.height / 2);
-			projectile.width = 18;
-			projectile.height = 18;
-			projectile.position.X = projectile.position.X - (projectile.width / 2);
-			projectile.position.Y = projectile.position.Y - (projectile.height / 2);
+			Projectile.position.X = Projectile.position.X + (Projectile.width / 2);
+			Projectile.position.Y = Projectile.position.Y + (Projectile.height / 2);
+			Projectile.width = 18;
+			Projectile.height = 18;
+			Projectile.position.X = Projectile.position.X - (Projectile.width / 2);
+			Projectile.position.Y = Projectile.position.Y - (Projectile.height / 2);
 
 			if(canPaint())
-				explode(projectile.Center, explosionRadius * 16, getPaintData());
+				explode(Projectile.Center, explosionRadius * 16, getPaintData());
 		}
 	}
 }

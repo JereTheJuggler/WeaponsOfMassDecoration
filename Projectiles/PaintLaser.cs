@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.ModLoader;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.PaintUtils;
 using static WeaponsOfMassDecoration.ShaderUtils;
@@ -22,18 +23,18 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-			projectile.width = 6;
-			projectile.height = 6;
-			projectile.aiStyle = 0;
-			projectile.friendly = true;
-			projectile.timeLeft = 3;
-			projectile.alpha = 255;
-			projectile.magic = true;
+			Projectile.width = 6;
+			Projectile.height = 6;
+			Projectile.aiStyle = 0;
+			Projectile.friendly = true;
+			Projectile.timeLeft = 3;
+			Projectile.alpha = 255;
+			Projectile.DamageType = DamageClass.Magic;
 			light = .5f;
-			projectile.penetrate = -1;
-			projectile.extraUpdates = 2;
-			projectile.tileCollide = false;
-			projectile.ignoreWater = true;
+			Projectile.penetrate = -1;
+			Projectile.extraUpdates = 2;
+			Projectile.tileCollide = false;
+			Projectile.ignoreWater = true;
 		}
 
 		public override bool PreAI() {
@@ -41,19 +42,19 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public override void AI() {
-			if(projectile.owner == Main.myPlayer) {
-				if(projectile.timeLeft <= 2) {
+			if(Projectile.owner == Main.myPlayer) {
+				if(Projectile.timeLeft <= 2) {
 					PaintData data = getPaintData();
 					Vector2 playerPos = Main.player[Main.myPlayer].position;
-					Vector2 myPos = projectile.Center;
-					if(projectile.ai[1] > 0 && canPaint())
-						explode(projectile.Center, 16, data);
-					Vector2 displacement = new Vector2(projectile.ai[0], projectile.ai[1]) - projectile.Center;
+					Vector2 myPos = Projectile.Center;
+					if(Projectile.ai[1] > 0 && canPaint())
+						explode(Projectile.Center, 16, data);
+					Vector2 displacement = new Vector2(Projectile.ai[0], Projectile.ai[1]) - Projectile.Center;
 
 					createLight();
 
 					for(int p = 0; p < 12; p++) {
-						Dust dust = getDust(Dust.NewDust(projectile.TopLeft + displacement * (p / 10f) + new Vector2(-3, -3), 7, 7, DustType<Dusts.PaintDust>(), 0, 0, 200, getColor(data), 1f));
+						Dust dust = getDust(Dust.NewDust(Projectile.TopLeft + displacement * (p / 10f) + new Vector2(-3, -3), 7, 7, DustType<Dusts.PaintDust>(), 0, 0, 200, getColor(data), 1f));
 						if(dust != null) {
 							dust.velocity = new Vector2(.05f, 0f).RotatedByRandom(Math.PI * 2);
 							if(dust.customData != null)
@@ -62,7 +63,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 						}
 					}
 					if(canPaint())
-						paint(projectile.Center, data);
+						paint(Projectile.Center, data);
 				}
 			}
 		}
@@ -70,7 +71,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		public override bool OnTileCollide(Vector2 oldVelocity) {
 			PaintData data = getPaintData().clone();
 			data.wallsAllowed = false;
-			explode(projectile.Center, 16, data);
+			explode(Projectile.Center, 16, data);
 			return base.OnTileCollide(oldVelocity);
 		}
 	}

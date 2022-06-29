@@ -13,30 +13,29 @@ namespace WeaponsOfMassDecoration.Items {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-			item.CloneDefaults(ItemID.DiamondStaff);
-			item.shoot = ProjectileType<Projectiles.SplatterStaff>();
-			item.rare = ItemRarityID.Green;
-			item.damage = 10;
-			item.width = 48;
-			item.height = 48;
-			item.useTime = 10;
-			item.useAnimation = 10;
-			item.reuseDelay = 10;
-			item.useAmmo = -1;
-			item.useStyle = ItemUseStyleID.HoldingOut;
-			item.noMelee = true;
-			item.value = Item.sellPrice(0, 0, 30, 0);
-			item.UseSound = SoundID.Item21;
-			item.shootSpeed = 9f;
+			Item.CloneDefaults(ItemID.DiamondStaff);
+			Item.shoot = ProjectileType<Projectiles.SplatterStaff>();
+			Item.rare = ItemRarityID.Green;
+			Item.damage = 10;
+			Item.width = 48;
+			Item.height = 48;
+			Item.useTime = 10;
+			Item.useAnimation = 10;
+			Item.reuseDelay = 10;
+			Item.useAmmo = -1;
+			Item.useStyle = ItemUseStyleID.Shoot;
+			Item.noMelee = true;
+			Item.value = Item.sellPrice(0, 0, 30, 0);
+			Item.UseSound = SoundID.Item21;
+			Item.shootSpeed = 9f;
 		}
 
 		public override void AddRecipes() {
-			ModRecipe recipe = new ModRecipe(mod);
+			Recipe recipe = CreateRecipe();
 			recipe.AddIngredient(ItemType<PaintStaff>(), 1);
 			recipe.AddIngredient(ItemType<PaintBomb>(), 1);
 			recipe.AddTile(TileID.Anvils);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			recipe.Register();
 		}
 	}
 }

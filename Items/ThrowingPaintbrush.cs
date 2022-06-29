@@ -1,4 +1,5 @@
 ﻿using Terraria.ID;
+using Terraria.ModLoader;
 using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
@@ -14,11 +15,11 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override void SetDefaults() {
-			item.CloneDefaults(ItemID.ThrowingKnife);
-			item.rare = ItemRarityID.Green;
+			Item.CloneDefaults(ItemID.ThrowingKnife);
+			Item.rare = ItemRarityID.Green;
 
-			item.thrown = true;
-			item.shoot = ProjectileType<Projectiles.ThrowingPaintbrush>();
+			Item.DamageType = DamageClass.Ranged;
+			Item.shoot = ProjectileType<Projectiles.ThrowingPaintbrush>();
 		}
 	}
 }

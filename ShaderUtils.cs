@@ -65,7 +65,7 @@ namespace WeaponsOfMassDecoration {
 				return null;
 			if(!gProjectile.painted)
 				return null;
-			if(data.PaintColor == PaintID.Negative || data.CustomPaint is NegativeSprayPaint)
+			if(data.PaintColor == PaintID.NegativePaint || data.CustomPaint is NegativeSprayPaint)
 				return getNegativeShader();
 			Color color = getColor(data);
 			return getPaintedShader(color);
@@ -84,7 +84,7 @@ namespace WeaponsOfMassDecoration {
 				return null;
 			if(data.PaintColor == -1 && data.CustomPaint == null)
 				return null;
-			if(data.PaintColor == PaintID.Negative || data.CustomPaint is NegativeSprayPaint)
+			if(data.PaintColor == PaintID.NegativePaint || data.CustomPaint is NegativeSprayPaint)
 				return getNegativeShader();
 			Color color = getColor(data);
 			if(data.CustomPaint != null && data.sprayPaint) {
@@ -111,7 +111,7 @@ namespace WeaponsOfMassDecoration {
 			data.paintMethod = item.overridePaintMethod(modPlayer);
 			if(data.paintMethod == PaintMethods.RemovePaint)
 				return null;
-			if(data.PaintColor == PaintID.Negative || data.CustomPaint is NegativeSprayPaint)
+			if(data.PaintColor == PaintID.NegativePaint || data.CustomPaint is NegativeSprayPaint)
 				return getNegativeShader();
 			return getGSShader(data.RenderColor);
 		}
@@ -125,7 +125,7 @@ namespace WeaponsOfMassDecoration {
 				return null;
 			if((data.PaintColor == -1 && data.CustomPaint == null) || data.paintMethod == PaintMethods.RemovePaint)
 				return null;
-			if(data.PaintColor == PaintID.Negative || data.CustomPaint is NegativeSprayPaint)
+			if(data.PaintColor == PaintID.NegativePaint || data.CustomPaint is NegativeSprayPaint)
 				return getNegativeShader();
 			if(projectile.usesGSShader)
 				return getGSShader(data.RenderColor);
@@ -138,7 +138,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="player"></param>
 		/// <returns></returns>
 		public static MiscShaderData getShader(WoMDItem item, PaintData data) {
-			if(data.PaintColor == PaintID.Negative || data.CustomPaint is NegativeSprayPaint)
+			if(data.PaintColor == PaintID.NegativePaint || data.CustomPaint is NegativeSprayPaint)
 				return getNegativeShader();
 			return getGSShader(data.RenderColor);
 		}
@@ -166,7 +166,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="drawData"></param>
 		/// <returns></returns>
 		private static MiscShaderData getSprayPaintedShader(Color color) {
-			MiscShaderData data = GameShaders.Misc["SprayPainted"].UseColor(color).UseImage("Images/Misc/noise").UseOpacity(1f);
+			MiscShaderData data = GameShaders.Misc["SprayPainted"].UseColor(color).UseImage0("Images/Misc/noise").UseOpacity(1f);
 			return data;
 		}
 		/// <summary>

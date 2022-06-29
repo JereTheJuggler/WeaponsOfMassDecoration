@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
+using Terraria.ModLoader;
 using static WeaponsOfMassDecoration.PaintUtils;
 
 namespace WeaponsOfMassDecoration.Projectiles {
@@ -32,37 +34,37 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-			projectile.width = 20;
-			projectile.height = 20;
-			projectile.gfxOffY = 12;
-			projectile.aiStyle = 0;
-			projectile.friendly = true;
-			projectile.hostile = false;
-			projectile.penetrate = 2;
-			projectile.timeLeft = 1000;
-			projectile.ignoreWater = true;
-			projectile.tileCollide = true;
-			aiType = ProjectileID.MagicDagger;
-			projectile.damage = 20;
-			projectile.Opacity = .75f;
+			Projectile.width = 20;
+			Projectile.height = 20;
+			Projectile.gfxOffY = 12;
+			Projectile.aiStyle = 0;
+			Projectile.friendly = true;
+			Projectile.hostile = false;
+			Projectile.penetrate = 2;
+			Projectile.timeLeft = 1000;
+			Projectile.ignoreWater = true;
+			Projectile.tileCollide = true;
+			AIType = ProjectileID.MagicDagger;
+			Projectile.damage = 20;
+			Projectile.Opacity = .75f;
 			light = .5f;
-			projectile.melee = true;
+			Projectile.DamageType = DamageClass.Melee;
 		}
 
 		public override bool PreAI() {
 			if(canPaint()) {
 				PaintData data = getPaintData();
 				int armLength = 48;
-				Vector2 arm1 = new Vector2((float)Math.Cos(projectile.rotation + (Math.PI / 6f) + (Math.PI / 2f)), (float)Math.Sin(projectile.rotation + (Math.PI / 6f) + (Math.PI / 2f)));
-				Vector2 arm2 = new Vector2((float)Math.Cos(projectile.rotation - (Math.PI / 6f) + (Math.PI / 2f)), (float)Math.Sin(projectile.rotation - (Math.PI / 6f) + (Math.PI / 2f)));
+				Vector2 arm1 = new Vector2((float)Math.Cos(Projectile.rotation + (Math.PI / 6f) + (Math.PI / 2f)), (float)Math.Sin(Projectile.rotation + (Math.PI / 6f) + (Math.PI / 2f)));
+				Vector2 arm2 = new Vector2((float)Math.Cos(Projectile.rotation - (Math.PI / 6f) + (Math.PI / 2f)), (float)Math.Sin(Projectile.rotation - (Math.PI / 6f) + (Math.PI / 2f)));
 				for(int offset = 8; offset <= armLength; offset += 8) {
 					Point tile1 = new Point(
-						(int)Math.Round((projectile.Center.X + (arm1.X * offset)) / 16f),
-						(int)Math.Round((projectile.Center.Y + (arm1.Y * offset)) / 16f)
+						(int)Math.Round((Projectile.Center.X + (arm1.X * offset)) / 16f),
+						(int)Math.Round((Projectile.Center.Y + (arm1.Y * offset)) / 16f)
 					);
 					Point tile2 = new Point(
-						(int)Math.Round((projectile.Center.X + (arm2.X * offset)) / 16f),
-						(int)Math.Round((projectile.Center.Y + (arm2.Y * offset)) / 16f)
+						(int)Math.Round((Projectile.Center.X + (arm2.X * offset)) / 16f),
+						(int)Math.Round((Projectile.Center.Y + (arm2.Y * offset)) / 16f)
 					);
 					paint(tile1.X, tile1.Y, data);
 					paint(tile2.X, tile2.Y, data);
@@ -73,19 +75,19 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public override void AI() {
-			projectile.velocity.Y += .4f;
-			projectile.rotation = projectile.velocity.ToRotation() + (float)(Math.PI / 2f);
+			Projectile.velocity.Y += .4f;
+			Projectile.rotation = Projectile.velocity.ToRotation() + (float)(Math.PI / 2f);
 		}
 
 		public override bool OnTileCollide(Vector2 oldVelocity) {
 			if(canPaint()) {
 				PaintData data = getPaintData();
-				paint(projectile.Center, data);
+				paint(Projectile.Center, data);
 				oldVelocity.Normalize();
-				explode(projectile.Center, 32f, data);
+				explode(Projectile.Center, 32f, data);
 			}
-			Main.PlaySound(SoundID.Item21, projectile.Center);
-			projectile.Kill();
+			SoundEngine.PlaySound(SoundID.Item21, Projectile.Center);
+			Projectile.Kill();
 			return false;
 		}
 	}

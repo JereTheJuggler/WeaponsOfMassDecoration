@@ -15,14 +15,14 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override void SetDefaults() {
-			item.shoot = ProjectileType<Projectiles.PaintSolution>() - ProjectileID.PureSpray;
-			item.ammo = AmmoID.Solution;
-			item.width = 10;
-			item.height = 12;
-			item.value = Item.buyPrice(0, 0, 25, 0);
-			item.rare = ItemRarityID.Orange;
-			item.maxStack = 999;
-			item.consumable = true;
+			Item.shoot = ProjectileType<Projectiles.PaintSolution>() - ProjectileID.PureSpray;
+			Item.ammo = AmmoID.Solution;
+			Item.width = 10;
+			Item.height = 12;
+			Item.value = Item.buyPrice(0, 0, 25, 0);
+			Item.rare = ItemRarityID.Orange;
+			Item.maxStack = 999;
+			Item.consumable = true;
 		}
 	}
 }

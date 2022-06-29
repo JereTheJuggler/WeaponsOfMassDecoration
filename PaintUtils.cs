@@ -267,18 +267,18 @@ namespace WeaponsOfMassDecoration {
 
 			bool updated = false;
 
-			if(data.paintMethod != PaintMethods.Walls && data.blocksAllowed && t.active() && t.color() != color && (color != 0 || data.paintMethod == PaintMethods.RemovePaint)) {
+			if(data.paintMethod != PaintMethods.Walls && data.blocksAllowed && t.HasTile && t.TileColor != color && (color != 0 || data.paintMethod == PaintMethods.RemovePaint)) {
 				if(useWorldGen)
 					WorldGen.paintTile(x, y, color, false);
 				else
-					t.color(color);
+					t.TileColor = color;
 				updated = true;
 			}
-			if(data.paintMethod != PaintMethods.Blocks && data.wallsAllowed && t.wall > 0 && t.wallColor() != color && (color != 0 || data.paintMethod == PaintMethods.RemovePaint)) {
+			if(data.paintMethod != PaintMethods.Blocks && data.wallsAllowed && t.WallType > 0 && t.WallColor != color && (color != 0 || data.paintMethod == PaintMethods.RemovePaint)) {
 				if(useWorldGen)
 					WorldGen.paintWall(x, y, color, false);
 				else
-					t.wallColor(color);
+					t.WallColor = color;
 				updated = true;
 			}
 			if(updated) {

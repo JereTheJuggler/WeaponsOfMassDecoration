@@ -16,38 +16,36 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override bool CanUseItem(Player player) {
-			return player.ownedProjectileCounts[item.shoot] < item.stack;
+			return player.ownedProjectileCounts[Item.shoot] < Item.stack;
 		}
 
 		public override void SetDefaults() {
-			item.CloneDefaults(ItemID.Flamarang);
-			item.shootSpeed = 12f;
-			item.damage = 10;
-			item.maxStack = 3;
+			Item.CloneDefaults(ItemID.Flamarang);
+			Item.shootSpeed = 12f;
+			Item.damage = 10;
+			Item.maxStack = 3;
 
-			item.UseSound = SoundID.Item1;
-			item.value = Item.sellPrice(silver: 5);
-			item.shoot = ProjectileType<Projectiles.PaintBoomerang>();
+			Item.UseSound = SoundID.Item1;
+			Item.value = Item.sellPrice(silver: 5);
+			Item.shoot = ProjectileType<Projectiles.PaintBoomerang>();
 		}
 
 		public override void AddRecipes() {
-			ModRecipe recipe = new ModRecipe(mod);
+			Recipe recipe = CreateRecipe();
 			recipe.AddIngredient(ItemID.EnchantedBoomerang);
 			recipe.AddIngredient(ItemID.Paintbrush);
 			recipe.AddIngredient(ItemID.PaintRoller);
 			recipe.AddIngredient(ItemID.PaintScraper);
 			recipe.AddTile(TileID.DyeVat);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			recipe.Register();
 
-			ModRecipe recipe2 = new ModRecipe(mod);
+			Recipe recipe2 = CreateRecipe();
 			recipe2.AddIngredient(ItemID.IceBoomerang);
 			recipe2.AddIngredient(ItemID.Paintbrush);
 			recipe2.AddIngredient(ItemID.PaintRoller);
 			recipe2.AddIngredient(ItemID.PaintScraper);
 			recipe2.AddTile(TileID.DyeVat);
-			recipe2.SetResult(this);
-			recipe2.AddRecipe();
+			recipe2.Register();
 		}
 	}
 }

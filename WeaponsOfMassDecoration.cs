@@ -10,8 +10,8 @@ using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
+using ReLogic.Content;
 using WeaponsOfMassDecoration.Buffs;
-
 using WeaponsOfMassDecoration.Items;
 using WeaponsOfMassDecoration.NPCs;
 using WeaponsOfMassDecoration.Projectiles;
@@ -53,11 +53,10 @@ namespace WeaponsOfMassDecoration {
 		protected static Dictionary<string, Texture2D> extraTextures;
 
 		public WeaponsOfMassDecoration() {
-			Properties = new ModProperties() {
-				Autoload = true,
-				AutoloadGores = true,
-				AutoloadSounds = true
-			};
+			ContentAutoloadingEnabled = true;
+			GoreAutoloadingEnabled = true;
+			MusicAutoloadingEnabled = true;
+			BackgroundAutoloadingEnabled = true;
 		}
 
 		public override void HandlePacket(BinaryReader reader, int whoAmI) {
@@ -97,17 +96,17 @@ namespace WeaponsOfMassDecoration {
 		public override void Load() {
 			if(Main.netMode != NetmodeID.Server) {
 				#region load shaders
-				Ref<Effect> paintedRef = new Ref<Effect>(GetEffect("Effects/Painted"));
+				Ref<Effect> paintedRef = new Ref<Effect>(ModContent.Request<Effect>("WeaponsOfMassDecoration/Effects/Painted", AssetRequestMode.ImmediateLoad).Value);
 				GameShaders.Misc["Painted"] = new MiscShaderData(paintedRef, "paintedColor").UseColor(1f, 0, 0).UseOpacity(1f);
 
-				Ref<Effect> gsPaintedRef = new Ref<Effect>(GetEffect("Effects/GreenScreenPainted"));
+				Ref<Effect> gsPaintedRef = new Ref<Effect>(ModContent.Request<Effect>("WeaponsOfMassDecoration/Effects/GreenScreenPainted", AssetRequestMode.ImmediateLoad).Value);
 				GameShaders.Misc["GSPainted"] = new MiscShaderData(gsPaintedRef, "gsPaintedColor").UseColor(1f, 0, 0).UseOpacity(1f);
 
-				Ref<Effect> paintedNegativeRef = new Ref<Effect>(GetEffect("Effects/PaintedNegative"));
+				Ref<Effect> paintedNegativeRef = new Ref<Effect>(ModContent.Request<Effect>("WeaponsOfMassDecoration/Effects/PaintedNegative", AssetRequestMode.ImmediateLoad).Value);
 				GameShaders.Misc["PaintedNegative"] = new MiscShaderData(paintedNegativeRef, "paintedNegativeColor");
 
-				Ref<Effect> sprayPaintedRef = new Ref<Effect>(GetEffect("Effects/SprayPainted"));
-				GameShaders.Misc["SprayPainted"] = new MiscShaderData(sprayPaintedRef, "sprayPaintedColor").UseImage("Images/Misc/noise");
+				Ref<Effect> sprayPaintedRef = new Ref<Effect>(ModContent.Request<Effect>("WeaponsOfMassDecoration/Effects/SprayPainted", AssetRequestMode.ImmediateLoad).Value);
+				GameShaders.Misc["SprayPainted"] = new MiscShaderData(sprayPaintedRef, "sprayPaintedColor").UseImage0("Images/Misc/noise");
 				#endregion
 
 				#region load extra textures
@@ -143,6 +142,11 @@ namespace WeaponsOfMassDecoration {
 
 				IL.Terraria.Player.PlaceThing += HookPlaceThing;
 			}
+		}
+		public override void Unload() {
+			extraTextures = null;
+			IL.Terraria.Player.PlaceThing -= HookPlaceThing;
+			base.Unload();
 		}
 
 		//The following 3 things are used for an IL edit that disables the vanilla painting handled in Player.PlaceThing
@@ -198,16 +202,12 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="name">The key to use for this texture's dictionary entry</param>
 		private void loadExtraTexture(string filename, string name) {
 			try {
-				Texture2D texture = GetTexture(filename);
+				Texture2D texture = ModContent.Request<Texture2D>("WeaponsOfMassDecoration/"+filename).Value;
 				extraTextures.Add(name, texture);
 			} catch {
 			}
 		}
 
-		public override void Unload() {
-			extraTextures = null;
-			base.Unload();
-		}
 
 		public override void AddRecipeGroups() {
 			RecipeGroup hmBarGroup1 = new RecipeGroup(() => Language.GetTextValue("LegacyMisc.37") + " Cobalt Bar", new int[]{
@@ -375,7 +375,11 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="item"></param>
 		/// <returns></returns>
 		public static bool isPaint(Item item) {
-			if(item.modItem is CustomPaint)
+			if(item == null)
+				return false;
+			if(!item.active)
+				return false;
+			if(item.ModItem is CustomPaint)
 				return true;
 			if(item.paint > 0)
 				return true;
@@ -387,7 +391,11 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="item"></param>
 		/// <returns></returns>
 		public static bool isPaintingTool(Item item) {
-			if(item.modItem is PaintingMultiTool)
+			if(item == null)
+				return false;
+			if(!item.active)
+				return false;
+			if(item.ModItem is PaintingMultiTool)
 				return true;
 			switch(item.type) {
 				case ItemID.Paintbrush:
@@ -398,6 +406,20 @@ namespace WeaponsOfMassDecoration {
 				case ItemID.SpectrePaintScraper:
 					return true;
 			}
+			return false;
+		}
+		/// <summary>
+		/// Checks if the provided item is a PaintingItem
+		/// </summary>
+		/// <param name="item"></param>
+		/// <returns></returns>
+		public static bool isPaintingItem(Item item) {
+			if(item == null)
+				return false;
+			if(!item.active)
+				return false;
+			if(item.ModItem is PaintingItem)
+				return true;
 			return false;
 		}
 		/// <summary>
@@ -414,6 +436,7 @@ namespace WeaponsOfMassDecoration {
 			}
 			return "None";
 		}
+		
 
 		/// <summary>
 		/// Gets the name for a type of paint, provided a paintColor and customPaint

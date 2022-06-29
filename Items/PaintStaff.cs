@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 using static Terraria.ModLoader.ModContent;
@@ -15,51 +16,49 @@ namespace WeaponsOfMassDecoration.Items {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-			item.CloneDefaults(ItemID.DiamondStaff);
-			item.shoot = ProjectileType<Projectiles.PaintStaff>();
-			item.rare = ItemRarityID.Green;
-			item.damage = 20;
-			item.width = 42;
-			item.height = 30;
-			item.useAmmo = -1;
-			item.useStyle = ItemUseStyleID.HoldingOut;
-			item.noMelee = true;
-			item.value = Item.sellPrice(0, 0, 30, 0);
-			item.UseSound = SoundID.Item21;
-			item.shootSpeed = 12f;
+			Item.CloneDefaults(ItemID.DiamondStaff);
+			Item.shoot = ProjectileType<Projectiles.PaintStaff>();
+			Item.rare = ItemRarityID.Green;
+			Item.damage = 20;
+			Item.width = 42;
+			Item.height = 30;
+			Item.useAmmo = -1;
+			Item.useStyle = ItemUseStyleID.Shoot;
+			Item.noMelee = true;
+			Item.value = Item.sellPrice(0, 0, 30, 0);
+			Item.UseSound = SoundID.Item21;
+			Item.shootSpeed = 12f;
 		}
 
 		public override void AddRecipes() {
-			ModRecipe recipe = new ModRecipe(mod);
+			Recipe recipe = CreateRecipe();
 			recipe.AddIngredient(ItemID.AmethystStaff);
 			recipe.AddIngredient(ItemID.Paintbrush);
 			recipe.AddIngredient(ItemID.PaintRoller);
 			recipe.AddIngredient(ItemID.PaintScraper);
 			recipe.AddTile(TileID.DyeVat);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			recipe.Register();
 
-			ModRecipe recipe2 = new ModRecipe(mod);
+			Recipe recipe2 = CreateRecipe();
 			recipe2.AddIngredient(ItemID.TopazStaff);
 			recipe2.AddIngredient(ItemID.Paintbrush);
 			recipe2.AddIngredient(ItemID.PaintRoller);
 			recipe2.AddIngredient(ItemID.PaintScraper);
 			recipe2.AddTile(TileID.DyeVat);
-			recipe2.SetResult(this);
-			recipe2.AddRecipe();
+			recipe2.Register();
 		}
 
 		public override bool PreDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI) {
 			return base.PreDrawInWorld(spriteBatch, lightColor, alphaColor, ref rotation, ref scale, whoAmI);
 		}
 
-		public override bool UseItem(Player player) {
+		public override bool? UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */ {
 			return base.UseItem(player);
 		}
 
-		public override bool Shoot(Player player, ref Vector2 position, ref float speedX, ref float speedY, ref int type, ref int damage, ref float knockBack) {
+		public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback) {
 			SetDefaults();
-			return base.Shoot(player, ref position, ref speedX, ref speedY, ref type, ref damage, ref knockBack);
+			return base.Shoot(player, null, position, velocity, type, damage, knockback);
 			//return true;
 		}
 

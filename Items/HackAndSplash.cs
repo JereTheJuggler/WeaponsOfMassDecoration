@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 using static Terraria.ModLoader.ModContent;
@@ -13,43 +14,40 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override void SetDefaults() {
-			item.damage = 20;
-			item.melee = true;
-			item.width = 40;
-			item.height = 48;
-			item.useTime = 20;
-			item.useAnimation = 20;
-			item.useStyle = ItemUseStyleID.SwingThrow;
-			item.knockBack = 5;
-			item.value = 10000;
-			item.rare = ItemRarityID.Green;
-			item.UseSound = SoundID.Item1;
-			item.autoReuse = true;
-			item.shootSpeed = 15f;
-			item.shoot = ProjectileType<Projectiles.HackAndSplashBlob>();
+			Item.damage = 20;
+			Item.DamageType = DamageClass.Melee;
+			Item.width = 40;
+			Item.height = 48;
+			Item.useTime = 20;
+			Item.useAnimation = 20;
+			Item.useStyle = ItemUseStyleID.Swing;
+			Item.knockBack = 5;
+			Item.value = 10000;
+			Item.rare = ItemRarityID.Green;
+			Item.UseSound = SoundID.Item1;
+			Item.autoReuse = true;
+			Item.shootSpeed = 15f;
+			Item.shoot = ProjectileType<Projectiles.HackAndSplashBlob>();
 		}
 
 		public override void AddRecipes() {
-			ModRecipe recipe = new ModRecipe(mod);
+			Recipe recipe = CreateRecipe(1);
 			recipe.AddRecipeGroup("WoMD:goldSword", 1);
 			recipe.AddRecipeGroup("WoMD:basePaints", 10);
 			recipe.AddTile(TileID.DyeVat);
-			recipe.SetResult(this, 1);
-			recipe.AddRecipe();
+			recipe.Register();
 
-			ModRecipe recipe2 = new ModRecipe(mod);
+			Recipe recipe2 = CreateRecipe(1);
 			recipe.AddRecipeGroup("WoMD:goldSword", 1);
 			recipe2.AddRecipeGroup("WoMD:deepPaints", 5);
 			recipe2.AddTile(TileID.DyeVat);
-			recipe2.SetResult(this, 1);
-			recipe2.AddRecipe();
+			recipe2.Register();
 		}
 
-		public override bool UseItem(Player player) {
-			float xVel = 20f;
-			float yVel = 20f;
+		public override bool? UseItem(Player player){
+			Vector2 vel = new Vector2(20f, 20f);
 			int type = ProjectileType<Projectiles.HackAndSplashBlob>();
-			Shoot(player, ref player.position, ref xVel, ref yVel, ref type, ref item.damage, ref item.knockBack);
+			Shoot(player, null, player.position, vel, type, Item.damage, Item.knockBack);
 			return base.UseItem(player);
 		}
 
@@ -57,19 +55,19 @@ namespace WeaponsOfMassDecoration.Items {
 			base.MeleeEffects(player, hitbox);
 		}
 
-		public override bool Shoot(Player player, ref Vector2 position, ref float speedX, ref float speedY, ref int type, ref int damage, ref float knockBack) {
+		public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback) {
 			position.Y -= 32;
 
-			item.shootSpeed = 15;
+			Item.shootSpeed = 15;
 
 			Vector2 speed = Main.MouseWorld - position;
 			speed.Normalize();
-			speed *= item.shootSpeed;
+			speed *= Item.shootSpeed;
 
-			speedX = speed.X;
-			speedY = speed.Y;
+			float speedX = speed.X;
+			float speedY = speed.Y;
 
-			return base.Shoot(player, ref position, ref speedX, ref speedY, ref type, ref damage, ref knockBack);
+			return base.Shoot(player, source, position, new Vector2(speedX, speedY), type, damage, knockback);
 		}
 
 	}

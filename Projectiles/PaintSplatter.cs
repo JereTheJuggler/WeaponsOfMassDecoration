@@ -24,41 +24,41 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-			projectile.width = 10;
-			projectile.height = 10;
-			projectile.gfxOffY = 5;
-			projectile.aiStyle = 25;
-			projectile.friendly = true;
-			projectile.hostile = false;
-			projectile.penetrate = 1;
-			projectile.timeLeft = startingTimeLeft;
-			projectile.ignoreWater = true;
-			projectile.tileCollide = true;
-			aiType = ProjectileID.MagicDagger;
-			projectile.damage = 1;
+			Projectile.width = 10;
+			Projectile.height = 10;
+			Projectile.gfxOffY = 5;
+			Projectile.aiStyle = 25;
+			Projectile.friendly = true;
+			Projectile.hostile = false;
+			Projectile.penetrate = 1;
+			Projectile.timeLeft = startingTimeLeft;
+			Projectile.ignoreWater = true;
+			Projectile.tileCollide = true;
+			AIType = ProjectileID.MagicDagger;
+			Projectile.damage = 1;
 		}
 
 		public override bool PreAI() {
 			base.PreAI();
 			if(canPaint()) {
 				PaintData data = getPaintData();
-				Point coords = projectile.Center.ToTileCoordinates();
+				Point coords = Projectile.Center.ToTileCoordinates();
 				paint(coords.X, coords.Y, data);
 			}
 			return true;
 		}
 
 		public override void PostAI() {
-			rotation = projectile.velocity.ToRotation() + (float)Math.PI / 2f;
+			rotation = Projectile.velocity.ToRotation() + (float)Math.PI / 2f;
 			base.PostAI();
 		}
 
 		public override bool OnTileCollide(Vector2 oldVelocity) {
 			if(canPaint()) {
 				PaintData data = getPaintData();
-				paint(projectile.Center, data);
+				paint(Projectile.Center, data);
 				oldVelocity.Normalize();
-				Vector2 center = projectile.Center.ToWorldCoordinates(0, 0);
+				Vector2 center = Projectile.Center.ToWorldCoordinates(0, 0);
 				center = new Vector2(center.X / 16, center.Y / 16);
 				for(int i = 0; i < 64; i++) {
 					Point coords = new Point((int)Math.Floor((center.X + (oldVelocity.X * i)) / 16), (int)Math.Floor((center.Y + (oldVelocity.Y * i)) / 16));
@@ -68,7 +68,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 					}
 				}
 			}
-			projectile.Kill();
+			Projectile.Kill();
 			return false;
 		}
 	}

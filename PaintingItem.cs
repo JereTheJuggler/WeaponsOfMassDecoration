@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -60,17 +61,17 @@ namespace WeaponsOfMassDecoration {
 
 		//This is what fills in the "Current Tool" and "Current Paint" lines of the tooltip
 		public override void ModifyTooltips(List<TooltipLine> tooltips) {
-			Player p = getPlayer(item.owner);
+			Player p = getPlayer(Item.playerIndexTheItemIsReservedFor);
 			if(p == null)
 				return;
 			WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
 			if(player == null)
 				return;
 			for(int i = 0; i < tooltips.Count; i++) {
-				if(tooltips[i].text.StartsWith("Current Tool: ")) {
-					tooltips[i].text = "Current Tool: " + getPaintToolName(player.paintData.paintMethod);
-				} else if(tooltips[i].text.StartsWith("Current Paint: ")) {
-					tooltips[i].text = "Current Paint: " + getPaintColorName(player.paintData);
+				if(tooltips[i].Text.StartsWith("Current Tool: ")) {
+					tooltips[i].Text = "Current Tool: " + getPaintToolName(player.paintData.paintMethod);
+				} else if(tooltips[i].Text.StartsWith("Current Paint: ")) {
+					tooltips[i].Text = "Current Paint: " + getPaintColorName(player.paintData);
 				}
 			}
 			base.ModifyTooltips(tooltips);
@@ -85,23 +86,23 @@ namespace WeaponsOfMassDecoration {
 			if(player == null)
 				return true;
 			MiscShaderData shader = getShader(this, p);
-			if((usesGSShader || ((player.paintData.PaintColor == PaintID.Negative || player.paintData.CustomPaint is NegativeSprayPaint) && !(this is CustomPaint)))) {
+			if((usesGSShader || ((player.paintData.PaintColor == PaintID.NegativePaint || player.paintData.CustomPaint is NegativeSprayPaint) && !(this is CustomPaint)))) {
 				if(shader != null) {
-					spriteBatch.End();
-					spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, (player.paintData.PaintColor == PaintID.Negative || player.paintData.CustomPaint is NegativeSprayPaint) ? SamplerState.LinearClamp : SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
+					//spriteBatch.End();
+					//spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, (player.paintData.PaintColor == PaintID.NegativePaint || player.paintData.CustomPaint is NegativeSprayPaint) ? SamplerState.LinearClamp : SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
 
-					shader.Apply();
+					//shader.Apply();
 				}
 
 				Texture2D texture = getTexture(player);
 				if(texture == null)
-					texture = Main.itemTexture[item.type];
+					texture = TextureAssets.Item[Item.type].Value;
 
 				spriteBatch.Draw(texture, position, frame, drawColor, 0, new Vector2(0, 0), scale, SpriteEffects.None, 0);
 
 				if(shader != null) {
-					spriteBatch.End();
-					spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix);
+					//spriteBatch.End();
+					//spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix);
 				}
 				return false;
 			}
@@ -126,21 +127,21 @@ namespace WeaponsOfMassDecoration {
 		}
 
 		//This is where damage is cut in half if the player's current tool is a paint scraper or the player doesn't have any paint or tools in their inventory
-		public override void ModifyWeaponDamage(Player player, ref float add, ref float mult, ref float flat) {
+		public override void ModifyWeaponDamage(Player player, ref StatModifier damage) {
 			WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
 			if(p == null)
 				return;
 			if(!p.canPaint()) {
-				mult *= .5f;
+				damage.Scale(.5f);
 			} else if(p.paintData.paintMethod == PaintMethods.RemovePaint) {
-				mult *= .5f;
+				damage.Scale(.5f);
 			}
 		}
 
 		//This is where the painted buff is applied to NPCs that the item hits with melee
 		public override void OnHitNPC(Player p, NPC target, int damage, float knockBack, bool crit) {
 			WoMDNPC npc = target.GetGlobalNPC<WoMDNPC>();
-			if(npc != null && p != null && item.owner == Main.myPlayer) {
+			if(npc != null && p != null && Item.playerIndexTheItemIsReservedFor == Main.myPlayer) {
 				WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
 				PaintMethods method = overridePaintMethod(player);
 				if(method != PaintMethods.None) {
@@ -150,7 +151,7 @@ namespace WeaponsOfMassDecoration {
 						if(index >= 0)
 							target.DelBuff(index);
 					} else {
-						applyPaintedToNPC(target, new PaintData(npcCyclingTimeScale, player.paintData.PaintColor, player.paintData.CustomPaint, player.paintData.CustomPaint is ISprayPaint, Main.GlobalTime, player: player.player));
+						applyPaintedToNPC(target, new PaintData(npcCyclingTimeScale, player.paintData.PaintColor, player.paintData.CustomPaint, player.paintData.CustomPaint is ISprayPaint, Main.GlobalTimeWrappedHourly, player: player.Player));
 					}
 				}
 			}

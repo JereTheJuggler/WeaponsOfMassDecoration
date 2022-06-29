@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 using Terraria.ModLoader;
 
 namespace WeaponsOfMassDecoration {
-	public class WoMDWorld : ModWorld{
+	public class WoMDWorld : ModSystem{
 		protected List<PaintAnimation> animations;
 
 		public WoMDWorld() : base(){
 			animations = new List<PaintAnimation>();
 		}
 
-		public override void PostUpdate() {
+		public override void PostUpdateWorld() {
 			int i = 0;
 			while(i < animations.Count) {
 				if(!animations[i].run()) {

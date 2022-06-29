@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Terraria.ModLoader;
 using Terraria.ID;
 
 namespace WeaponsOfMassDecoration.Projectiles {
@@ -25,13 +26,13 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-			projectile.CloneDefaults(ProjectileID.PaladinsHammerFriendly);
-			projectile.width = 20;
-			projectile.height = 20;
-			projectile.friendly = true;
-			projectile.hostile = false;
-			projectile.melee = true;
-			projectile.ignoreWater = true;
+			Projectile.CloneDefaults(ProjectileID.PaladinsHammerFriendly);
+			Projectile.width = 20;
+			Projectile.height = 20;
+			Projectile.friendly = true;
+			Projectile.hostile = false;
+			Projectile.DamageType = DamageClass.Melee;
+			Projectile.ignoreWater = true;
 
 			light = .5f;
 		}

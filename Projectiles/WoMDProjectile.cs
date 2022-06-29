@@ -42,7 +42,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		public override bool InstancePerEntity => true;
 
 		//Don't want new instances to be cloned either
-		public override bool CloneNewInstances => false;
+		protected override bool CloneNewInstances => false;
 
 		/// <summary>
 		/// Sends a packet to sync the variables regarding the rendering of the projectile
@@ -56,7 +56,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 				return;
 			PaintData data = gProj.paintData;
 			if(server() || multiplayer()) {
-				ModPacket packet = gProj.mod.GetPacket();
+				ModPacket packet = gProj.Mod.GetPacket();
 				packet.Write(WoMDMessageTypes.SetProjectileColor);
 				packet.Write(proj.whoAmI);
 				packet.Write(proj.type);
@@ -114,14 +114,14 @@ namespace WeaponsOfMassDecoration.Projectiles {
 										WoMDNPC gNpc = archer.GetGlobalNPC<WoMDNPC>();
 										if(gNpc == null || !gNpc.painted)
 											break;
-										int projId = Projectile.NewProjectile(projectile.Center, projectile.velocity, ProjectileType<PaintArrow>(), projectile.damage, projectile.knockBack);
+										int projId = Projectile.NewProjectile(projectile.GetSource_FromThis(), projectile.Center, projectile.velocity, ProjectileType<PaintArrow>(), projectile.damage, projectile.knockBack);
 										Projectile newArrow = getProjectile(projId);
 										if(newArrow == null)
 											break;
-										PaintArrow arrow = (PaintArrow)newArrow.modProjectile;
-										cloneProperties(projectile, arrow.projectile);
+										PaintArrow arrow = (PaintArrow)newArrow.ModProjectile;
+										cloneProperties(projectile, arrow.Projectile);
 										arrow.npcOwner = archer.whoAmI;
-										arrow.projectile.GetGlobalProjectile<WoMDProjectile>().setupPreAi = true;
+										arrow.Projectile.GetGlobalProjectile<WoMDProjectile>().setupPreAi = true;
 										projectile.timeLeft = 0;
 										if(server())
 											PaintingProjectile.sendProjNPCOwnerPacket(arrow);
@@ -274,10 +274,10 @@ namespace WeaponsOfMassDecoration.Projectiles {
 							float y = Main.rand.NextFloat(projectile.height * .6f, projectile.height);
 							Vector2 pos = new Vector2(projectile.position.X + projectile.width / 2f, projectile.position.Y + projectile.height - y);
 							int dir = Main.rand.Next(0, 2) * 2 - 1;
-							Projectile proj = Projectile.NewProjectileDirect(pos, new Vector2(6f * dir, -6f - (float)Math.Sqrt(y / 8f)), ProjectileType<PaintSplatter>(), 0, 0);
+							Projectile proj = Projectile.NewProjectileDirect(projectile.GetSource_FromThis(), pos, new Vector2(6f * dir, -6f - (float)Math.Sqrt(y / 8f)), ProjectileType<PaintSplatter>(), 0, 0);
 							if(proj != null) {
 								proj.timeLeft = (int)Math.Round(30f + (2f * y));
-								PaintingProjectile p = proj.modProjectile as PaintingProjectile;
+								PaintingProjectile p = proj.ModProjectile as PaintingProjectile;
 								if(p != null) {
 									p.npcOwner = projectile.GetGlobalProjectile<WoMDProjectile>().npcOwner;
 									if(server())
@@ -396,7 +396,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		/// </summary>
 		protected bool resetBatchInPost = false;
 
-		public override bool PreDraw(Projectile projectile, SpriteBatch spriteBatch, Color lightColor) {
+		/*
+		public override bool PreDraw(Projectile projectile, ref Color lightColor) {
 			if(painted && !server() && (_paintData.PaintColor != -1 || _paintData.CustomPaint != null)) {
 				resetBatchInPost = true;
 
@@ -408,12 +409,12 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			return true;
 		}
 
-		public override void PostDraw(Projectile projectile, SpriteBatch spriteBatch, Color lightColor) {
+		public override void PostDraw(Projectile projectile, Color lightColor) {
 			if(resetBatchInPost) {
 				spriteBatch.End();
 				spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
 				resetBatchInPost = false;
 			}
-		}
+		}*/
 	}
 }

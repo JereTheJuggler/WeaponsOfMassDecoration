@@ -1,8 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using WeaponsOfMassDecoration.Dusts;
+using Terraria.ModLoader;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.PaintUtils;
 using static WeaponsOfMassDecoration.ShaderUtils;
@@ -29,18 +31,18 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-			projectile.width = 8;
-			projectile.height = 8;
-			projectile.aiStyle = 1;
-			projectile.friendly = true;
-			projectile.hostile = false;
-			projectile.ranged = true;
-			projectile.penetrate = 1;
-			projectile.timeLeft = 600;
-			projectile.alpha = 255;
-			projectile.ignoreWater = true;
-			projectile.tileCollide = true;
-			aiType = ProjectileID.Bullet;
+			Projectile.width = 8;
+			Projectile.height = 8;
+			Projectile.aiStyle = 1;
+			Projectile.friendly = true;
+			Projectile.hostile = false;
+			Projectile.DamageType = DamageClass.Ranged;
+			Projectile.penetrate = 1;
+			Projectile.timeLeft = 600;
+			Projectile.alpha = 255;
+			Projectile.ignoreWater = true;
+			Projectile.tileCollide = true;
+			AIType = ProjectileID.Bullet;
 			light = .5f;
 		}
 
@@ -53,9 +55,9 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		public override bool OnTileCollide(Vector2 oldVelocity) {
 			if(canPaint()) {
 				PaintData data = getPaintData();
-				paint(projectile.Center, data);
+				paint(Projectile.Center, data);
 				oldVelocity.Normalize();
-				Vector2 center = projectile.Center.ToWorldCoordinates(0, 0);
+				Vector2 center = Projectile.Center.ToWorldCoordinates(0, 0);
 				center = new Vector2(center.X / 16, center.Y / 16);
 				for(int i = 0; i < 64; i++) {
 					Point coords = new Point((int)Math.Floor((center.X + (oldVelocity.X * i)) / 16), (int)Math.Floor((center.Y + (oldVelocity.Y * i)) / 16));
@@ -80,13 +82,13 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public void blowUp() {
-			projectile.position = projectile.Center - new Vector2(32, 32);
-			projectile.Size = new Vector2(64, 64);
-			projectile.timeLeft = 3;
-			projectile.aiStyle = 0;
-			projectile.velocity = new Vector2(0, 0);
+			Projectile.position = Projectile.Center - new Vector2(32, 32);
+			Projectile.Size = new Vector2(64, 64);
+			Projectile.timeLeft = 3;
+			Projectile.aiStyle = 0;
+			Projectile.velocity = new Vector2(0, 0);
 
-			Vector2 backwards = projectile.oldVelocity * -1;
+			Vector2 backwards = Projectile.oldVelocity * -1;
 			double splatterAngle = (Math.PI / 5) * 3;
 			int spokes = 7;
 			backwards = backwards.RotatedBy(splatterAngle / -2f);
@@ -96,9 +98,9 @@ namespace WeaponsOfMassDecoration.Projectiles {
 				Vector2 vel = backwards.RotatedBy((splatterAngle / (spokes - 1)) * i);
 				int length = Main.rand.Next(7, 12);
 				if(paint)
-					paintBetweenPoints(projectile.Center, projectile.Center + vel * length, data);
+					paintBetweenPoints(Projectile.Center, Projectile.Center + vel * length, data);
 				for(int j = 0; j < length; j++) {
-					Dust dust = getDust(Dust.NewDust((projectile.Center + (vel * j)) - new Vector2(5, 5), 10, 10, DustType<PaintDust>(), 0, 0, 0, data.RenderColor, 1f));
+					Dust dust = getDust(Dust.NewDust((Projectile.Center + (vel * j)) - new Vector2(5, 5), 10, 10, DustType<PaintDust>(), 0, 0, 0, data.RenderColor, 1f));
 					if(dust != null) {
 						dust.noGravity = true;
 						dust.velocity = new Vector2(1, 0).RotatedByRandom(Math.PI * 2);
@@ -108,12 +110,12 @@ namespace WeaponsOfMassDecoration.Projectiles {
 				}
 			}
 			for(int i = 0; i < 15; i++) {
-				Dust dust = getDust(Dust.NewDust(projectile.Center - new Vector2(16, 16), 32, 32, DustID.Smoke, 0f, 0f, 100, data.RenderColor, 1f));
+				Dust dust = getDust(Dust.NewDust(Projectile.Center - new Vector2(16, 16), 32, 32, DustID.Smoke, 0f, 0f, 100, data.RenderColor, 1f));
 				if(dust != null) {
 					dust.velocity *= .8f;
 				}
 			}
-			Main.PlaySound(SoundID.Item14, projectile.Center);
+			SoundEngine.PlaySound(SoundID.Item14, Projectile.Center);
 		}
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
+using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using WeaponsOfMassDecoration.NPCs;
@@ -15,17 +16,16 @@ namespace WeaponsOfMassDecoration.Items {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-			item.uniqueStack = true;
-			item.maxStack = 1;
-			item.consumable = false;
+			Item.uniqueStack = true;
+			Item.maxStack = 1;
+			Item.consumable = false;
 		}
 
 		public override void AddRecipes() {
-			ModRecipe recipe = new ModRecipe(mod);
+			Recipe recipe = CreateRecipe(1);
 			recipe.AddIngredient(ItemType<PaintSolution>(), 999);
 			recipe.AddTile(TileID.DyeVat);
-			recipe.SetResult(this, 1);
-			recipe.AddRecipe();
+			recipe.Register();
 		}
 
 		protected override Texture2D getTexture(WoMDPlayer player) {

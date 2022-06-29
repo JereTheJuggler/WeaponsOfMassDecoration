@@ -8,12 +8,12 @@ namespace WeaponsOfMassDecoration.Dusts {
 
 		public Color trueColor;
 
-		public override void SetDefaults() {
+		public override void SetStaticDefaults() {
 			//base.SetDefaults();
 		}
 		public override void OnSpawn(Dust dust) {
 			if(Main.netMode != NetmodeID.Server) {
-				SetDefaults();
+				//SetDefaults();
 				dust.alpha = 0;
 				dust.noGravity = true;
 				trueColor = dust.color;

@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
+using Terraria.ModLoader;
 using static WeaponsOfMassDecoration.PaintUtils;
 
 namespace WeaponsOfMassDecoration.Projectiles {
@@ -29,22 +31,22 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-			projectile.CloneDefaults(ProjectileID.ThrowingKnife);
-			projectile.thrown = true;
-			projectile.light = 0;
+			Projectile.CloneDefaults(ProjectileID.ThrowingKnife);
+			Projectile.DamageType = DamageClass.Ranged;
+			Projectile.light = 0;
 
-			aiType = ProjectileID.ThrowingKnife;
+			AIType = ProjectileID.ThrowingKnife;
 		}
 
 		public override bool PreAI() {
 			base.PreAI();
 			if(canPaint()) {
 				PaintData data = getPaintData();
-				Vector2 coords = projectile.Center + new Vector2(0, 24).RotatedBy(projectile.rotation + Math.PI);
+				Vector2 coords = Projectile.Center + new Vector2(0, 24).RotatedBy(Projectile.rotation + Math.PI);
 				paint(coords, data);
-				if(Math.Abs(projectile.rotation - oldRotation) > Math.PI / 9) {
-					paint(projectile.Center + new Vector2(0, 24).RotatedBy(projectile.rotation + Math.PI + (Math.PI / 9)), data);
-					paint(projectile.Center + new Vector2(0, 24).RotatedBy(projectile.rotation + Math.PI - (Math.PI / 9)), data);
+				if(Math.Abs(Projectile.rotation - oldRotation) > Math.PI / 9) {
+					paint(Projectile.Center + new Vector2(0, 24).RotatedBy(Projectile.rotation + Math.PI + (Math.PI / 9)), data);
+					paint(Projectile.Center + new Vector2(0, 24).RotatedBy(Projectile.rotation + Math.PI - (Math.PI / 9)), data);
 				}
 				if(lastPaintCoord != null) {
 					paintBetweenPoints((Vector2)lastPaintCoord, coords, data);
@@ -55,7 +57,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public override bool OnTileCollide(Vector2 oldVelocity) {
-			Main.PlaySound(SoundID.Dig, projectile.Center);
+			SoundEngine.PlaySound(SoundID.Dig, Projectile.Center);
 			return true;
 		}
 	}

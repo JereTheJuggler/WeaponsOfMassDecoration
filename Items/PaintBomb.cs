@@ -15,21 +15,21 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override void SetDefaults() {
-			item.useStyle = ItemUseStyleID.SwingThrow;
-			item.shootSpeed = 4.5f;
-			item.shoot = ProjectileType<Projectiles.PaintBomb>();
-			item.width = 18;
-			item.height = 18;
-			item.maxStack = 99;
-			item.consumable = true;
-			item.UseSound = SoundID.Item1;
-			item.noUseGraphic = true;
-			item.noMelee = true;
-			item.useTime = 25;
-			item.useAnimation = 25;
-			item.value = Item.buyPrice(0, 0, 50, 0);
-			item.rare = ItemRarityID.Green;
-			item.autoReuse = false;
+			Item.useStyle = ItemUseStyleID.Swing;
+			Item.shootSpeed = 4.5f;
+			Item.shoot = ProjectileType<Projectiles.PaintBomb>();
+			Item.width = 18;
+			Item.height = 18;
+			Item.maxStack = 99;
+			Item.consumable = true;
+			Item.UseSound = SoundID.Item1;
+			Item.noUseGraphic = true;
+			Item.noMelee = true;
+			Item.useTime = 25;
+			Item.useAnimation = 25;
+			Item.value = Item.buyPrice(0, 0, 50, 0);
+			Item.rare = ItemRarityID.Green;
+			Item.autoReuse = false;
 		}
 	}
 }

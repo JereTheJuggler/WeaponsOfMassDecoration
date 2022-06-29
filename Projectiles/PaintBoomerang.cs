@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 using WeaponsOfMassDecoration.Dusts;
+using Terraria.ModLoader;
 using static Terraria.ModLoader.ModContent;
 using static WeaponsOfMassDecoration.PaintUtils;
 using static WeaponsOfMassDecoration.ShaderUtils;
@@ -25,27 +26,27 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-			projectile.CloneDefaults(ProjectileID.Flamarang);
-			projectile.width = 20;
-			projectile.height = 20;
-			projectile.aiStyle = 3;
-			projectile.friendly = true;
-			projectile.melee = true;
-			projectile.penetrate = -1;
-			projectile.gfxOffY = 19;
+			Projectile.CloneDefaults(ProjectileID.Flamarang);
+			Projectile.width = 20;
+			Projectile.height = 20;
+			Projectile.aiStyle = 3;
+			Projectile.friendly = true;
+			Projectile.DamageType = DamageClass.Melee;
+			Projectile.penetrate = -1;
+			Projectile.gfxOffY = 19;
 			light = .5f;
-			projectile.light = 0;
-			aiType = ProjectileID.WoodenBoomerang;
+			Projectile.light = 0;
+			AIType = ProjectileID.WoodenBoomerang;
 		}
 
 		public override bool PreAI() {
 			base.PreAI();
 			if(canPaint()) {
 				PaintData data = getPaintData();
-				paint(new Vector2(projectile.Center.X + 8, projectile.Center.Y + 8), data);
-				paint(new Vector2(projectile.Center.X + 8, projectile.Center.Y - 8), data);
-				paint(new Vector2(projectile.Center.X - 8, projectile.Center.Y + 8), data);
-				paint(new Vector2(projectile.Center.X - 8, projectile.Center.Y - 8), data);
+				paint(new Vector2(Projectile.Center.X + 8, Projectile.Center.Y + 8), data);
+				paint(new Vector2(Projectile.Center.X + 8, Projectile.Center.Y - 8), data);
+				paint(new Vector2(Projectile.Center.X - 8, Projectile.Center.Y + 8), data);
+				paint(new Vector2(Projectile.Center.X - 8, Projectile.Center.Y - 8), data);
 				paintedTiles = new List<Point>();
 			}
 			return true;
@@ -54,7 +55,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		public override void AI() {
 			base.AI();
 			if(Main.rand.NextFloat() <= .5f) {
-				Dust dust = Dust.NewDustPerfect(projectile.Center, DustType<PaintDust>(), new Vector2(2, 0).RotatedByRandom(Math.PI * 2), 0, getColor(getPaintData()), 1);
+				Dust dust = Dust.NewDustPerfect(Projectile.Center, DustType<PaintDust>(), new Vector2(2, 0).RotatedByRandom(Math.PI * 2), 0, getColor(getPaintData()), 1);
 				if(dust != null) {
 					dust.velocity = new Vector2(1, 0).RotatedByRandom(Math.PI * 2);
 					((float[])dust.customData)[1] = .015f;
@@ -65,7 +66,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override bool OnTileCollide(Vector2 oldVelocity) {
 			if(canPaint())
-				explode(projectile.Center, 45, getPaintData());
+				explode(Projectile.Center, 45, getPaintData());
 			return true;
 		}
 	}

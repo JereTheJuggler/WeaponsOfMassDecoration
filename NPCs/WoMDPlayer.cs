@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -12,7 +13,7 @@ using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.NPCs {
 	public class WoMDPlayer : ModPlayer {
-		public override bool CloneNewInstances => false;
+		protected override bool CloneNewInstances => false;
 
 		/// <summary>
 		/// The index of the first slot containing paint in the player's inventory
@@ -41,13 +42,18 @@ namespace WeaponsOfMassDecoration.NPCs {
 		/// </summary>
 		public bool accPalette = false;
 
+		/// <summary>
+		/// Whether or not the player has the Rewards Program accessory equipped
+		/// </summary>
+		public bool accRewardsProgram = false;
+
 		protected const int fartDelay = 60 * 10; //10 seconds
 		protected uint mountUnicornTime = 0;
 		protected uint lastFartTime = 0;
 
 		public WoMDPlayer() : base() {
 			accPalette = false;
-			_paintData = new PaintData(paintCyclingTimeScale, -1, null, player: player);
+			_paintData = new PaintData(paintCyclingTimeScale, -1, null, player: Player);
 			_currentPaintIndex = -1;
 			for(byte i = 0; i < oldPos.Length; i++)
 				oldPos[i] = new Vector2(0, 0);
@@ -56,6 +62,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 		public override void ResetEffects() {
 			buffPainted = false;
 			accPalette = false;
+			accRewardsProgram = false;
 		}
 
 		public override void UpdateDead() {
@@ -70,18 +77,18 @@ namespace WeaponsOfMassDecoration.NPCs {
 
 		public override void PostUpdateBuffs() {
 			base.PostUpdateBuffs();
-			if(chaosMode() && player.whoAmI == Main.myPlayer) {
-				if(player.HasBuff(BuffID.UnicornMount)) {
+			if(chaosMode() && Player.whoAmI == Main.myPlayer) {
+				if(Player.HasBuff(BuffID.UnicornMount)) {
 					if(mountUnicornTime == 0)
 						mountUnicornTime = Main.GameUpdateCount;
 					if(Main.GameUpdateCount - lastFartTime > fartDelay && Main.GameUpdateCount - mountUnicornTime > fartDelay) {
 						lastFartTime = Main.GameUpdateCount;
 						if(Main.rand.NextFloat() <= .3f) {
-							Main.PlaySound(SoundID.Item16, player.position);
-							int fartDirection = player.direction * -1;
-							Point fartPosition = (player.position + new Vector2(32 * fartDirection, 48)).ToTileCoordinates();
+							SoundEngine.PlaySound(SoundID.Item16, Player.position);
+							int fartDirection = Player.direction * -1;
+							Point fartPosition = (Player.position + new Vector2(32 * fartDirection, 48)).ToTileCoordinates();
 							int[] heights = new int[] { 1, 3, 3, 5, 5, 7 };
-							byte[] colors = new byte[] { PaintID.DeepRed, PaintID.DeepOrange, PaintID.DeepYellow, PaintID.DeepGreen, PaintID.DeepBlue, PaintID.DeepPurple };
+							byte[] colors = new byte[] { PaintID.DeepRedPaint, PaintID.DeepOrangePaint, PaintID.DeepYellowPaint, PaintID.DeepGreenPaint, PaintID.DeepBluePaint, PaintID.DeepPurplePaint };
 
 							for(int i = 0; i < 6; i++) {
 								Dust d = Dust.NewDustPerfect(fartPosition.ToWorldCoordinates() + new Vector2(8, 8), 22, new Vector2(fartDirection * 3f, 0).RotatedBy(Main.rand.NextFloat((float)(Math.PI / -6f), (float)(Math.PI / 6f))) * 3f, 0, default, 1f);
@@ -109,15 +116,15 @@ namespace WeaponsOfMassDecoration.NPCs {
 		}
 
 		public override void PostUpdate() {
-			if(!player.dead) {
+			if(!Player.dead) {
 				for(byte i = (byte)(oldPos.Length - 1); i > 0; i--)
 					oldPos[i] = oldPos[i - 1];
-				oldPos[0] = player.Center;
+				oldPos[0] = Player.Center;
 			}
 		}
 
 		public override void Kill(double damage, int hitDirection, bool pvp, PlayerDeathReason damageSource) {
-			if(GetInstance<WoMDConfig>().chaosModeEnabled && player.whoAmI == Main.myPlayer) {
+			if(GetInstance<WoMDConfig>().chaosModeEnabled && Player.whoAmI == Main.myPlayer) {
 				int projIndex = damageSource.SourceProjectileIndex;
 				int npcIndex = damageSource.SourceNPCIndex;
 				int playerIndex = damageSource.SourcePlayerIndex;
@@ -133,7 +140,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 							if(true) {
 								Projectile proj = getProjectile(projIndex);
 								if(proj != null)
-									WoMDProjectile.applyPainted(proj, new PaintData(PaintID.DeepRed));
+									WoMDProjectile.applyPainted(proj, new PaintData(PaintID.DeepRedPaint));
 							}
 							break;
 					}
@@ -146,21 +153,28 @@ namespace WeaponsOfMassDecoration.NPCs {
 				} else if(otherIndex >= 0) {
 					switch(otherIndex) {
 						case OtherDeathID.Poisoned:
-							byte[] colors = new byte[] { PaintID.DeepGreen };
-							if(player.HasBuff(BuffID.Poisoned)) {
-								colors = new byte[] { PaintID.DeepGreen, PaintID.DeepLime };
-							}else if(player.HasBuff(BuffID.Venom)) {
-								colors = new byte[] { PaintID.DeepPurple, PaintID.DeepViolet };
+							byte[] colors = new byte[] { PaintID.DeepGreenPaint };
+							if(Player.HasBuff(BuffID.Poisoned)) {
+								colors = new byte[] { PaintID.DeepGreenPaint, PaintID.DeepLimePaint };
+							}else if(Player.HasBuff(BuffID.Venom)) {
+								colors = new byte[] { PaintID.DeepPurplePaint, PaintID.DeepVioletPaint };
 							}
 							byte color = colors[Main.rand.Next(colors.Length)];
 							preventDefault = true;
 							for(byte i = 0; i < 8; i++) {
-								Projectile proj = Projectile.NewProjectileDirect(player.Center, new Vector2(0, 1).RotatedBy(((PI * 2f) / 8f) * i) * Main.rand.NextFloat(3,4), ProjectileType<PaintSplatter>(),0,0);
+								Projectile proj = Projectile.NewProjectileDirect(
+									null,
+									Player.Center, 
+									new Vector2(0, 1).RotatedBy(((PI * 2f) / 8f) * i) * Main.rand.NextFloat(3,4), 
+									ProjectileType<PaintSplatter>(),
+									0,
+									0
+								);
 								if(proj != null) {
 									proj.timeLeft = 40;
 									proj.velocity.Y -= 2;
-									proj.velocity += player.velocity.SafeNormalize(new Vector2(0,0))*4;
-									PaintSplatter splatter = proj.modProjectile as PaintSplatter;
+									proj.velocity += Player.velocity.SafeNormalize(new Vector2(0,0))*4;
+									PaintSplatter splatter = proj.ModProjectile as PaintSplatter;
 									if(splatter != null)
 										splatter.setOverridePaintData(new PaintData(color));
 								}
@@ -170,8 +184,8 @@ namespace WeaponsOfMassDecoration.NPCs {
 						case OtherDeathID.ChaosState2:
 							preventDefault = true;
 
-							Vector2 dir = (player.Center - oldPos[1]).SafeNormalize(new Vector2(0,1));
-							PaintData data = new PaintData(PaintID.DeepPink);
+							Vector2 dir = (Player.Center - oldPos[1]).SafeNormalize(new Vector2(0,1));
+							PaintData data = new PaintData(PaintID.DeepPinkPaint);
 							Vector2[] dirs = new Vector2[7];
 							int[] lengths = new int[7];
 							int maxLength = 0;
@@ -187,7 +201,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 								for(byte i = 0; i < dirs.Length; i++) {
 									if(index <= lengths[i]) {
 										Vector2 disp = dirs[i] * 16f * (float)index;
-										paint((player.Center + disp).ToTileCoordinates(), data, true);
+										paint((Player.Center + disp).ToTileCoordinates(), data, true);
 									}
 								}
 								return true;
@@ -196,7 +210,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 					}
 				}
 				if(!preventDefault)
-					splatter(player.Center, 130f, 6, new PaintData(PaintID.DeepRed), true);
+					splatter(Player.Center, 130f, 6, new PaintData(PaintID.DeepRedPaint), true);
 			}
 		}
 
@@ -207,22 +221,22 @@ namespace WeaponsOfMassDecoration.NPCs {
 			_paintData.PaintColor = -1;
 			_paintData.CustomPaint = null;
 			_paintData.sprayPaint = false;
-			_paintData.player = getPlayer(player.whoAmI);
+			_paintData.player = getPlayer(Player.whoAmI);
 			_paintData.paintMethod = PaintMethods.None;
-			for(int i = 0; i < player.inventory.Length && ((_paintData.PaintColor == -1 && _paintData.CustomPaint == null) || _paintData.paintMethod == PaintMethods.None); i++) {
-				Item item = player.inventory[i];
+			for(int i = 0; i < Player.inventory.Length && ((_paintData.PaintColor == -1 && _paintData.CustomPaint == null) || _paintData.paintMethod == PaintMethods.None); i++) {
+				Item item = Player.inventory[i];
 				if(item.active && item.stack > 0 && i != 58) {
-					item.owner = player.whoAmI;
+					item.playerIndexTheItemIsReservedFor = Player.whoAmI;
 					if(_currentPaintIndex < 0 && isPaint(item)) {
 						_currentPaintIndex = i;
-						if(item.paint == CustomPaint.paintValue && item.modItem is CustomPaint) {
-							_paintData.CustomPaint = item.modItem as CustomPaint;
+						if(item.paint == CustomPaint.paintValue && item.ModItem is CustomPaint) {
+							_paintData.CustomPaint = item.ModItem as CustomPaint;
 							_paintData.sprayPaint = _paintData.CustomPaint is ISprayPaint;
 						} else {
 							_paintData.PaintColor = item.paint;
 						}
 					} else if(_paintData.paintMethod == PaintMethods.None && isPaintingTool(item)) {
-						if(item.modItem is PaintingMultiTool) {
+						if(item.ModItem is PaintingMultiTool) {
 							_paintData.paintMethod = PaintMethods.BlocksAndWalls;
 						} else {
 							switch(item.type) {
@@ -270,7 +284,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 			if(_currentPaintIndex >= 0) {
 				if(_paintData.CustomPaint != null && _paintData.CustomPaint.paintConsumptionChance < 1f && Main.rand.NextFloat() <= _paintData.CustomPaint.paintConsumptionChance)
 					return;
-				Item item = player.inventory[_currentPaintIndex];
+				Item item = Player.inventory[_currentPaintIndex];
 				if(item.stack > 0)
 					item.stack--;
 				if(item.stack == 0) {

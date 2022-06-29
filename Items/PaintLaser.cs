@@ -19,45 +19,43 @@ namespace WeaponsOfMassDecoration.Items {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-			item.shoot = ModContent.ProjectileType<Projectiles.PaintLaser>();
-			item.rare = ItemRarityID.Green;
-			item.damage = 25;
-			item.width = 42;
-			item.height = 30;
-			item.useTime = 20;
-			item.useAnimation = 20;
-			item.useAmmo = -1;
-			item.useStyle = ItemUseStyleID.HoldingOut;
-			item.mana = 10;
-			item.noMelee = true;
-			item.knockBack = 1f;
-			item.value = Item.sellPrice(0, 0, 30, 0);
-			item.UseSound = SoundID.Item72;
-			item.autoReuse = true;
-			item.shootSpeed = 12f;
-			item.magic = true;
+			Item.shoot = ModContent.ProjectileType<Projectiles.PaintLaser>();
+			Item.rare = ItemRarityID.Green;
+			Item.damage = 25;
+			Item.width = 42;
+			Item.height = 30;
+			Item.useTime = 20;
+			Item.useAnimation = 20;
+			Item.useAmmo = -1;
+			Item.useStyle = ItemUseStyleID.Shoot;
+			Item.mana = 10;
+			Item.noMelee = true;
+			Item.knockBack = 1f;
+			Item.value = Item.sellPrice(0, 0, 30, 0);
+			Item.UseSound = SoundID.Item72;
+			Item.autoReuse = true;
+			Item.shootSpeed = 12f;
+			Item.DamageType = DamageClass.Magic;
 		}
 
 		public override void AddRecipes() {
-			ModRecipe recipe = new ModRecipe(mod);
+			Recipe recipe = CreateRecipe();
 			recipe.AddIngredient(ItemID.AmethystStaff);
 			recipe.AddRecipeGroup("WoMD:hmBar1", 5);
 			recipe.AddIngredient(ItemID.Paintbrush);
 			recipe.AddIngredient(ItemID.PaintRoller);
 			recipe.AddIngredient(ItemID.PaintScraper);
 			recipe.AddTile(TileID.DyeVat);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			recipe.Register();
 
-			ModRecipe recipe2 = new ModRecipe(mod);
+			Recipe recipe2 = CreateRecipe();
 			recipe2.AddIngredient(ItemID.TopazStaff);
 			recipe2.AddRecipeGroup("WoMD:hmBar1", 5);
 			recipe2.AddIngredient(ItemID.Paintbrush);
 			recipe2.AddIngredient(ItemID.PaintRoller);
 			recipe2.AddIngredient(ItemID.PaintScraper);
 			recipe2.AddTile(TileID.DyeVat);
-			recipe2.SetResult(this);
-			recipe2.AddRecipe();
+			recipe2.Register();
 		}
 
 		public enum GeneralDirection {
@@ -67,29 +65,29 @@ namespace WeaponsOfMassDecoration.Items {
 			DownRight
 		}
 
-		public override bool Shoot(Player player, ref Vector2 position, ref float speedX, ref float speedY, ref int type, ref int damage, ref float knockBack) {
+		public override bool Shoot(Player player, Terraria.DataStructures.EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback) {
 			//TODO: rewrite this... again...
 			/*Vector2 dir = new Vector2(speedX, speedY).SafeNormalize(new Vector2(0, 1));
-            List<Vector2> endPoints = new List<Vector2>();
-            int maxIterations = 600;
-            int maxDistanceBetweenSpawns = 16;
-            int maxTotalDistance = 1200;
-            float currentDistance = 0;
-            int distancePerIteration = 8;
-            Vector2 currentPosition = position * 1;
-            endPoints.Add(position);
-            for(int i=0;i<=maxIterations && currentDistance < maxTotalDistance - 1; i++) {
-                Point currentTilePosition = currentPosition.ToTileCoordinates();
-                Point nextTilePosition = (currentPosition + (dir * distancePerIteration)).ToTileCoordinates();
-                if(!WorldGen.InWorld(nextTilePosition.X, nextTilePosition.Y, 10))
-                    break;
-                Tile nextTile = Main.tile[nextTilePosition]
+			List<Vector2> endPoints = new List<Vector2>();
+			int maxIterations = 600;
+			int maxDistanceBetweenSpawns = 16;
+			int maxTotalDistance = 1200;
+			float currentDistance = 0;
+			int distancePerIteration = 8;
+			Vector2 currentPosition = position * 1;
+			endPoints.Add(position);
+			for(int i=0;i<=maxIterations && currentDistance < maxTotalDistance - 1; i++) {
+				Point currentTilePosition = currentPosition.ToTileCoordinates();
+				Point nextTilePosition = (currentPosition + (dir * distancePerIteration)).ToTileCoordinates();
+				if(!WorldGen.InWorld(nextTilePosition.X, nextTilePosition.Y, 10))
+					break;
+				Tile nextTile = Main.tile[nextTilePosition]
 			}
-            endPoints.Add(currentPosition);
+			endPoints.Add(currentPosition);
 
-            return false;
-        }*/
-			Vector2 dir = new Vector2(speedX, speedY).SafeNormalize(new Vector2(0, 1));
+			return false;
+			}*/
+			Vector2 dir = velocity.SafeNormalize(new Vector2(0, 1));
 			int maxDistancePerIteration = 16;
 			int maxIterations = 600;
 			int maxDistanceBetweenSpawns = 16;
@@ -396,7 +394,7 @@ namespace WeaponsOfMassDecoration.Items {
 				Vector2 spawnOffset = disp / totalSpawns;
 				for(int i = 1; i <= totalSpawns; i++) {
 					Vector2 previousPos = currentPos + spawnOffset * (i - 1);
-					int projId = Projectile.NewProjectile(currentPos + spawnOffset * i, new Vector2(0, 0), ModContent.ProjectileType<Projectiles.PaintLaser>(), damage, 0f, player.whoAmI, previousPos.X, previousPos.Y);
+					int projId = Projectile.NewProjectile(null,currentPos + spawnOffset * i, new Vector2(0, 0), ModContent.ProjectileType<Projectiles.PaintLaser>(), damage, 0f, player.whoAmI, previousPos.X, previousPos.Y);
 				}
 			}
 
@@ -630,8 +628,8 @@ namespace WeaponsOfMassDecoration.Items {
 			paddedMiddleLeftCorner = middleLeftCorner + new Vector2(-2, -2);
 			paddedMiddleRightCorner = middleRightCorner + new Vector2(2, -2);
 
-			if(tile.active() && tile.collisionType != -1) {
-				if(tile.halfBrick()) {
+			if(tile.HasTile && WorldGen.SolidOrSlopedTile(tile)) { // tile.collisionType != -1) {
+				if(tile.IsHalfBlock) {
 					segments.Add(new LineSegment(middleLeftCorner, bottomLeftCorner));
 					segments.Add(new LineSegment(bottomLeftCorner, bottomRightCorner));
 					segments.Add(new LineSegment(bottomRightCorner, middleRightCorner));
@@ -642,7 +640,7 @@ namespace WeaponsOfMassDecoration.Items {
 					segments.Add(new LineSegment(paddedBottomRightCorner, paddedBottomLeftCorner));
 					segments.Add(new LineSegment(paddedBottomLeftCorner, paddedMiddleLeftCorner));
 				} else {
-					byte slope = tile.slope();
+					byte slope = (byte)tile.Slope;
 					if(slope == 0 || slope == 1 || slope == 3) {
 						segments.Add(new LineSegment(topLeftCorner, bottomLeftCorner));
 						segments.Add(new LineSegment(paddedTopLeftCorner, paddedBottomLeftCorner));
@@ -853,12 +851,12 @@ namespace WeaponsOfMassDecoration.Items {
 		private void init(Point coords) {
 			this.coords = coords;
 			tile = Main.tile[coords.X, coords.Y];
-			if(!tile.active() || tile.collisionType == -1) {
+			if(!tile.HasTile || WorldGen.SolidOrSlopedTile(tile)){ //tile.collisionType == -1) {
 				slope = -1;
-			} else if(tile.halfBrick()) {
+			} else if(tile.IsHalfBlock) {
 				slope = 5;
 			} else {
-				slope = tile.slope();
+				slope = (byte)tile.Slope;
 			}
 		}
 	}

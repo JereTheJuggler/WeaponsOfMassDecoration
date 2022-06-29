@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 using WeaponsOfMassDecoration.Dusts;
@@ -34,7 +35,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 		//Each entity needs their own set of the above variables
 		public override bool InstancePerEntity => true;
 		//Don't want instances to be cloned
-		public override bool CloneNewInstances => false;
+		protected override bool CloneNewInstances => false;
 
 		public override void ResetEffects(NPC npc) {
 			painted = false;
@@ -65,7 +66,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 				return;
 			PaintData data = gNpc.paintData;
 			if(server() || multiplayer()) {
-				ModPacket packet = gNpc.mod.GetPacket();
+				ModPacket packet = gNpc.Mod.GetPacket();
 				packet.Write(WoMDMessageTypes.SetNPCColors);
 				packet.Write(npc.whoAmI);
 				packet.Write(npc.type);
@@ -129,9 +130,16 @@ namespace WeaponsOfMassDecoration.NPCs {
 								Vector2 startVector = new Vector2(0, -6).RotatedBy(Math.PI / -3);
 								int numSplatters = 7;
 								for(int i = 0; i < numSplatters; i++) {
-									Projectile p = Projectile.NewProjectileDirect(npc.Bottom - new Vector2(0, 8), startVector.RotatedBy(((Math.PI * 2f / 3f) / (numSplatters - 1)) * i), ProjectileType<PaintSplatter>(), 0, 0);
+									Projectile p = Projectile.NewProjectileDirect(
+										npc.GetSource_FromAI(),
+										npc.Bottom - new Vector2(0, 8), 
+										startVector.RotatedBy(((Math.PI * 2f / 3f) / (numSplatters - 1)) * i), 
+										ProjectileType<PaintSplatter>(), 
+										0, 
+										0
+									);
 									if(p != null) {
-										PaintingProjectile proj = (PaintingProjectile)p.modProjectile;
+										PaintingProjectile proj = (PaintingProjectile)p.ModProjectile;
 										proj.npcOwner = npc.whoAmI;
 										p.timeLeft = 60;
 										PaintingProjectile.sendProjNPCOwnerPacket(proj);
@@ -160,11 +168,18 @@ namespace WeaponsOfMassDecoration.NPCs {
 									else if(dir.Y < 0 && dir.X < 0)
 										speed += 1;
 									Vector2 vel = dir.RotatedBy(PI / 2f) * speed;
-									Projectile p = Projectile.NewProjectileDirect(npc.Center + offset, vel, ProjectileType<PaintSplatter>(), 0, 0);
+									Projectile p = Projectile.NewProjectileDirect(
+										npc.GetSource_FromAI(),
+										npc.Center + offset, 
+										vel, 
+										ProjectileType<PaintSplatter>(), 
+										0, 
+										0
+									);
 									if(p != null) {
 										p.velocity = vel;
 										p.timeLeft = 100;
-										PaintingProjectile proj = p.modProjectile as PaintingProjectile;
+										PaintingProjectile proj = p.ModProjectile as PaintingProjectile;
 										if(proj != null) {
 											proj.npcOwner = npc.whoAmI;
 											if(server())
@@ -180,8 +195,8 @@ namespace WeaponsOfMassDecoration.NPCs {
 		}
 
 		//This is used for controlling certain Chaos Mode functionality
-		public override void NPCLoot(NPC npc) {
-			base.NPCLoot(npc);
+		public override void OnKill(NPC npc) {
+			base.OnKill(npc);
 			if(chaosMode()) {
 				if(painted) {
 					switch(npc.type) {
@@ -244,13 +259,13 @@ namespace WeaponsOfMassDecoration.NPCs {
 				}
 				if(npc.townNPC) {
 					if(npc.type == NPCID.PartyGirl) {
-						splatterColored(npc.Center, 8, new byte[] { PaintID.DeepRed, PaintID.DeepRed, PaintID.DeepOrange, PaintID.DeepYellow, PaintID.DeepGreen, PaintID.DeepBlue, PaintID.DeepPurple }, new PaintData(1, PaintMethods.BlocksAndWalls), true);
+						splatterColored(npc.Center, 8, new byte[] { PaintID.DeepRedPaint, PaintID.DeepRedPaint, PaintID.DeepOrangePaint, PaintID.DeepYellowPaint, PaintID.DeepGreenPaint, PaintID.DeepBluePaint, PaintID.DeepPurplePaint }, new PaintData(1, PaintMethods.BlocksAndWalls), true);
 						for(int i = 0; i < 10; i++) {
 							Vector2 vel = new Vector2(Main.rand.NextFloat(2, 3), 0).RotatedBy(Main.rand.NextFloat(PI * 2));
 							Dust.NewDust(npc.Center - npc.Size / 4f, npc.width / 2, npc.height / 2, DustID.Confetti + Main.rand.Next(0,4), vel.X, vel.Y, 0);
 						}
 					} else {
-						PaintData data = new PaintData(PaintID.DeepRed);
+						PaintData data = new PaintData(PaintID.DeepRedPaint);
 						splatter(npc.Center, 100f, 8, data, true);
 					}
 				}
@@ -258,13 +273,20 @@ namespace WeaponsOfMassDecoration.NPCs {
 		}
 
 		private PaintSplatter createPaintSplatter(int npcOwner, Vector2 position, Vector2 velocity, int timeLeft = 30, float light = 0, float scale = 1f) {
-			Projectile p = Projectile.NewProjectileDirect(position, velocity, ProjectileType<PaintSplatter>(), 0, 0);
+			Projectile p = Projectile.NewProjectileDirect(
+				Main.npc[npcOwner].GetSource_FromAI(),
+				position, 
+				velocity, 
+				ProjectileType<PaintSplatter>(), 
+				0, 
+				0
+			);
 			if(p != null) {
 				p.scale = scale;
 				p.velocity = velocity;
 				p.timeLeft = timeLeft;
 				p.light = light;
-				PaintSplatter proj = p.modProjectile as PaintSplatter;
+				PaintSplatter proj = p.ModProjectile as PaintSplatter;
 				if(proj != null) {
 					proj.npcOwner = npcOwner;
 					return proj;
@@ -279,20 +301,20 @@ namespace WeaponsOfMassDecoration.NPCs {
 		private bool resetBatchInPost;
 
 		//This is where the shaders are applied to the NPCs to make them appear painted
-		public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Color drawColor) {
+		public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) {
 			if(painted && !server()) {
 				resetBatchInPost = true;
 
 				spriteBatch.End();
 				spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
 
-				applyShader(this, paintData, new DrawData(Main.npcTexture[npc.type], npc.position, npc.frame, Color.White));
+				applyShader(this, paintData, new DrawData(TextureAssets.Npc[npc.type].Value, npc.position, npc.frame, Color.White));
 			}
 			return true;
 		}
 
 		//This just resets the spritebatch after the NPC is drawn, if necessary
-		public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Color drawColor) {
+		public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) {
 			if(resetBatchInPost) {
 				spriteBatch.End();
 				spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
@@ -308,6 +330,12 @@ namespace WeaponsOfMassDecoration.NPCs {
 		}
 
 		public override void SetupShop(int type, Chest shop, ref int nextSlot) {
+			bool rewardsProgram = false;
+
+			WoMDPlayer player = getModPlayer(Main.myPlayer);
+			if(player != null) 
+				rewardsProgram = player.accRewardsProgram;
+			
 			switch(type) {
 				case NPCID.Steampunker:
 					if(shouldSellPaintingStuff()) {
@@ -349,6 +377,13 @@ namespace WeaponsOfMassDecoration.NPCs {
 					}
 					break;
 			}
+			if(rewardsProgram) {
+				for(int i = 0; i < shop.item.Length; i++) {
+					Item item = shop.item[i];
+					if(isPaint(item) || isPaintingTool(item) || isPaintingItem(item))
+						item.value = (int)Math.Ceiling((float)item.value * .8);
+				}
+			}
 		}
 
 		/// <summary>
@@ -365,7 +400,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 			for(int c = 0; c < inv.Length; c++) {
 				Item i = inv[c];
 				if(i.active && i.stack > 0) {
-					if(i.modItem is PaintingItem)
+					if(i.ModItem is PaintingItem)
 						return true;
 					if(isPaintingTool(i))
 						return true;

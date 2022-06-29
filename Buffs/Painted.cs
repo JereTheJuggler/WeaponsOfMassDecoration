@@ -6,14 +6,17 @@ using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Buffs {
 	class Painted : ModBuff {
-		public override void SetDefaults() {
+		public override void SetStaticDefaults() {
 			DisplayName.SetDefault("Painted");
 			Description.SetDefault("What a Mess!");
 			Main.debuff[Type] = true;
 			Main.buffNoSave[Type] = true;
 			Main.pvpBuff[Type] = true;
-			longerExpertDebuff = false;
-			canBeCleared = false;
+			//longerExpertDebuff = false;
+		}
+
+		public override bool RightClick(int buffIndex) {
+			return false;
 		}
 
 		public override void ModifyBuffTip(ref string tip, ref int rare) {
@@ -31,13 +34,13 @@ namespace WeaponsOfMassDecoration.Buffs {
 				if(paintColor == 0)
 					return;
 				switch(paintColor) {
-					case PaintID.Red:
-					case PaintID.DeepRed:
+					case PaintID.RedPaint:
+					case PaintID.DeepRedPaint:
 						//fire
 						npc.AddBuff(BuffID.OnFire, 2);
 						//buffIndex++;
 						break;
-					case PaintID.Yellow:
+					case PaintID.YellowPaint:
 						if(npc.defense <= 0)
 							break;
 						if(npc.defense <= 5)
@@ -45,7 +48,7 @@ namespace WeaponsOfMassDecoration.Buffs {
 						else
 							npc.defense -= 5;
 						break;
-					case PaintID.DeepYellow:
+					case PaintID.DeepYellowPaint:
 						if(npc.defense <= 0)
 							break;
 						if(npc.defense <= 10)
@@ -53,27 +56,27 @@ namespace WeaponsOfMassDecoration.Buffs {
 						else
 							npc.defense -= 10;
 						break;
-					case PaintID.Green:
-					case PaintID.DeepGreen:
+					case PaintID.GreenPaint:
+					case PaintID.DeepGreenPaint:
 						//poison
 						break;
-					case PaintID.Purple:
-					case PaintID.DeepPurple:
+					case PaintID.PurplePaint:
+					case PaintID.DeepPurplePaint:
 						//venom
 						break;
-					case PaintID.Cyan:
-					case PaintID.DeepCyan:
+					case PaintID.CyanPaint:
+					case PaintID.DeepCyanPaint:
 						//frozen
 						npc.AddBuff(BuffID.Frostburn, 2);
 						buffIndex++;
 						break;
-					case PaintID.Black:
+					case PaintID.BlackPaint:
 						//darkness
 						break;
-					case PaintID.Shadow:
+					case PaintID.ShadowPaint:
 						//blackout
 						break;
-					case PaintID.Negative:
+					case PaintID.NegativePaint:
 						//confused
 						npc.AddBuff(BuffID.Confused, 2);
 						buffIndex++;

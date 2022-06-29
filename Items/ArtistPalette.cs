@@ -12,20 +12,19 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override void SetDefaults() {
-			item.maxStack = 1;
-			item.accessory = true;
-			item.noMelee = true;
-			item.noUseGraphic = true;
-			item.rare = ItemRarityID.Green;
+			Item.maxStack = 1;
+			Item.accessory = true;
+			Item.noMelee = true;
+			Item.noUseGraphic = true;
+			Item.rare = ItemRarityID.Green;
 		}
 
 		public override void AddRecipes() {
-			ModRecipe recipe = new ModRecipe(mod);
+			Recipe recipe = CreateRecipe();
 			recipe.AddIngredient(ItemType<DeepRainbowPaint>(), 999);
 			recipe.AddIngredient(ItemID.Pearlwood, 15);
 			recipe.AddTile(TileID.DyeVat);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			recipe.Register();
 		}
 
 		public override void UpdateAccessory(Player player, bool hideVisual) {

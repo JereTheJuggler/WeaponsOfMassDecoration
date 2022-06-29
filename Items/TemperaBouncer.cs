@@ -12,21 +12,21 @@ namespace WeaponsOfMassDecoration.Items {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-			item.CloneDefaults(ItemID.CursedFlames);
-			item.RebuildTooltip();
-			item.shoot = ProjectileType<Projectiles.TemperaBouncer>();
-			item.rare = ItemRarityID.Green;
-			item.damage = 60;
-			item.useAmmo = -1;
-			item.mana = 10;
-			item.noMelee = true;
-			item.value = Item.sellPrice(0, 0, 30, 0);
-			item.UseSound = SoundID.Item21;
-			item.shootSpeed = 15f;
+			Item.CloneDefaults(ItemID.CursedFlames);
+			Item.RebuildTooltip();
+			Item.shoot = ProjectileType<Projectiles.TemperaBouncer>();
+			Item.rare = ItemRarityID.Green;
+			Item.damage = 60;
+			Item.useAmmo = -1;
+			Item.mana = 10;
+			Item.noMelee = true;
+			Item.value = Item.sellPrice(0, 0, 30, 0);
+			Item.UseSound = SoundID.Item21;
+			Item.shootSpeed = 15f;
 		}
 
 		public override void AddRecipes() {
-			ModRecipe recipe = new ModRecipe(mod);
+			Recipe recipe = CreateRecipe();
 			recipe.AddIngredient(ItemID.SpellTome, 1);
 			recipe.AddIngredient(ItemID.Paintbrush, 1);
 			recipe.AddIngredient(ItemID.PaintRoller, 1);
@@ -34,8 +34,7 @@ namespace WeaponsOfMassDecoration.Items {
 			recipe.AddIngredient(ItemID.SoulofLight, 5);
 			recipe.AddIngredient(ItemID.SoulofNight, 5);
 			recipe.AddTile(TileID.Bookcases);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			recipe.Register();
 		}
 	}
 }

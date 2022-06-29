@@ -20,48 +20,48 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-			projectile.width = 6;
-			projectile.height = 6;
-			projectile.aiStyle = 41;
-			aiType = ProjectileID.PureSpray;
-			projectile.friendly = true;
-			projectile.timeLeft = 50;
-			projectile.alpha = 255;
+			Projectile.width = 6;
+			Projectile.height = 6;
+			Projectile.aiStyle = 41;
+			AIType = ProjectileID.PureSpray;
+			Projectile.friendly = true;
+			Projectile.timeLeft = 50;
+			Projectile.alpha = 255;
 			//projectile.light = .5f;
 			light = .5f;
-			projectile.penetrate = -1;
-			projectile.extraUpdates = 2;
-			projectile.tileCollide = false;
-			projectile.ignoreWater = true;
+			Projectile.penetrate = -1;
+			Projectile.extraUpdates = 2;
+			Projectile.tileCollide = false;
+			Projectile.ignoreWater = true;
 		}
 
 		public override void AI() {
 			if(canPaint()) {
 				Vector2 playerPos = Main.player[Main.myPlayer].position;
-				Vector2 myPos = projectile.Center;
+				Vector2 myPos = Projectile.Center;
 				if(Math.Sqrt(Math.Pow(myPos.X - playerPos.X, 2) + Math.Pow(myPos.Y - playerPos.Y, 2)) > 32) {
-					Convert((int)(projectile.position.X + projectile.width / 2) / 16, (int)(projectile.position.Y + projectile.height / 2) / 16, 2);
+					Convert((int)(Projectile.position.X + Projectile.width / 2) / 16, (int)(Projectile.position.Y + Projectile.height / 2) / 16, 2);
 				}
 			}
 			int dustType = DustID.Smoke;
-			if(projectile.timeLeft > 100) {
-				projectile.timeLeft = 100;
+			if(Projectile.timeLeft > 100) {
+				Projectile.timeLeft = 100;
 			}
-			if(projectile.ai[0] > 7f) {
+			if(Projectile.ai[0] > 7f) {
 				float dustScale = 1f;
-				if(projectile.ai[0] == 8f) {
+				if(Projectile.ai[0] == 8f) {
 					dustScale = 0.2f;
-				} else if(projectile.ai[0] == 9f) {
+				} else if(Projectile.ai[0] == 9f) {
 					dustScale = 0.4f;
-				} else if(projectile.ai[0] == 10f) {
+				} else if(Projectile.ai[0] == 10f) {
 					dustScale = 0.6f;
-				} else if(projectile.ai[0] == 11f) {
+				} else if(Projectile.ai[0] == 11f) {
 					dustScale = 0.8f;
 				}
-				projectile.ai[0] += 1f;
+				Projectile.ai[0] += 1f;
 				PaintData data = getPaintData();
 				for(int i = 0; i < 1; i++) {
-					Dust dust = getDust(Dust.NewDust(new Vector2(projectile.position.X, projectile.position.Y), projectile.width, projectile.height, dustType, projectile.velocity.X * 0.2f, projectile.velocity.Y * 0.2f, 100, default, 1f));
+					Dust dust = getDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, dustType, Projectile.velocity.X * 0.2f, Projectile.velocity.Y * 0.2f, 100, default, 1f));
 					if(dust != null) {
 						dust.noGravity = true;
 						dust.scale *= 1.75f;
@@ -72,9 +72,9 @@ namespace WeaponsOfMassDecoration.Projectiles {
 					}
 				}
 			} else {
-				projectile.ai[0] += 1f;
+				Projectile.ai[0] += 1f;
 			}
-			projectile.rotation += 0.3f * projectile.direction;
+			Projectile.rotation += 0.3f * Projectile.direction;
 		}
 
 		public void Convert(int i, int j, int size = 4) {

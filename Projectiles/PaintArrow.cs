@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
+using Terraria.ModLoader;
 using static WeaponsOfMassDecoration.PaintUtils;
 
 namespace WeaponsOfMassDecoration.Projectiles {
@@ -21,18 +23,18 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-			projectile.CloneDefaults(ProjectileID.WoodenArrowFriendly);
-			projectile.width = 10;
-			projectile.height = 10;
-			projectile.aiStyle = 1;
-			projectile.friendly = true;
-			projectile.hostile = false;
-			projectile.ranged = true;
-			projectile.penetrate = 1;
-			projectile.timeLeft = 600;
-			projectile.alpha = 0;
-			projectile.ignoreWater = true;
-			projectile.tileCollide = true;
+			Projectile.CloneDefaults(ProjectileID.WoodenArrowFriendly);
+			Projectile.width = 10;
+			Projectile.height = 10;
+			Projectile.aiStyle = 1;
+			Projectile.friendly = true;
+			Projectile.hostile = false;
+			Projectile.DamageType = DamageClass.Ranged;
+			Projectile.penetrate = 1;
+			Projectile.timeLeft = 600;
+			Projectile.alpha = 0;
+			Projectile.ignoreWater = true;
+			Projectile.tileCollide = true;
 		}
 
 		public override bool PreAI() {
@@ -40,7 +42,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			if(canPaint()) {
 				PaintData data = getPaintData();
 				if(data != null) {
-					Point coords = new Point((int)Math.Floor(projectile.Center.X / 16f), (int)Math.Floor(projectile.Center.Y / 16f));
+					Point coords = new Point((int)Math.Floor(Projectile.Center.X / 16f), (int)Math.Floor(Projectile.Center.Y / 16f));
 					paint(coords.X, coords.Y, data);
 				}
 			}
@@ -52,7 +54,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 				PaintData data = getPaintData();
 				bool madeContact = false;
 				for(float i = 1f; i < 8f; i += .5f) {
-					Vector2 coords = projectile.position + oldVelocity * i;
+					Vector2 coords = Projectile.position + oldVelocity * i;
 					Point tile = new Point((int)Math.Floor(coords.X / 16f), (int)Math.Floor(coords.Y / 16f));
 					if(tile.X > 0 && tile.Y > 0 && tile.X < Main.maxTilesX && tile.Y < Main.maxTilesY) {
 						if(WorldGen.SolidOrSlopedTile(tile.X, tile.Y) || madeContact) {
@@ -62,8 +64,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
 					}
 				}
 			}
-			Main.PlaySound(SoundID.Dig);
-			projectile.Kill();
+			SoundEngine.PlaySound(SoundID.Dig);
+			Projectile.Kill();
 			return false;
 		}
 	}

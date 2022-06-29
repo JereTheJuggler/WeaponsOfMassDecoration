@@ -15,9 +15,9 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override void SetDefaults() {
-			item.CloneDefaults(ItemID.Shuriken);
-			item.value = Item.sellPrice(silver: 5);
-			item.shoot = ProjectileType<Projectiles.PaintShuriken>();
+			Item.CloneDefaults(ItemID.Shuriken);
+			Item.value = Item.sellPrice(silver: 5);
+			Item.shoot = ProjectileType<Projectiles.PaintShuriken>();
 		}
 	}
 }
