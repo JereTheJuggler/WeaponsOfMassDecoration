@@ -554,7 +554,6 @@ namespace WeaponsOfMassDecoration {
 		public override bool PreDraw(ref Color lightColor) {
 			if(Server())
 				return false;
-			//TODO: make this function a little more organized
 			if(!hasGraphics)
 				return false;
 			if(!fullyShaded) {
