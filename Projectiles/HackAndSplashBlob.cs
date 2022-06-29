@@ -12,7 +12,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			dropsOnDeath = true;
 			dropCount = 5;
 			dropCone = (float)Math.PI / 2f;
-			usesShader = true;
+			fullyShaded = true;
 
 			explodesOnDeath = true;
 			explosionRadius = 64f;
@@ -52,8 +52,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public override bool PreAI() {
-			if(canPaint()) {
-				PaintData data = getPaintData();
+			if(CanPaint()) {
+				PaintData data = GetPaintData();
 				int armLength = 48;
 				Vector2 arm1 = new Vector2((float)Math.Cos(Projectile.rotation + (Math.PI / 6f) + (Math.PI / 2f)), (float)Math.Sin(Projectile.rotation + (Math.PI / 6f) + (Math.PI / 2f)));
 				Vector2 arm2 = new Vector2((float)Math.Cos(Projectile.rotation - (Math.PI / 6f) + (Math.PI / 2f)), (float)Math.Sin(Projectile.rotation - (Math.PI / 6f) + (Math.PI / 2f)));
@@ -66,8 +66,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
 						(int)Math.Round((Projectile.Center.X + (arm2.X * offset)) / 16f),
 						(int)Math.Round((Projectile.Center.Y + (arm2.Y * offset)) / 16f)
 					);
-					paint(tile1.X, tile1.Y, data);
-					paint(tile2.X, tile2.Y, data);
+					Paint(tile1.X, tile1.Y, data);
+					Paint(tile2.X, tile2.Y, data);
 				}
 			}
 			base.PreAI();
@@ -80,11 +80,11 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public override bool OnTileCollide(Vector2 oldVelocity) {
-			if(canPaint()) {
-				PaintData data = getPaintData();
-				paint(Projectile.Center, data);
+			if(CanPaint()) {
+				PaintData data = GetPaintData();
+				Paint(Projectile.Center, data);
 				oldVelocity.Normalize();
-				explode(Projectile.Center, 32f, data);
+				Explode(Projectile.Center, 32f, data);
 			}
 			SoundEngine.PlaySound(SoundID.Item21, Projectile.Center);
 			Projectile.Kill();

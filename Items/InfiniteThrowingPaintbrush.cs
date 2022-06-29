@@ -27,13 +27,13 @@ namespace WeaponsOfMassDecoration.Items {
 			recipe.Register();
 		}
 
-		protected override Texture2D getTexture(WoMDPlayer player) {
+		protected override Texture2D GetTexture(WoMDPlayer player) {
 			//Needs to be overridden in this class, because the texture names do not follow the convention of <Class name>Painted and <Class name>Scraper
 			if(player.paintData.paintMethod == PaintMethods.RemovePaint)
-				return getExtraTexture("ThrowingPaintbrushScraper");
+				return GetExtraTexture("ThrowingPaintbrushScraper");
 			if(player.paintData.PaintColor == -1 && player.paintData.CustomPaint == null)
 				return null;
-			return getExtraTexture("ThrowingPaintbrushPainted");
+			return GetExtraTexture("ThrowingPaintbrushPainted");
 		}
 	}
 }

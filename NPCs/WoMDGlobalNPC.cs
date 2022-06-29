@@ -26,11 +26,11 @@ namespace WeaponsOfMassDecoration.NPCs {
 		/// <summary>
 		/// The paint data that is currently used for rendering this npc
 		/// </summary>
-		protected PaintData _paintData = new PaintData(npcCyclingTimeScale, -1, null);
+		protected PaintData _paintData = new(npcCyclingTimeScale, -1, null);
 		/// <summary>
 		/// The paint data that is currently used for rendering this npc
 		/// </summary>
-		public PaintData paintData => !painted ? new PaintData(npcCyclingTimeScale, -1, null) : _paintData;
+		public PaintData PaintData => !painted ? new PaintData(npcCyclingTimeScale, -1, null) : _paintData;
 
 		//Each entity needs their own set of the above variables
 		public override bool InstancePerEntity => true;
@@ -46,11 +46,11 @@ namespace WeaponsOfMassDecoration.NPCs {
 		/// </summary>
 		/// <param name="npc"></param>
 		/// <param name="data"></param>
-		public void setPaintData(NPC npc, PaintData data) {
+		public void SetPaintData(NPC npc, PaintData data) {
 			_paintData = data;
 			painted = true;
-			if(multiplayer()) {
-				sendColorPacket(this, npc);
+			if(Multiplayer()) {
+				SendColorPacket(this, npc);
 			}
 		}
 
@@ -61,11 +61,11 @@ namespace WeaponsOfMassDecoration.NPCs {
 		/// <param name="npc"></param>
 		/// <param name="toClient"></param>
 		/// <param name="ignoreClient"></param>
-		public static void sendColorPacket(WoMDNPC gNpc, NPC npc, int toClient = -1, int ignoreClient = -1) {
+		public static void SendColorPacket(WoMDNPC gNpc, NPC npc, int toClient = -1, int ignoreClient = -1) {
 			if(!gNpc.painted)
 				return;
-			PaintData data = gNpc.paintData;
-			if(server() || multiplayer()) {
+			PaintData data = gNpc.PaintData;
+			if(Server() || Multiplayer()) {
 				ModPacket packet = gNpc.Mod.GetPacket();
 				packet.Write(WoMDMessageTypes.SetNPCColors);
 				packet.Write(npc.whoAmI);
@@ -84,10 +84,10 @@ namespace WeaponsOfMassDecoration.NPCs {
 		/// <param name="reader"></param>
 		/// <param name="gNpc"></param>
 		/// <param name="npc"></param>
-		public static void readColorPacket(BinaryReader reader, out WoMDNPC gNpc, out NPC npc) {
+		public static void ReadColorPacket(BinaryReader reader, out WoMDNPC gNpc, out NPC npc) {
 			int npcId = reader.ReadInt32();
 			int npcType = reader.ReadInt32();
-			npc = getNPC(npcId);
+			npc = GetNPC(npcId);
 			gNpc = npc.GetGlobalNPC<WoMDNPC>();
 			int paintColor = reader.ReadInt32();
 			string customPaintName = reader.ReadString();
@@ -111,7 +111,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 		//This is used for controlling certain Chaos Mode functionality
 		public override void PostAI(NPC npc) {
 			base.PostAI(npc);
-			if((Main.netMode == NetmodeID.SinglePlayer || Main.netMode == NetmodeID.Server) && chaosMode()) {
+			if((Main.netMode == NetmodeID.SinglePlayer || Main.netMode == NetmodeID.Server) && ChaosMode()) {
 				if(painted) {
 					switch(npc.aiStyle) {
 						case 1: //slime
@@ -142,7 +142,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 										PaintingProjectile proj = (PaintingProjectile)p.ModProjectile;
 										proj.npcOwner = npc.whoAmI;
 										p.timeLeft = 60;
-										PaintingProjectile.sendProjNPCOwnerPacket(proj);
+										PaintingProjectile.SendProjNPCOwnerPacket(proj);
 									}
 								}
 							}
@@ -182,8 +182,8 @@ namespace WeaponsOfMassDecoration.NPCs {
 										PaintingProjectile proj = p.ModProjectile as PaintingProjectile;
 										if(proj != null) {
 											proj.npcOwner = npc.whoAmI;
-											if(server())
-												PaintingProjectile.sendProjNPCOwnerPacket(proj);
+											if(Server())
+												PaintingProjectile.SendProjNPCOwnerPacket(proj);
 										}
 									}
 								}
@@ -197,7 +197,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 		//This is used for controlling certain Chaos Mode functionality
 		public override void OnKill(NPC npc) {
 			base.OnKill(npc);
-			if(chaosMode()) {
+			if(ChaosMode()) {
 				if(painted) {
 					switch(npc.type) {
 						case NPCID.EyeofCthulhu:
@@ -232,17 +232,17 @@ namespace WeaponsOfMassDecoration.NPCs {
 								List<PaintingProjectile> projectiles = new List<PaintingProjectile>();
 								for(int i = 0; i < 8; i++) {
 									Vector2 rotatedDir = dir.RotatedBy((PI / 4f) * i);
-									PaintSplatter p = createPaintSplatter(npc.whoAmI, npc.Center + rotatedDir * 48, rotatedDir * 10, 100, .5f, 2f);
+									PaintSplatter p = CreatePaintSplatter(npc.whoAmI, npc.Center + rotatedDir * 48, rotatedDir * 10, 100, .5f, 2f);
 									if(p != null)
 										projectiles.Add(p);
 									rotatedDir = rotatedDir.RotatedBy(PI / 8f);
-									PaintSplatter p2 = createPaintSplatter(npc.whoAmI, npc.Center + rotatedDir * 32, rotatedDir * 6, 100);
+									PaintSplatter p2 = CreatePaintSplatter(npc.whoAmI, npc.Center + rotatedDir * 32, rotatedDir * 6, 100);
 									if(p2 != null)
 										projectiles.Add(p2);
 								}
-								if(singlePlayer()) {
+								if(SinglePlayer()) {
 									for(int i = 0; i < 20; i++) {
-										Dust d = Dust.NewDustDirect(npc.Center - npc.Size / 4f, npc.width / 2, npc.height / 2, DustType<PaintDust>(), 0, 0, 0, getColor(_paintData), 2);
+										Dust d = Dust.NewDustDirect(npc.Center - npc.Size / 4f, npc.width / 2, npc.height / 2, DustType<PaintDust>(), 0, 0, 0, GetColor(_paintData), 2);
 										if(d != null) {
 											d.velocity = (d.position - npc.Center).SafeNormalize(new Vector2(1, 0)) * 5;
 											if(d.customData != null) {
@@ -251,28 +251,28 @@ namespace WeaponsOfMassDecoration.NPCs {
 										}
 									}
 								}
-								if(server())
-									PaintingProjectile.sendMultiProjNPCOwnerPacket(projectiles);
+								if(Server())
+									PaintingProjectile.SendMultiProjNPCOwnerPacket(projectiles);
 							}
 							break;
 					}
 				}
 				if(npc.townNPC) {
 					if(npc.type == NPCID.PartyGirl) {
-						splatterColored(npc.Center, 8, new byte[] { PaintID.DeepRedPaint, PaintID.DeepRedPaint, PaintID.DeepOrangePaint, PaintID.DeepYellowPaint, PaintID.DeepGreenPaint, PaintID.DeepBluePaint, PaintID.DeepPurplePaint }, new PaintData(1, PaintMethods.BlocksAndWalls), true);
+						SplatterColored(npc.Center, 8, new byte[] { PaintID.DeepRedPaint, PaintID.DeepRedPaint, PaintID.DeepOrangePaint, PaintID.DeepYellowPaint, PaintID.DeepGreenPaint, PaintID.DeepBluePaint, PaintID.DeepPurplePaint }, new PaintData(1, PaintMethods.BlocksAndWalls), true);
 						for(int i = 0; i < 10; i++) {
 							Vector2 vel = new Vector2(Main.rand.NextFloat(2, 3), 0).RotatedBy(Main.rand.NextFloat(PI * 2));
 							Dust.NewDust(npc.Center - npc.Size / 4f, npc.width / 2, npc.height / 2, DustID.Confetti + Main.rand.Next(0,4), vel.X, vel.Y, 0);
 						}
 					} else {
 						PaintData data = new PaintData(PaintID.DeepRedPaint);
-						splatter(npc.Center, 100f, 8, data, true);
+						Splatter(npc.Center, 100f, 8, data, true);
 					}
 				}
 			}
 		}
 
-		private PaintSplatter createPaintSplatter(int npcOwner, Vector2 position, Vector2 velocity, int timeLeft = 30, float light = 0, float scale = 1f) {
+		private static PaintSplatter CreatePaintSplatter(int npcOwner, Vector2 position, Vector2 velocity, int timeLeft = 30, float light = 0, float scale = 1f) {
 			Projectile p = Projectile.NewProjectileDirect(
 				Main.npc[npcOwner].GetSource_FromAI(),
 				position, 
@@ -302,13 +302,13 @@ namespace WeaponsOfMassDecoration.NPCs {
 
 		//This is where the shaders are applied to the NPCs to make them appear painted
 		public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) {
-			if(painted && !server()) {
+			if(painted && !Server()) {
 				resetBatchInPost = true;
 
 				spriteBatch.End();
 				spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
 
-				applyShader(this, paintData, new DrawData(TextureAssets.Npc[npc.type].Value, npc.position, npc.frame, Color.White));
+				ApplyShader(this, PaintData, new DrawData(TextureAssets.Npc[npc.type].Value, npc.position, npc.frame, Color.White));
 			}
 			return true;
 		}
@@ -323,7 +323,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 			if(painted) {
 				switch(npc.type) {
 					case NPCID.Paladin:
-						Lighting.AddLight(npc.Center, getColor(_paintData).ToVector3() * .5f);
+						Lighting.AddLight(npc.Center, GetColor(_paintData).ToVector3() * .5f);
 						break;
 				}
 			}
@@ -332,19 +332,19 @@ namespace WeaponsOfMassDecoration.NPCs {
 		public override void SetupShop(int type, Chest shop, ref int nextSlot) {
 			bool rewardsProgram = false;
 
-			WoMDPlayer player = getModPlayer(Main.myPlayer);
+			WoMDPlayer player = GetModPlayer(Main.myPlayer);
 			if(player != null) 
 				rewardsProgram = player.accRewardsProgram;
 			
 			switch(type) {
 				case NPCID.Steampunker:
-					if(shouldSellPaintingStuff()) {
+					if(ShouldSellPaintingStuff()) {
 						shop.item[nextSlot].SetDefaults(ItemType<Items.PaintSolution>());
 						nextSlot++;
 					}
 					break;
 				case NPCID.Merchant:
-					if(shouldSellPaintingStuff()) {
+					if(ShouldSellPaintingStuff()) {
 						shop.item[nextSlot].SetDefaults(ItemType<Items.PaintArrow>());
 						nextSlot++;
 
@@ -356,7 +356,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 					}
 					break;
 				case NPCID.Demolitionist:
-					if(shouldSellPaintingStuff()) {
+					if(ShouldSellPaintingStuff()) {
 						shop.item[nextSlot].SetDefaults(ItemType<Items.PaintBomb>());
 						nextSlot++;
 
@@ -365,13 +365,13 @@ namespace WeaponsOfMassDecoration.NPCs {
 					}
 					break;
 				case NPCID.ArmsDealer:
-					if(shouldSellPaintingStuff()) {
+					if(ShouldSellPaintingStuff()) {
 						shop.item[nextSlot].SetDefaults(ItemType<Items.Paintball>());
 						nextSlot++;
 					}
 					break;
 				case NPCID.Painter:
-					if(multiplayer() && shouldSellPaintingStuff()) {
+					if(Multiplayer() && ShouldSellPaintingStuff()) {
 						shop.item[nextSlot].SetDefaults(ItemType<TeamPaint>());
 						nextSlot++;
 					}
@@ -380,7 +380,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 			if(rewardsProgram) {
 				for(int i = 0; i < shop.item.Length; i++) {
 					Item item = shop.item[i];
-					if(isPaint(item) || isPaintingTool(item) || isPaintingItem(item))
+					if(IsPaint(item) || IsPaintingTool(item) || IsPaintingItem(item))
 						item.value = (int)Math.Ceiling((float)item.value * .8);
 				}
 			}
@@ -390,10 +390,10 @@ namespace WeaponsOfMassDecoration.NPCs {
 		/// A generic test to check if an npc should sell painting items. Will return true if the painter has moved in, or if the player is currently carrying any paint related items
 		/// </summary>
 		/// <returns></returns>
-		public bool shouldSellPaintingStuff() {
+		public static bool ShouldSellPaintingStuff() {
 			if(NPC.AnyNPCs(NPCID.Painter))
 				return true;
-			Player p = getPlayer(Main.myPlayer);
+			Player p = GetPlayer(Main.myPlayer);
 			if(p == null)
 				return false;
 			Item[] inv = p.inventory;
@@ -402,9 +402,9 @@ namespace WeaponsOfMassDecoration.NPCs {
 				if(i.active && i.stack > 0) {
 					if(i.ModItem is PaintingItem)
 						return true;
-					if(isPaintingTool(i))
+					if(IsPaintingTool(i))
 						return true;
-					if(isPaint(i))
+					if(IsPaint(i))
 						return true;
 				}
 			}

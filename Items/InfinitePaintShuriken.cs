@@ -26,11 +26,11 @@ namespace WeaponsOfMassDecoration.Items {
 			recipe.AddTile(TileID.DyeVat);
 			recipe.Register();
 		}
-		protected override Texture2D getTexture(WoMDPlayer player) {
+		protected override Texture2D GetTexture(WoMDPlayer player) {
 			//Needs to be overridden in this class, because the texture names do not follow the convention of <Class name>Painted
 			if((player.paintData.PaintColor == -1 && player.paintData.CustomPaint == null) || player.paintData.paintMethod == PaintMethods.RemovePaint)
 				return null;
-			return getExtraTexture("PaintShurikenPainted");
+			return GetExtraTexture("PaintShurikenPainted");
 		}
 	}
 }

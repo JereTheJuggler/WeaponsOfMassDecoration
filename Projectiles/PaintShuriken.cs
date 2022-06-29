@@ -38,14 +38,14 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override bool PreAI() {
 			base.PreAI();
-			if(canPaint() && (Projectile.timeLeft + 1) % 3 == 0) {
-				PaintData data = getPaintData();
+			if(CanPaint() && (Projectile.timeLeft + 1) % 3 == 0) {
+				PaintData data = GetPaintData();
 				Vector2 projCenter = new Vector2((float)Math.Floor(Projectile.Center.X / 16f) * 16f, (float)Math.Floor(Projectile.Center.Y / 16f) * 16f);
 				for(float delta = 0; delta < Math.PI * 2; delta += (float)Math.PI / 2) {
 					float startAngle = rotation + delta;
 					Vector2 center = projCenter + new Vector2(0, radius).RotatedBy(startAngle);
 					for(float delta2 = 0; delta2 < Math.PI * 2 / 3; delta2 += (float)Math.PI / 32) {
-						paint(center + new Vector2(0, -1 * radius).RotatedBy(startAngle + Projectile.direction * delta2), data);
+						Paint(center + new Vector2(0, -1 * radius).RotatedBy(startAngle + Projectile.direction * delta2), data);
 					}
 				}
 				paintedTiles = new List<Point>();
@@ -56,13 +56,13 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override bool OnTileCollide(Vector2 oldVelocity) {
 			SoundEngine.PlaySound(SoundID.Dig, Projectile.Center);
-			PaintData data = getPaintData();
+			PaintData data = GetPaintData();
 			for(int i = 0; i < 4; i++) {
 				Vector2 vel = oldVelocity * -1;
 				vel.Normalize();
 				vel = vel.RotatedBy(Main.rand.NextFloat(-.2f, .2f));
 				vel *= .5f;
-				Dust.NewDust(Projectile.Center, 0, 0, DustID.Stone, vel.X, vel.Y, 0, getColor(data));
+				Dust.NewDust(Projectile.Center, 0, 0, DustID.Stone, vel.X, vel.Y, 0, GetColor(data));
 			}
 			return base.OnTileCollide(oldVelocity);
 		}

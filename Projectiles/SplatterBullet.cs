@@ -53,35 +53,35 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public override bool OnTileCollide(Vector2 oldVelocity) {
-			if(canPaint()) {
-				PaintData data = getPaintData();
-				paint(Projectile.Center, data);
+			if(CanPaint()) {
+				PaintData data = GetPaintData();
+				Paint(Projectile.Center, data);
 				oldVelocity.Normalize();
 				Vector2 center = Projectile.Center.ToWorldCoordinates(0, 0);
 				center = new Vector2(center.X / 16, center.Y / 16);
 				for(int i = 0; i < 64; i++) {
 					Point coords = new Point((int)Math.Floor((center.X + (oldVelocity.X * i)) / 16), (int)Math.Floor((center.Y + (oldVelocity.Y * i)) / 16));
 					if(coords.X > 0 && coords.Y > 0 && coords.X < Main.maxTilesX && coords.Y < Main.maxTilesY && WorldGen.SolidOrSlopedTile(coords.X, coords.Y)) {
-						paint(coords.X, coords.Y, data);
+						Paint(coords.X, coords.Y, data);
 						break;
 					}
 				}
 			}
-			blowUp();
+			BlowUp();
 			return false;
 		}
 
 		public override void OnHitNPC(NPC target, int damage, float knockback, bool crit) {
 			base.OnHitNPC(target, damage, knockback, crit);
-			blowUp();
+			BlowUp();
 		}
 
 		public override void OnHitPvp(Player target, int damage, bool crit) {
 			base.OnHitPvp(target, damage, crit);
-			blowUp();
+			BlowUp();
 		}
 
-		public void blowUp() {
+		public void BlowUp() {
 			Projectile.position = Projectile.Center - new Vector2(32, 32);
 			Projectile.Size = new Vector2(64, 64);
 			Projectile.timeLeft = 3;
@@ -92,15 +92,15 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			double splatterAngle = (Math.PI / 5) * 3;
 			int spokes = 7;
 			backwards = backwards.RotatedBy(splatterAngle / -2f);
-			PaintData data = getPaintData();
-			bool paint = canPaint();
+			PaintData data = GetPaintData();
+			bool paint = CanPaint();
 			for(byte i = 0; i < spokes; i++) {
 				Vector2 vel = backwards.RotatedBy((splatterAngle / (spokes - 1)) * i);
 				int length = Main.rand.Next(7, 12);
 				if(paint)
-					paintBetweenPoints(Projectile.Center, Projectile.Center + vel * length, data);
+					PaintBetweenPoints(Projectile.Center, Projectile.Center + vel * length, data);
 				for(int j = 0; j < length; j++) {
-					Dust dust = getDust(Dust.NewDust((Projectile.Center + (vel * j)) - new Vector2(5, 5), 10, 10, DustType<PaintDust>(), 0, 0, 0, data.RenderColor, 1f));
+					Dust dust = GetDust(Dust.NewDust((Projectile.Center + (vel * j)) - new Vector2(5, 5), 10, 10, DustType<PaintDust>(), 0, 0, 0, data.RenderColor, 1f));
 					if(dust != null) {
 						dust.noGravity = true;
 						dust.velocity = new Vector2(1, 0).RotatedByRandom(Math.PI * 2);
@@ -110,7 +110,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 				}
 			}
 			for(int i = 0; i < 15; i++) {
-				Dust dust = getDust(Dust.NewDust(Projectile.Center - new Vector2(16, 16), 32, 32, DustID.Smoke, 0f, 0f, 100, data.RenderColor, 1f));
+				Dust dust = GetDust(Dust.NewDust(Projectile.Center - new Vector2(16, 16), 32, 32, DustID.Smoke, 0f, 0f, 100, data.RenderColor, 1f));
 				if(dust != null) {
 					dust.velocity *= .8f;
 				}

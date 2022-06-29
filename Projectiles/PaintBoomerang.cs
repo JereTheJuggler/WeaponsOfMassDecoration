@@ -41,12 +41,12 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override bool PreAI() {
 			base.PreAI();
-			if(canPaint()) {
-				PaintData data = getPaintData();
-				paint(new Vector2(Projectile.Center.X + 8, Projectile.Center.Y + 8), data);
-				paint(new Vector2(Projectile.Center.X + 8, Projectile.Center.Y - 8), data);
-				paint(new Vector2(Projectile.Center.X - 8, Projectile.Center.Y + 8), data);
-				paint(new Vector2(Projectile.Center.X - 8, Projectile.Center.Y - 8), data);
+			if(CanPaint()) {
+				PaintData data = GetPaintData();
+				Paint(new Vector2(Projectile.Center.X + 8, Projectile.Center.Y + 8), data);
+				Paint(new Vector2(Projectile.Center.X + 8, Projectile.Center.Y - 8), data);
+				Paint(new Vector2(Projectile.Center.X - 8, Projectile.Center.Y + 8), data);
+				Paint(new Vector2(Projectile.Center.X - 8, Projectile.Center.Y - 8), data);
 				paintedTiles = new List<Point>();
 			}
 			return true;
@@ -55,7 +55,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		public override void AI() {
 			base.AI();
 			if(Main.rand.NextFloat() <= .5f) {
-				Dust dust = Dust.NewDustPerfect(Projectile.Center, DustType<PaintDust>(), new Vector2(2, 0).RotatedByRandom(Math.PI * 2), 0, getColor(getPaintData()), 1);
+				Dust dust = Dust.NewDustPerfect(Projectile.Center, DustType<PaintDust>(), new Vector2(2, 0).RotatedByRandom(Math.PI * 2), 0, GetColor(GetPaintData()), 1);
 				if(dust != null) {
 					dust.velocity = new Vector2(1, 0).RotatedByRandom(Math.PI * 2);
 					((float[])dust.customData)[1] = .015f;
@@ -65,8 +65,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public override bool OnTileCollide(Vector2 oldVelocity) {
-			if(canPaint())
-				explode(Projectile.Center, 45, getPaintData());
+			if(CanPaint())
+				Explode(Projectile.Center, 45, GetPaintData());
 			return true;
 		}
 	}

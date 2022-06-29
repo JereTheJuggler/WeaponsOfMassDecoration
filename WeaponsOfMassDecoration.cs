@@ -62,30 +62,30 @@ namespace WeaponsOfMassDecoration {
 		public override void HandlePacket(BinaryReader reader, int whoAmI) {
 			switch(reader.ReadByte()) {
 				case WoMDMessageTypes.SetNPCColors:
-					if(multiplayer() || server()) {
-						WoMDNPC.readColorPacket(reader, out WoMDNPC gNpc, out NPC npc);
-						if(server()) {
-							WoMDNPC.sendColorPacket(gNpc, npc);
+					if(Multiplayer() || Server()) {
+						WoMDNPC.ReadColorPacket(reader, out WoMDNPC gNpc, out NPC npc);
+						if(Server()) {
+							WoMDNPC.SendColorPacket(gNpc, npc);
 						}
 					}
 					break;
 				case WoMDMessageTypes.SetProjectileColor:
-					if(multiplayer())
-						WoMDProjectile.readProjectileColorPacket(reader, out _, out _);
+					if(Multiplayer())
+						WoMDProjectile.ReadProjectileColorPacket(reader, out _, out _);
 					break;
 				case WoMDMessageTypes.SetProjNPCOwner:
-					if(multiplayer())
-						PaintingProjectile.readProjNPCOwnerPacket(reader);
+					if(Multiplayer())
+						PaintingProjectile.ReadProjNPCOwnerPacket(reader);
 					break;
 				case WoMDMessageTypes.SetMultiProjNPCOwner:
-					if(multiplayer())
-						PaintingProjectile.readMultiProjNPCOwnerPacket(reader);
+					if(Multiplayer())
+						PaintingProjectile.ReadMultiProjNPCOwnerPacket(reader);
 					break;
 				case WoMDMessageTypes.SetPPOverrideData:
-					if(multiplayer() || server()) {
-						PaintingProjectile.readPPOverrideDataPacket(reader, out PaintingProjectile proj);
-						if(server() && proj != null) {
-							PaintingProjectile.sendPPOverrideDataPacket(proj);
+					if(Multiplayer() || Server()) {
+						PaintingProjectile.ReadPPOverrideDataPacket(reader, out PaintingProjectile proj);
+						if(Server() && proj != null) {
+							PaintingProjectile.SendPPOverrideDataPacket(proj);
 						}
 					}
 					break;
@@ -112,32 +112,32 @@ namespace WeaponsOfMassDecoration {
 				#region load extra textures
 				extraTextures = new Dictionary<string, Texture2D>();
 
-				loadExtraTexture("Items/PaintbrushPainted");
-				loadExtraTexture("Items/SpectrePaintbrushPainted");
-				loadExtraTexture("Items/PaintRollerPainted");
-				loadExtraTexture("Items/SpectrePaintRollerPainted");
-				loadExtraTexture("Items/PaintingMultiToolPainted");
-				loadExtraTexture("Items/SpectrePaintingMultiToolPainted");
+				LoadExtraTexture("Items/PaintbrushPainted");
+				LoadExtraTexture("Items/SpectrePaintbrushPainted");
+				LoadExtraTexture("Items/PaintRollerPainted");
+				LoadExtraTexture("Items/SpectrePaintRollerPainted");
+				LoadExtraTexture("Items/PaintingMultiToolPainted");
+				LoadExtraTexture("Items/SpectrePaintingMultiToolPainted");
 
-				loadExtraTexture("Items/PaintArrowScraper");
-				loadExtraTexture("Items/PaintArrowPainted");
+				LoadExtraTexture("Items/PaintArrowScraper");
+				LoadExtraTexture("Items/PaintArrowPainted");
 
-				loadExtraTexture("Items/PaintShurikenPainted");
+				LoadExtraTexture("Items/PaintShurikenPainted");
 
-				loadExtraTexture("Items/PaintDynamitePainted");
+				LoadExtraTexture("Items/PaintDynamitePainted");
 
-				loadExtraTexture("Items/ThrowingPaintbrushPainted");
-				loadExtraTexture("Items/ThrowingPaintbrushScraper");
+				LoadExtraTexture("Items/ThrowingPaintbrushPainted");
+				LoadExtraTexture("Items/ThrowingPaintbrushScraper");
 
-				loadExtraTexture("Items/PaintBombPainted");
+				LoadExtraTexture("Items/PaintBombPainted");
 
-				loadExtraTexture("Items/PaintBoomerangPainted");
-				loadExtraTexture("Items/PaintBoomerangScraper");
+				LoadExtraTexture("Items/PaintBoomerangPainted");
+				LoadExtraTexture("Items/PaintBoomerangScraper");
 
-				loadExtraTexture("Items/PaintSolutionPainted");
-				loadExtraTexture("Items/InfinitePaintSolutionPainted");
+				LoadExtraTexture("Items/PaintSolutionPainted");
+				LoadExtraTexture("Items/InfinitePaintSolutionPainted");
 
-				loadExtraTexture("Items/PaintballPainted");
+				LoadExtraTexture("Items/PaintballPainted");
 				#endregion
 
 				IL.Terraria.Player.PlaceThing += HookPlaceThing;
@@ -183,7 +183,7 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="name"></param>
 		/// <returns></returns>
-		public static Texture2D getExtraTexture(string name) {
+		public static Texture2D GetExtraTexture(string name) {
 			if(extraTextures.ContainsKey(name))
 				return extraTextures[name];
 			return null;
@@ -192,15 +192,15 @@ namespace WeaponsOfMassDecoration {
 		/// Loads an additional texture that won't be found with autoload. Uses the filename as the key in the dictionary
 		/// </summary>
 		/// <param name="filename">The file location + name for the texture. Extension should not be provided</param>
-		private void loadExtraTexture(string filename) {
-			loadExtraTexture(filename, filename.Substring(filename.LastIndexOf("/") + 1));
+		private static void LoadExtraTexture(string filename) {
+			LoadExtraTexture(filename, filename.Substring(filename.LastIndexOf("/") + 1));
 		}
 		/// <summary>
 		/// Loads an additional texture that won't be found with autoload. Uses a provided name as the key in the dictionary
 		/// </summary>
 		/// <param name="filename">The file location + name for the texture. Extension should not be provided</param>
 		/// <param name="name">The key to use for this texture's dictionary entry</param>
-		private void loadExtraTexture(string filename, string name) {
+		private static void LoadExtraTexture(string filename, string name) {
 			try {
 				Texture2D texture = ModContent.Request<Texture2D>("WeaponsOfMassDecoration/"+filename).Value;
 				extraTextures.Add(name, texture);
@@ -260,7 +260,7 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="index">The index of the dust in Main.dust</param>
 		/// <returns></returns>
-		public static Dust getDust(int index) {
+		public static Dust GetDust(int index) {
 			if(index < 0 || index >= Main.dust.Length - 1)
 				return null;
 			return Main.dust[index];
@@ -271,7 +271,7 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="index">The index of the projectile in Main.projectile</param>
 		/// <returns></returns>
-		public static Projectile getProjectile(int index) {
+		public static Projectile GetProjectile(int index) {
 			if(index < 0 || index >= Main.projectile.Length - 1)
 				return null;
 			return Main.projectile[index];
@@ -282,7 +282,7 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="index">The index of the projectile in Main.projectile</param>
 		/// <returns></returns>
-		public static WoMDProjectile getGlobalProjectile(int index) {
+		public static WoMDProjectile GetGlobalProjectile(int index) {
 			if(index < 0 || index >= Main.projectile.Length - 1)
 				return null;
 			Projectile p = Main.projectile[index];
@@ -296,7 +296,7 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="index">The index of the player in Main.player</param>
 		/// <returns></returns>
-		public static Player getPlayer(int index) {
+		public static Player GetPlayer(int index) {
 			if(index < 0 || index >= Main.player.Length - 1)
 				return null;
 			return Main.player[index];
@@ -307,7 +307,7 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="index">The index of the player in Main.player</param>
 		/// <returns></returns>
-		public static WoMDPlayer getModPlayer(int index) {
+		public static WoMDPlayer GetModPlayer(int index) {
 			if(index < 0 || index >= Main.player.Length - 1)
 				return null;
 			Player p = Main.player[index];
@@ -321,7 +321,7 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="index">The index of the npc in Main.npc</param>
 		/// <returns></returns>
-		public static NPC getNPC(int index) {
+		public static NPC GetNPC(int index) {
 			if(index < 0 || index >= Main.npc.Length - 1)
 				return null;
 			return Main.npc[index];
@@ -332,7 +332,7 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="index">The index of the npc in Main.npc</param>
 		/// <returns></returns>
-		public static WoMDNPC getGlobalNPC(int index) {
+		public static WoMDNPC GetGlobalNPC(int index) {
 			if(index < 0 || index >= Main.npc.Length - 1)
 				return null;
 			NPC npc = Main.npc[index];
@@ -345,36 +345,36 @@ namespace WeaponsOfMassDecoration {
 		/// Gets an instance of WoMDWorld
 		/// </summary>
 		/// <returns></returns>
-		public static WoMDWorld getWorld() => ModContent.GetInstance<WoMDWorld>();
+		public static WoMDWorld GetWorld() => ModContent.GetInstance<WoMDWorld>();
 
 		/// <summary>
 		/// Returns whether or not Chaos Mode is enabled
 		/// </summary>
 		/// <returns></returns>
-		public static bool chaosMode() => ModContent.GetInstance<WoMDConfig>().chaosModeEnabled;
+		public static bool ChaosMode() => ModContent.GetInstance<WoMDConfig>().chaosModeEnabled;
 
 		/// <summary>
 		/// A shortcut for Main.netMode == NetmodeID.SinglePlayer
 		/// </summary>
 		/// <returns></returns>
-		public static bool singlePlayer() => Main.netMode == NetmodeID.SinglePlayer;
+		public static bool SinglePlayer() => Main.netMode == NetmodeID.SinglePlayer;
 		/// <summary>
 		/// A shortcut for Main.netMode == NetmodeID.MultiplayerClient
 		/// </summary>
 		/// <returns></returns>
-		public static bool multiplayer() => Main.netMode == NetmodeID.MultiplayerClient;
+		public static bool Multiplayer() => Main.netMode == NetmodeID.MultiplayerClient;
 		/// <summary>
 		/// A shortcut for Main.netMode == NetmodeID.Server
 		/// </summary>
 		/// <returns></returns>
-		public static bool server() => Main.netMode == NetmodeID.Server;
+		public static bool Server() => Main.netMode == NetmodeID.Server;
 
 		/// <summary>
 		/// Checks if the provided item is either a vanilla paint, or a CustomPaint
 		/// </summary>
 		/// <param name="item"></param>
 		/// <returns></returns>
-		public static bool isPaint(Item item) {
+		public static bool IsPaint(Item item) {
 			if(item == null)
 				return false;
 			if(!item.active)
@@ -390,7 +390,7 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="item"></param>
 		/// <returns></returns>
-		public static bool isPaintingTool(Item item) {
+		public static bool IsPaintingTool(Item item) {
 			if(item == null)
 				return false;
 			if(!item.active)
@@ -413,7 +413,7 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="item"></param>
 		/// <returns></returns>
-		public static bool isPaintingItem(Item item) {
+		public static bool IsPaintingItem(Item item) {
 			if(item == null)
 				return false;
 			if(!item.active)
@@ -427,7 +427,7 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="paintMethod"></param>
 		/// <returns></returns>
-		public static string getPaintToolName(PaintMethods paintMethod) {
+		public static string GetPaintToolName(PaintMethods paintMethod) {
 			switch(paintMethod) {
 				case PaintMethods.Blocks: return "Paintbrush";
 				case PaintMethods.Walls: return "Paint Roller";
@@ -444,7 +444,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="paintColor">Specifies a value from PaintID. -1 for custom paints</param>
 		/// <param name="customPaint">Specifies an instance of CustomPaint to use. null for vanilla paints</param>
 		/// <returns></returns>
-		public static string getPaintColorName(PaintData paintData) {
+		public static string GetPaintColorName(PaintData paintData) {
 			//TODO: Make this get the display names from the vanilla paints instead of hardcoded values. Maybe add in translations for custom paints
 			if(paintData.PaintColor == -1 && paintData.CustomPaint == null)
 				return "None";
@@ -466,7 +466,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="customPaint">The CustomPaint to use for painting the npc. Should be null when using a vanilla paint</param>
 		/// <param name="handledNpcs">Should not be provided</param>
 		/// <param name="preventRecursion">Should not be provided</param>
-		public static void applyPaintedToNPC(NPC npc, PaintData data, List<NPC> handledNpcs = null, bool preventRecursion = false) {
+		public static void ApplyPaintedToNPC(NPC npc, PaintData data, List<NPC> handledNpcs = null, bool preventRecursion = false) {
 			switch(npc.type) {
 				//cultist fight
 				case NPCID.CultistDragonBody1:
@@ -518,7 +518,7 @@ namespace WeaponsOfMassDecoration {
 				data.CustomPaint.modifyPaintDataForNpc(ref data);
 
 			if(globalNpc.painted) {
-				PaintData existingData = globalNpc.paintData;
+				PaintData existingData = globalNpc.PaintData;
 				if(existingData.PaintColor == data.PaintColor &&
 				   (existingData.CustomPaint == null) == (data.CustomPaint == null) && //either both or neither are null
 				   existingData.CustomPaint.GetType().Equals(data.CustomPaint.GetType()) &&
@@ -526,9 +526,9 @@ namespace WeaponsOfMassDecoration {
 					return; //nothing needs to be updated
 			}
 
-			globalNpc.setPaintData(npc, data);
+			globalNpc.SetPaintData(npc, data);
 
-			if(singlePlayer()) {
+			if(SinglePlayer()) {
 				//TODO: do this whole section better
 				if(handledNpcs == null)
 					handledNpcs = new List<NPC>();
@@ -545,7 +545,7 @@ namespace WeaponsOfMassDecoration {
 								case NPCID.MoonLordHead:
 								case NPCID.MoonLordHand:
 								case NPCID.MoonLordCore:
-									applyPaintedToNPC(Main.npc[i], data, null, true);
+									ApplyPaintedToNPC(Main.npc[i], data, null, true);
 									break;
 							}
 						}
@@ -564,12 +564,12 @@ namespace WeaponsOfMassDecoration {
 					case NPCID.SolarCrawltipedeBody:
 					case NPCID.BoneSerpentBody:
 						if(npc.ai[0] == Math.Round(npc.ai[0])) {
-							NPC prevSection = getNPC((int)npc.ai[0]);
+							NPC prevSection = GetNPC((int)npc.ai[0]);
 							if(prevSection != null && !handledNpcs.Contains(prevSection)) {
 								if(prevSection.ai[1] == Math.Round(prevSection.ai[1])) {
-									NPC thisSection = getNPC((int)prevSection.ai[1]);
+									NPC thisSection = GetNPC((int)prevSection.ai[1]);
 									if(thisSection != null && thisSection.Equals(npc)) {
-										applyPaintedToNPC(prevSection, data, handledNpcs);
+										ApplyPaintedToNPC(prevSection, data, handledNpcs);
 									}
 								}
 							}
@@ -586,12 +586,12 @@ namespace WeaponsOfMassDecoration {
 					case NPCID.SolarCrawltipedeHead:
 					case NPCID.BoneSerpentHead:
 						if(npc.ai[0] == Math.Round(npc.ai[0])) {
-							NPC prevSection = getNPC((int)npc.ai[0]);
+							NPC prevSection = GetNPC((int)npc.ai[0]);
 							if(prevSection != null && !handledNpcs.Contains(prevSection)) {
 								if(prevSection.ai[1] == Math.Round(prevSection.ai[1])) {
-									NPC thisSection = getNPC((int)prevSection.ai[1]);
+									NPC thisSection = GetNPC((int)prevSection.ai[1]);
 									if(thisSection != null && thisSection.Equals(npc)) {
-										applyPaintedToNPC(prevSection, data, handledNpcs);
+										ApplyPaintedToNPC(prevSection, data, handledNpcs);
 									}
 								}
 							}
@@ -608,12 +608,12 @@ namespace WeaponsOfMassDecoration {
 					case NPCID.SolarCrawltipedeTail:
 					case NPCID.BoneSerpentTail:
 						if(npc.ai[1] == Math.Round(npc.ai[1])) {
-							NPC nextSection = getNPC((int)npc.ai[1]);
+							NPC nextSection = GetNPC((int)npc.ai[1]);
 							if(nextSection != null && !handledNpcs.Contains(nextSection)) {
 								if(nextSection.ai[0] == Math.Round(nextSection.ai[0])) {
-									NPC thisSection = getNPC((int)nextSection.ai[0]);
+									NPC thisSection = GetNPC((int)nextSection.ai[0]);
 									if(thisSection != null && thisSection.Equals(npc)) {
-										applyPaintedToNPC(nextSection, data, handledNpcs);
+										ApplyPaintedToNPC(nextSection, data, handledNpcs);
 									}
 								}
 							}

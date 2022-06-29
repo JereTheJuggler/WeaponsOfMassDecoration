@@ -23,7 +23,7 @@ namespace WeaponsOfMassDecoration {
 			counter = delay;
 		}
 
-		public bool run() {
+		public bool Run() {
 			counter--;
 			if(counter <= 0) {
 				counter = delay;

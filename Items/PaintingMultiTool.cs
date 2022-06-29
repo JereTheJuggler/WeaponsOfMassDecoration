@@ -91,25 +91,25 @@ namespace WeaponsOfMassDecoration.Items {
 			int yOffset = mousePosition.Y - playerPos.Y;
 			if(yOffset < 0)
 				yOffset--;
-			if(isInRange(player, xOffset, yOffset)) {
-				PaintData data = p.paintData.clone();
+			if(IsInRange(player, xOffset, yOffset)) {
+				PaintData data = p.paintData.Clone();
 				data.paintMethod = PaintMethods.BlocksAndWalls;
-				paint(mousePosition.X, mousePosition.Y, data, true);
+				Paint(mousePosition.X, mousePosition.Y, data, true);
 			}
 			return true;
 		}
 
-		public bool isInRange(Player player, int xOffset, int yOffset) {
+		public bool IsInRange(Player player, int xOffset, int yOffset) {
 			return Math.Abs(xOffset) <= player.lastTileRangeX + Item.tileBoost && Math.Abs(yOffset) <= player.lastTileRangeY + Item.tileBoost;
 		}
 
-		protected override Texture2D getTexture(WoMDPlayer player) {
+		protected override Texture2D GetTexture(WoMDPlayer player) {
 			if(player.paintData.PaintColor == -1 && player.paintData.CustomPaint == null)
 				return null;
-			return getExtraTexture(GetType().Name + "Painted");
+			return GetExtraTexture(GetType().Name + "Painted");
 		}
 
-		public override PaintMethods overridePaintMethod(WoMDPlayer player) => PaintMethods.BlocksAndWalls;
+		public override PaintMethods OverridePaintMethod(WoMDPlayer player) => PaintMethods.BlocksAndWalls;
 	}
 
 	public class SpectrePaintingMultiTool : PaintingMultiTool {

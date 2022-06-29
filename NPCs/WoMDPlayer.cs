@@ -21,11 +21,11 @@ namespace WeaponsOfMassDecoration.NPCs {
 		protected int _currentPaintIndex;
 
 		protected bool _paintDataSet = false;
-		protected PaintData _paintData = new PaintData(paintCyclingTimeScale, 0);
+		protected PaintData _paintData = new(paintCyclingTimeScale, 0);
 		public PaintData paintData {
 			get {
 				if(!_paintDataSet)
-					setPaintData();
+					SetPaintData();
 				return _paintData;
 			}
 		}
@@ -77,7 +77,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 
 		public override void PostUpdateBuffs() {
 			base.PostUpdateBuffs();
-			if(chaosMode() && Player.whoAmI == Main.myPlayer) {
+			if(ChaosMode() && Player.whoAmI == Main.myPlayer) {
 				if(Player.HasBuff(BuffID.UnicornMount)) {
 					if(mountUnicornTime == 0)
 						mountUnicornTime = Main.GameUpdateCount;
@@ -96,14 +96,14 @@ namespace WeaponsOfMassDecoration.NPCs {
 								d.fadeIn = 1.5f;
 							}
 
-							getWorld().addAnimation(new PaintAnimation(heights.Length - 1, 3, index => {
+							GetWorld().AddAnimation(new PaintAnimation(heights.Length - 1, 3, index => {
 								int height = heights[index];
 								for(int i = 0; i < height; i++) {
 									Point coords = new Point(
 										fartPosition.X + (index * fartDirection),
 										fartPosition.Y + (((height - 1) / -2) + i)
 									);
-									paint(coords.X, coords.Y, new PaintData(colors[index]), true);
+									Paint(coords.X, coords.Y, new PaintData(colors[index]), true);
 								}
 								return true;
 							}));
@@ -138,9 +138,9 @@ namespace WeaponsOfMassDecoration.NPCs {
 					switch(damageSource.SourceProjectileType) {
 						case ProjectileID.Boulder:
 							if(true) {
-								Projectile proj = getProjectile(projIndex);
+								Projectile proj = GetProjectile(projIndex);
 								if(proj != null)
-									WoMDProjectile.applyPainted(proj, new PaintData(PaintID.DeepRedPaint));
+									WoMDProjectile.ApplyPainted(proj, new PaintData(PaintID.DeepRedPaint));
 							}
 							break;
 					}
@@ -176,7 +176,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 									proj.velocity += Player.velocity.SafeNormalize(new Vector2(0,0))*4;
 									PaintSplatter splatter = proj.ModProjectile as PaintSplatter;
 									if(splatter != null)
-										splatter.setOverridePaintData(new PaintData(color));
+										splatter.SetOverridePaintData(new PaintData(color));
 								}
 							}
 							break;
@@ -197,11 +197,11 @@ namespace WeaponsOfMassDecoration.NPCs {
 									maxLength = length;
 							}
 
-							getWorld().addAnimation(new PaintAnimation(maxLength, 1, index => {
+							GetWorld().AddAnimation(new PaintAnimation(maxLength, 1, index => {
 								for(byte i = 0; i < dirs.Length; i++) {
 									if(index <= lengths[i]) {
 										Vector2 disp = dirs[i] * 16f * (float)index;
-										paint((Player.Center + disp).ToTileCoordinates(), data, true);
+										Paint((Player.Center + disp).ToTileCoordinates(), data, true);
 									}
 								}
 								return true;
@@ -210,24 +210,24 @@ namespace WeaponsOfMassDecoration.NPCs {
 					}
 				}
 				if(!preventDefault)
-					splatter(Player.Center, 130f, 6, new PaintData(PaintID.DeepRedPaint), true);
+					Splatter(Player.Center, 130f, 6, new PaintData(PaintID.DeepRedPaint), true);
 			}
 		}
 
-		protected void setPaintData() {
+		protected void SetPaintData() {
 			//don't overwrite _paintData with a new PaintData
 			//a PaintingProjectile could be in the middle of using the paint data while the player runs out of a certain type of paint
 			_currentPaintIndex = -1;
 			_paintData.PaintColor = -1;
 			_paintData.CustomPaint = null;
 			_paintData.sprayPaint = false;
-			_paintData.player = getPlayer(Player.whoAmI);
+			_paintData.player = GetPlayer(Player.whoAmI);
 			_paintData.paintMethod = PaintMethods.None;
 			for(int i = 0; i < Player.inventory.Length && ((_paintData.PaintColor == -1 && _paintData.CustomPaint == null) || _paintData.paintMethod == PaintMethods.None); i++) {
 				Item item = Player.inventory[i];
 				if(item.active && item.stack > 0 && i != 58) {
 					item.playerIndexTheItemIsReservedFor = Player.whoAmI;
-					if(_currentPaintIndex < 0 && isPaint(item)) {
+					if(_currentPaintIndex < 0 && IsPaint(item)) {
 						_currentPaintIndex = i;
 						if(item.paint == CustomPaint.paintValue && item.ModItem is CustomPaint) {
 							_paintData.CustomPaint = item.ModItem as CustomPaint;
@@ -235,7 +235,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 						} else {
 							_paintData.PaintColor = item.paint;
 						}
-					} else if(_paintData.paintMethod == PaintMethods.None && isPaintingTool(item)) {
+					} else if(_paintData.paintMethod == PaintMethods.None && IsPaintingTool(item)) {
 						if(item.ModItem is PaintingMultiTool) {
 							_paintData.paintMethod = PaintMethods.BlocksAndWalls;
 						} else {
@@ -264,9 +264,9 @@ namespace WeaponsOfMassDecoration.NPCs {
 		/// A quick check to test if the player is currently able to paint. Useful for optimization to check before running a bunch of subsequent functions that would need to check this individually
 		/// </summary>
 		/// <returns></returns>
-		public bool canPaint() {
+		public bool CanPaint() {
 			if(!_paintDataSet)
-				setPaintData();
+				SetPaintData();
 			return !(_paintData.paintMethod == PaintMethods.None || ((_paintData.PaintColor == -1 && _paintData.CustomPaint == null) && _paintData.paintMethod != PaintMethods.RemovePaint));
 		}
 
@@ -274,11 +274,11 @@ namespace WeaponsOfMassDecoration.NPCs {
 		/// Consumes paint if necessary when a player paints a block or wall
 		/// </summary>
 		/// <param name="data">An instance of PaintData. This is provided for scenarios where the paintMethod is altered before painting occurred. All other properties from PaintData are gathered from the player's protected _paintData</param>
-		public void consumePaint(PaintData data) {
+		public void ConsumePaint(PaintData data) {
 			if(accPalette)
 				return;
 			if(!_paintDataSet)
-				setPaintData();
+				SetPaintData();
 			if(data.paintMethod == PaintMethods.RemovePaint)
 				return;
 			if(_currentPaintIndex >= 0) {
@@ -289,7 +289,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 					item.stack--;
 				if(item.stack == 0) {
 					item.active = false;
-					setPaintData();
+					SetPaintData();
 					data.PaintColor = _paintData.PaintColor;
 					data.CustomPaint = _paintData.CustomPaint;
 					data.sprayPaint = _paintData.sprayPaint;

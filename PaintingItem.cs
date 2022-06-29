@@ -61,7 +61,7 @@ namespace WeaponsOfMassDecoration {
 
 		//This is what fills in the "Current Tool" and "Current Paint" lines of the tooltip
 		public override void ModifyTooltips(List<TooltipLine> tooltips) {
-			Player p = getPlayer(Item.playerIndexTheItemIsReservedFor);
+			Player p = GetPlayer(Item.playerIndexTheItemIsReservedFor);
 			if(p == null)
 				return;
 			WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
@@ -69,9 +69,9 @@ namespace WeaponsOfMassDecoration {
 				return;
 			for(int i = 0; i < tooltips.Count; i++) {
 				if(tooltips[i].Text.StartsWith("Current Tool: ")) {
-					tooltips[i].Text = "Current Tool: " + getPaintToolName(player.paintData.paintMethod);
+					tooltips[i].Text = "Current Tool: " + GetPaintToolName(player.paintData.paintMethod);
 				} else if(tooltips[i].Text.StartsWith("Current Paint: ")) {
-					tooltips[i].Text = "Current Paint: " + getPaintColorName(player.paintData);
+					tooltips[i].Text = "Current Paint: " + GetPaintColorName(player.paintData);
 				}
 			}
 			base.ModifyTooltips(tooltips);
@@ -79,49 +79,49 @@ namespace WeaponsOfMassDecoration {
 
 		//This is where shaders are applied to items to make them reflect the current paint and tool the player is using
 		public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale) {
-			Player p = getPlayer(Main.myPlayer);
+			Player p = GetPlayer(Main.myPlayer);
 			if(p == null)
 				return true;
 			WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
 			if(player == null)
 				return true;
-			MiscShaderData shader = getShader(this, p);
+			MiscShaderData shader = GetShader(this, p);
 			if((usesGSShader || ((player.paintData.PaintColor == PaintID.NegativePaint || player.paintData.CustomPaint is NegativeSprayPaint) && !(this is CustomPaint)))) {
 				if(shader != null) {
-					//spriteBatch.End();
-					//spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, (player.paintData.PaintColor == PaintID.NegativePaint || player.paintData.CustomPaint is NegativeSprayPaint) ? SamplerState.LinearClamp : SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
+					spriteBatch.End();
+					spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, (player.paintData.PaintColor == PaintID.NegativePaint || player.paintData.CustomPaint is NegativeSprayPaint) ? SamplerState.LinearClamp : SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
 
-					//shader.Apply();
+					shader.Apply();
 				}
 
-				Texture2D texture = getTexture(player);
+				Texture2D texture = GetTexture(player);
 				if(texture == null)
 					texture = TextureAssets.Item[Item.type].Value;
 
 				spriteBatch.Draw(texture, position, frame, drawColor, 0, new Vector2(0, 0), scale, SpriteEffects.None, 0);
 
 				if(shader != null) {
-					//spriteBatch.End();
-					//spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix);
+					spriteBatch.End();
+					spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix);
 				}
 				return false;
 			}
 			return true;
 		}
 
-		protected virtual Texture2D getTexture(WoMDPlayer player) {
+		protected virtual Texture2D GetTexture(WoMDPlayer player) {
 			//default handling based on conventions with texture counts and texture names
 			switch(textureCount) {
 				case 2: //expects a default version with no paint, and a version with paint
 					if((player.paintData.PaintColor == -1 && player.paintData.CustomPaint == null) || player.paintData.paintMethod == PaintMethods.RemovePaint)
 						return null;
-					return getExtraTexture(GetType().Name + "Painted");
+					return GetExtraTexture(GetType().Name + "Painted");
 				case 3: //expects a default version with no paint, and versions with paint and as a paint scraper
 					if(player.paintData.paintMethod == PaintMethods.RemovePaint)
-						return getExtraTexture(GetType().Name + "Scraper");
+						return GetExtraTexture(GetType().Name + "Scraper");
 					if(player.paintData.PaintColor == -1 && player.paintData.CustomPaint == null)
 						return null;
-					return getExtraTexture(GetType().Name + "Painted");
+					return GetExtraTexture(GetType().Name + "Painted");
 			}
 			return null;
 		}
@@ -131,7 +131,7 @@ namespace WeaponsOfMassDecoration {
 			WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
 			if(p == null)
 				return;
-			if(!p.canPaint()) {
+			if(!p.CanPaint()) {
 				damage.Scale(.5f);
 			} else if(p.paintData.paintMethod == PaintMethods.RemovePaint) {
 				damage.Scale(.5f);
@@ -143,7 +143,7 @@ namespace WeaponsOfMassDecoration {
 			WoMDNPC npc = target.GetGlobalNPC<WoMDNPC>();
 			if(npc != null && p != null && Item.playerIndexTheItemIsReservedFor == Main.myPlayer) {
 				WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
-				PaintMethods method = overridePaintMethod(player);
+				PaintMethods method = OverridePaintMethod(player);
 				if(method != PaintMethods.None) {
 					if(method == PaintMethods.RemovePaint) {
 						npc.painted = false;
@@ -151,7 +151,7 @@ namespace WeaponsOfMassDecoration {
 						if(index >= 0)
 							target.DelBuff(index);
 					} else {
-						applyPaintedToNPC(target, new PaintData(npcCyclingTimeScale, player.paintData.PaintColor, player.paintData.CustomPaint, player.paintData.CustomPaint is ISprayPaint, Main.GlobalTimeWrappedHourly, player: player.Player));
+						ApplyPaintedToNPC(target, new PaintData(npcCyclingTimeScale, player.paintData.PaintColor, player.paintData.CustomPaint, player.paintData.CustomPaint is ISprayPaint, Main.GlobalTimeWrappedHourly, player: player.Player));
 					}
 				}
 			}
@@ -162,6 +162,6 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="player"></param>
 		/// <returns></returns>
-		public virtual PaintMethods overridePaintMethod(WoMDPlayer player) => player.paintData.paintMethod;
+		public virtual PaintMethods OverridePaintMethod(WoMDPlayer player) => player.paintData.paintMethod;
 	}
 }

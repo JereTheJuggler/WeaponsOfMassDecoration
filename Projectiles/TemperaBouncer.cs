@@ -16,7 +16,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		public float lastBounceTime = 0;
 
 		public TemperaBouncer() : base() {
-			usesShader = true;
+			fullyShaded = true;
 
 			dropsOnDeath = true;
 			dropCount = 10;
@@ -54,19 +54,19 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override bool PreAI() {
 			base.PreAI();
-			if(canPaint()) {
-				PaintData data = getPaintData();
-				paint(new Vector2(Projectile.Center.X + 8, Projectile.Center.Y + 8), data);
-				paint(new Vector2(Projectile.Center.X + 8, Projectile.Center.Y - 8), data);
-				paint(new Vector2(Projectile.Center.X - 8, Projectile.Center.Y + 8), data);
-				paint(new Vector2(Projectile.Center.X - 8, Projectile.Center.Y - 8), data);
+			if(CanPaint()) {
+				PaintData data = GetPaintData();
+				Paint(new Vector2(Projectile.Center.X + 8, Projectile.Center.Y + 8), data);
+				Paint(new Vector2(Projectile.Center.X + 8, Projectile.Center.Y - 8), data);
+				Paint(new Vector2(Projectile.Center.X - 8, Projectile.Center.Y + 8), data);
+				Paint(new Vector2(Projectile.Center.X - 8, Projectile.Center.Y - 8), data);
 				paintedTiles = new List<Point>();
 			}
 			return true;
 		}
 		public override bool OnTileCollide(Vector2 oldVelocity) {
-			if(canPaint())
-				explode(Projectile.Center, 45, getPaintData());
+			if(CanPaint())
+				Explode(Projectile.Center, 45, GetPaintData());
 			if(Projectile.penetrate < 0) {
 				return true;
 			}
@@ -92,9 +92,9 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		public override void AI() {
 			Projectile.velocity.Y += .3f;
 			rotation += (float)Math.PI / 10f * Projectile.direction;
-			PaintData data = getPaintData();
+			PaintData data = GetPaintData();
 			for(int i = 0; i < 1; i++) {
-				Dust dust = getDust(Dust.NewDust(Projectile.Center - new Vector2(Projectile.width / 2, Projectile.height / 2), Projectile.width, Projectile.height, DustType<PaintDust>(), 0, 0, 0, data.RenderColor, 1));
+				Dust dust = GetDust(Dust.NewDust(Projectile.Center - new Vector2(Projectile.width / 2, Projectile.height / 2), Projectile.width, Projectile.height, DustType<PaintDust>(), 0, 0, 0, data.RenderColor, 1));
 				if(dust != null) {
 					dust.noGravity = true;
 					dust.velocity = new Vector2(1, 0).RotatedByRandom(Math.PI * 2);

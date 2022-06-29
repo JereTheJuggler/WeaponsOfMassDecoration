@@ -44,17 +44,17 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		public override void AI() {
 			if(Projectile.owner == Main.myPlayer) {
 				if(Projectile.timeLeft <= 2) {
-					PaintData data = getPaintData();
+					PaintData data = GetPaintData();
 					Vector2 playerPos = Main.player[Main.myPlayer].position;
 					Vector2 myPos = Projectile.Center;
-					if(Projectile.ai[1] > 0 && canPaint())
-						explode(Projectile.Center, 16, data);
+					if(Projectile.ai[1] > 0 && CanPaint())
+						Explode(Projectile.Center, 16, data);
 					Vector2 displacement = new Vector2(Projectile.ai[0], Projectile.ai[1]) - Projectile.Center;
 
-					createLight();
+					CreateLight();
 
 					for(int p = 0; p < 12; p++) {
-						Dust dust = getDust(Dust.NewDust(Projectile.TopLeft + displacement * (p / 10f) + new Vector2(-3, -3), 7, 7, DustType<Dusts.PaintDust>(), 0, 0, 200, getColor(data), 1f));
+						Dust dust = GetDust(Dust.NewDust(Projectile.TopLeft + displacement * (p / 10f) + new Vector2(-3, -3), 7, 7, DustType<Dusts.PaintDust>(), 0, 0, 200, GetColor(data), 1f));
 						if(dust != null) {
 							dust.velocity = new Vector2(.05f, 0f).RotatedByRandom(Math.PI * 2);
 							if(dust.customData != null)
@@ -62,16 +62,16 @@ namespace WeaponsOfMassDecoration.Projectiles {
 							dust.fadeIn = 3f;
 						}
 					}
-					if(canPaint())
-						paint(Projectile.Center, data);
+					if(CanPaint())
+						Paint(Projectile.Center, data);
 				}
 			}
 		}
 
 		public override bool OnTileCollide(Vector2 oldVelocity) {
-			PaintData data = getPaintData().clone();
+			PaintData data = GetPaintData().Clone();
 			data.wallsAllowed = false;
-			explode(Projectile.Center, 16, data);
+			Explode(Projectile.Center, 16, data);
 			return base.OnTileCollide(oldVelocity);
 		}
 	}

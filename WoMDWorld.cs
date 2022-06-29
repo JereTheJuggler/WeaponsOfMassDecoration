@@ -18,7 +18,7 @@ namespace WeaponsOfMassDecoration {
 		public override void PostUpdateWorld() {
 			int i = 0;
 			while(i < animations.Count) {
-				if(!animations[i].run()) {
+				if(!animations[i].Run()) {
 					animations.RemoveAt(i);
 				} else {
 					i++;
@@ -26,7 +26,7 @@ namespace WeaponsOfMassDecoration {
 			}
 		}
 
-		public void addAnimation(PaintAnimation animation) {
+		public void AddAnimation(PaintAnimation animation) {
 			animations.Add(animation);
 		}
 	}

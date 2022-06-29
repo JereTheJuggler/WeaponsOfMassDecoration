@@ -14,8 +14,8 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="gProjectile"></param>
 		/// <returns></returns>
-		public static MiscShaderData applyShader(WoMDProjectile gProjectile, PaintData data) {
-			MiscShaderData shader = getShader(gProjectile, data);
+		public static MiscShaderData ApplyShader(WoMDProjectile gProjectile, PaintData data) {
+			MiscShaderData shader = GetShader(gProjectile, data);
 			if(shader != null)
 				shader.Apply();
 			return shader;
@@ -26,8 +26,8 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="globalNpc"></param>
 		/// <param name="drawData">This is necessary for the SprayPainted shader to work</param>
 		/// <returns></returns>
-		public static MiscShaderData applyShader(WoMDNPC globalNpc, PaintData data, DrawData? drawData = null) {
-			MiscShaderData shader = getShader(globalNpc, data, out bool needsDrawData);
+		public static MiscShaderData ApplyShader(WoMDNPC globalNpc, PaintData data, DrawData? drawData = null) {
+			MiscShaderData shader = GetShader(globalNpc, data, out bool needsDrawData);
 			if(shader != null)
 				shader.Apply(needsDrawData ? drawData : null);
 			return shader;
@@ -38,8 +38,8 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="item"></param>
 		/// <param name="player"></param>
 		/// <returns></returns>
-		public static MiscShaderData applyShader(PaintingItem item, Player player) {
-			MiscShaderData shader = getShader(item, player);
+		public static MiscShaderData ApplyShader(PaintingItem item, Player player) {
+			MiscShaderData shader = GetShader(item, player);
 			if(shader != null)
 				shader.Apply();
 			return shader;
@@ -49,8 +49,8 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="projectile"></param>
 		/// <returns></returns>
-		public static MiscShaderData applyShader(PaintingProjectile projectile, PaintData data) {
-			MiscShaderData shader = getShader(projectile, data);
+		public static MiscShaderData ApplyShader(PaintingProjectile projectile, PaintData data) {
+			MiscShaderData shader = GetShader(projectile, data);
 			if(shader != null)
 				shader.Apply();
 			return shader;
@@ -60,15 +60,15 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="gProjectile"></param>
 		/// <returns></returns>
-		public static MiscShaderData getShader(WoMDProjectile gProjectile, PaintData data) {
+		public static MiscShaderData GetShader(WoMDProjectile gProjectile, PaintData data) {
 			if(gProjectile == null)
 				return null;
 			if(!gProjectile.painted)
 				return null;
 			if(data.PaintColor == PaintID.NegativePaint || data.CustomPaint is NegativeSprayPaint)
-				return getNegativeShader();
-			Color color = getColor(data);
-			return getPaintedShader(color);
+				return GetNegativeShader();
+			Color color = GetColor(data);
+			return GetPaintedShader(color);
 		}
 		/// <summary>
 		/// Gets a shader for the provided WoMDNPC. Possible results are the Painted, SprayPainted, and PaintedNegative shaders.
@@ -76,7 +76,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="globalNpc"></param>
 		/// <param name="drawData">This is necessary for the SprayPainted shader to work</param>
 		/// <returns></returns>
-		public static MiscShaderData getShader(WoMDNPC globalNpc, PaintData data, out bool needsDrawData) {
+		public static MiscShaderData GetShader(WoMDNPC globalNpc, PaintData data, out bool needsDrawData) {
 			needsDrawData = false;
 			if(globalNpc == null)
 				return null;
@@ -85,13 +85,13 @@ namespace WeaponsOfMassDecoration {
 			if(data.PaintColor == -1 && data.CustomPaint == null)
 				return null;
 			if(data.PaintColor == PaintID.NegativePaint || data.CustomPaint is NegativeSprayPaint)
-				return getNegativeShader();
-			Color color = getColor(data);
+				return GetNegativeShader();
+			Color color = GetColor(data);
 			if(data.CustomPaint != null && data.sprayPaint) {
 				needsDrawData = true;
-				return getSprayPaintedShader(color);
+				return GetSprayPaintedShader(color);
 			}
-			return getPaintedShader(color);
+			return GetPaintedShader(color);
 		}
 		/// <summary>
 		/// Gets a shader for the provided PaintingItem. Possible results are the GSPainted and PaintedNegative shaders.
@@ -99,7 +99,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="item"></param>
 		/// <param name="player"></param>
 		/// <returns></returns>
-		public static MiscShaderData getShader(PaintingItem item, Player player) {
+		public static MiscShaderData GetShader(PaintingItem item, Player player) {
 			if(player == null)
 				return null;
 			if(item == null)
@@ -107,29 +107,29 @@ namespace WeaponsOfMassDecoration {
 			WoMDPlayer modPlayer = player.GetModPlayer<WoMDPlayer>();
 			if(modPlayer == null)
 				return null;
-			PaintData data = modPlayer.paintData.clone();
-			data.paintMethod = item.overridePaintMethod(modPlayer);
+			PaintData data = modPlayer.paintData.Clone();
+			data.paintMethod = item.OverridePaintMethod(modPlayer);
 			if(data.paintMethod == PaintMethods.RemovePaint)
 				return null;
 			if(data.PaintColor == PaintID.NegativePaint || data.CustomPaint is NegativeSprayPaint)
-				return getNegativeShader();
-			return getGSShader(data.RenderColor);
+				return GetNegativeShader();
+			return GetGSShader(data.RenderColor);
 		}
 		/// <summary>
 		/// Gets a shader for the provided PaintingProjectile. Possible results are the Painted, GSPainted, and PaintedNegative shaders.
 		/// </summary>
 		/// <param name="projectile"></param>
 		/// <returns></returns>
-		public static MiscShaderData getShader(PaintingProjectile projectile, PaintData data) {
+		public static MiscShaderData GetShader(PaintingProjectile projectile, PaintData data) {
 			if(projectile == null)
 				return null;
 			if((data.PaintColor == -1 && data.CustomPaint == null) || data.paintMethod == PaintMethods.RemovePaint)
 				return null;
 			if(data.PaintColor == PaintID.NegativePaint || data.CustomPaint is NegativeSprayPaint)
-				return getNegativeShader();
+				return GetNegativeShader();
 			if(projectile.usesGSShader)
-				return getGSShader(data.RenderColor);
-			return getPaintedShader(data.RenderColor);
+				return GetGSShader(data.RenderColor);
+			return GetPaintedShader(data.RenderColor);
 		}
 		/// <summary>
 		/// Gets a shader for the provided WoMDItem. Possible results are the GSPainted and NegativePainted shaders.
@@ -137,16 +137,16 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="item"></param>
 		/// <param name="player"></param>
 		/// <returns></returns>
-		public static MiscShaderData getShader(WoMDItem item, PaintData data) {
+		public static MiscShaderData GetShader(WoMDItem item, PaintData data) {
 			if(data.PaintColor == PaintID.NegativePaint || data.CustomPaint is NegativeSprayPaint)
-				return getNegativeShader();
-			return getGSShader(data.RenderColor);
+				return GetNegativeShader();
+			return GetGSShader(data.RenderColor);
 		}
 		/// <summary>
 		/// Gets the data for the PaintedNegative shader
 		/// </summary>
 		/// <returns></returns>
-		private static MiscShaderData getNegativeShader() {
+		private static MiscShaderData GetNegativeShader() {
 			MiscShaderData data = GameShaders.Misc["PaintedNegative"];
 			return data;
 		}
@@ -155,7 +155,7 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="color"></param>
 		/// <returns></returns>
-		private static MiscShaderData getPaintedShader(Color color) {
+		private static MiscShaderData GetPaintedShader(Color color) {
 			MiscShaderData data = GameShaders.Misc["Painted"].UseColor(color).UseOpacity(1f);
 			return data;
 		}
@@ -165,7 +165,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="color"></param>
 		/// <param name="drawData"></param>
 		/// <returns></returns>
-		private static MiscShaderData getSprayPaintedShader(Color color) {
+		private static MiscShaderData GetSprayPaintedShader(Color color) {
 			MiscShaderData data = GameShaders.Misc["SprayPainted"].UseColor(color).UseImage0("Images/Misc/noise").UseOpacity(1f);
 			return data;
 		}
@@ -174,12 +174,12 @@ namespace WeaponsOfMassDecoration {
 		/// </summary>
 		/// <param name="color"></param>
 		/// <returns></returns>
-		private static MiscShaderData getGSShader(Color color) {
+		private static MiscShaderData GetGSShader(Color color) {
 			MiscShaderData data = GameShaders.Misc["GSPainted"].UseColor(color).UseOpacity(1f);
 			return data;
 		}
 
-		public static Color getColor(PaintData data) {
+		public static Color GetColor(PaintData data) {
 			if(data == null)
 				return Color.White;
 			return data.RenderColor;

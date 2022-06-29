@@ -65,7 +65,7 @@ namespace WeaponsOfMassDecoration {
 		private Color? _renderColor;
 		public Color RenderColor {
 			get {
-				validateCachedProperties();
+				ValidateCachedProperties();
 				if(_renderColor == null) {
 					if((_paintColor == -1 && _customPaint == null) || paintMethod == PaintMethods.RemovePaint) {
 						_renderColor = Color.White;
@@ -81,7 +81,7 @@ namespace WeaponsOfMassDecoration {
 		private int? _customPaintColor = null;
 		public int CustomPaintColor {
 			get {
-				validateCachedProperties();
+				ValidateCachedProperties();
 				if(_customPaintColor == null) {
 					if(_customPaint == null) {
 						_customPaintColor = -1;
@@ -94,7 +94,7 @@ namespace WeaponsOfMassDecoration {
 		}
 		
 		private uint lastUpdateTick = 0;
-		private void validateCachedProperties() {
+		private void ValidateCachedProperties() {
 			if(Main.GameUpdateCount != lastUpdateTick) {
 				_customPaintColor = null;
 				_renderColor = null;
@@ -139,7 +139,7 @@ namespace WeaponsOfMassDecoration {
 		public PaintData(float timeScale, float timeOffset = 0) :
 					this(timeScale, -1, null, timeOffset: timeOffset) { }
 
-		public PaintData clone() {
+		public PaintData Clone() {
 			PaintData data = new PaintData();
 			data._paintColor = _paintColor;
 			data._customPaint = _customPaint;

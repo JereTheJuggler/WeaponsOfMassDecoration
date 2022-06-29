@@ -63,7 +63,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		public override void AI() {
 			for(int i = 0; i < 2; i++) {
 				Vector2 speed = new Vector2(2, 0).RotatedByRandom(Math.PI * 2);
-				Dust dust = getDust(Dust.NewDust(Projectile.Center, 0, 0, Mod.Find<ModDust>("PaintDust").Type, speed.X, speed.Y, 0, getColor(getPaintData()), 1));
+				Dust dust = GetDust(Dust.NewDust(Projectile.Center, 0, 0, Mod.Find<ModDust>("PaintDust").Type, speed.X, speed.Y, 0, GetColor(GetPaintData()), 1));
 				if(dust != null) {
 					dust.noGravity = true;
 					dust.fadeIn = 1.5f;
@@ -76,14 +76,14 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public override void Kill(int timeLeft) { 
-			PaintData data = getPaintData();
-			if(canPaint())
-				splatter(Projectile.Center, 128, 8, data);
-			createLight(Projectile.Center, 1f);
+			PaintData data = GetPaintData();
+			if(CanPaint())
+				Splatter(Projectile.Center, 128, 8, data);
+			CreateLight(Projectile.Center, 1f);
 			SoundEngine.PlaySound(SoundID.Item14, Projectile.position);
 			//smoke dust
 			for(int i = 0; i < 15; i++) {
-				Dust d = getDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Smoke, 0f, 0f, 100, data.RenderColor, 2f));
+				Dust d = GetDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Smoke, 0f, 0f, 100, data.RenderColor, 2f));
 				if(d != null)
 					d.velocity *= 1.4f;
 			}

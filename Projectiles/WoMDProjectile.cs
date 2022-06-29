@@ -30,8 +30,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		/// <summary>
 		/// The data used for painting with and rendering this projectile
 		/// </summary>
-		protected PaintData _paintData = new PaintData(npcCyclingTimeScale, 0f);
-		public PaintData paintData => !painted ? new PaintData(npcCyclingTimeScale, -1, null) : _paintData;
+		protected PaintData _paintData = new(npcCyclingTimeScale, 0f);
+		public PaintData PaintData => !painted ? new PaintData(npcCyclingTimeScale, -1, null) : _paintData;
 
 		/// <summary>
 		/// Whether or this projectile has been taken care of in the preAI event
@@ -51,11 +51,11 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		/// <param name="proj"></param>
 		/// <param name="toClient"></param>
 		/// <param name="ignoreClient"></param>
-		public static void sendProjectileColorPacket(WoMDProjectile gProj, Projectile proj, int toClient = -1, int ignoreClient = -1) {
+		public static void SendProjectileColorPacket(WoMDProjectile gProj, Projectile proj, int toClient = -1, int ignoreClient = -1) {
 			if(!gProj.painted)
 				return;
-			PaintData data = gProj.paintData;
-			if(server() || multiplayer()) {
+			PaintData data = gProj.PaintData;
+			if(Server() || Multiplayer()) {
 				ModPacket packet = gProj.Mod.GetPacket();
 				packet.Write(WoMDMessageTypes.SetProjectileColor);
 				packet.Write(proj.whoAmI);
@@ -73,10 +73,10 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		/// <param name="reader"></param>
 		/// <param name="gProj"></param>
 		/// <param name="proj"></param>
-		public static void readProjectileColorPacket(BinaryReader reader, out WoMDProjectile gProj, out Projectile proj) {
+		public static void ReadProjectileColorPacket(BinaryReader reader, out WoMDProjectile gProj, out Projectile proj) {
 			int projId = reader.ReadInt32();
 			int projType = reader.ReadInt32();
-			proj = getProjectile(projId);
+			proj = GetProjectile(projId);
 			gProj = proj.GetGlobalProjectile<WoMDProjectile>();
 			int paintColor = reader.ReadInt32();
 			string customPaintName = reader.ReadString();
@@ -97,14 +97,14 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		//Handles assigning new projectiles npc owners
 		public override bool PreAI(Projectile projectile) {
-			if(server() || singlePlayer()) {
+			if(Server() || SinglePlayer()) {
 				if(!projectile.friendly && !setupPreAi) {
 					if(GetInstance<WoMDConfig>().chaosModeEnabled) {
 						setupPreAi = true;
 						switch(projectile.type) {
 							case ProjectileID.WoodenArrowHostile:
 								if(true) {
-									if(server())
+									if(Server())
 										break; //running into issues making this work in multiplayer
 									NPC archer = Main.npc
 										.Where(npc => npc.type == NPCID.CultistArcherBlue || npc.type == NPCID.GoblinArcher)
@@ -115,16 +115,16 @@ namespace WeaponsOfMassDecoration.Projectiles {
 										if(gNpc == null || !gNpc.painted)
 											break;
 										int projId = Projectile.NewProjectile(projectile.GetSource_FromThis(), projectile.Center, projectile.velocity, ProjectileType<PaintArrow>(), projectile.damage, projectile.knockBack);
-										Projectile newArrow = getProjectile(projId);
+										Projectile newArrow = GetProjectile(projId);
 										if(newArrow == null)
 											break;
 										PaintArrow arrow = (PaintArrow)newArrow.ModProjectile;
-										cloneProperties(projectile, arrow.Projectile);
+										CloneProperties(projectile, arrow.Projectile);
 										arrow.npcOwner = archer.whoAmI;
 										arrow.Projectile.GetGlobalProjectile<WoMDProjectile>().setupPreAi = true;
 										projectile.timeLeft = 0;
-										if(server())
-											PaintingProjectile.sendProjNPCOwnerPacket(arrow);
+										if(Server())
+											PaintingProjectile.SendProjNPCOwnerPacket(arrow);
 									}
 								}
 								break;
@@ -135,7 +135,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 										.OrderBy(npc => Math.Abs(npc.Center.X - projectile.Center.X) + Math.Abs(npc.Center.Y - projectile.Center.Y))
 										.FirstOrDefault();
 									if(nimbus != null) {
-										applyPaintedFromNpc(projectile, nimbus);
+										ApplyPaintedFromNpc(projectile, nimbus);
 									}
 								}
 								break;
@@ -147,7 +147,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 										.OrderBy(npc => Math.Abs(npc.Center.X - projectile.Center.X) + Math.Abs(npc.Center.Y - projectile.Center.Y))
 										.FirstOrDefault();
 									if(elemental != null) {
-										applyPaintedFromNpc(projectile, elemental);
+										ApplyPaintedFromNpc(projectile, elemental);
 									}
 								}
 								break;
@@ -170,7 +170,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 									}
 									float dist = Math.Abs(enemyPos.X - projectile.Center.X) + Math.Abs(enemyPos.Y - projectile.Center.Y);
 									if(dist < range) {
-										applyPaintedFromNpc(projectile, enemy);
+										ApplyPaintedFromNpc(projectile, enemy);
 									}
 								}
 								break;
@@ -183,7 +183,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 									if(enemy != null) {
 										float dist = Math.Abs(enemy.Center.X - projectile.Center.X) + Math.Abs(enemy.Center.Y - projectile.Center.Y);
 										if(dist < 64)
-											applyPaintedFromNpc(projectile, enemy);
+											ApplyPaintedFromNpc(projectile, enemy);
 									}
 								}
 								break;
@@ -196,7 +196,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 									if(enemy != null) {
 										float dist = Math.Abs(enemy.Center.X - projectile.Center.X) + Math.Abs(enemy.Center.Y - projectile.Center.Y);
 										if(dist <= 20)
-											applyPaintedFromNpc(projectile, enemy);
+											ApplyPaintedFromNpc(projectile, enemy);
 									}
 								}
 								break;
@@ -211,7 +211,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 										if(gNpc != null && gNpc.painted) {
 											float dist = Math.Abs(enemy.Center.X - projectile.Center.X) + Math.Abs(enemy.Center.Y - projectile.Center.Y);
 											if(dist <= 25) {
-												applyPaintedFromNpc(projectile, enemy);
+												ApplyPaintedFromNpc(projectile, enemy);
 												projectile.Opacity = 0;
 												projectile.alpha = 0;
 											}
@@ -231,43 +231,43 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		/// </summary>
 		/// <param name="projectile">The projectile to inherit the painted settings</param>
 		/// <param name="npc">The npc to copy the painted settings from</param>
-		private static void applyPaintedFromNpc(Projectile projectile, NPC npc) {
+		private static void ApplyPaintedFromNpc(Projectile projectile, NPC npc) {
 			WoMDNPC gNpc = npc.GetGlobalNPC<WoMDNPC>();
 			if(gNpc == null || !gNpc.painted)
 				return;
 			WoMDProjectile proj = projectile.GetGlobalProjectile<WoMDProjectile>();
 			if(proj == null)
 				return;
-			proj._paintData = gNpc.paintData.clone();
+			proj._paintData = gNpc.PaintData.Clone();
 			proj.npcOwner = npc.whoAmI;
-			if(server())
-				sendProjectileColorPacket(proj, projectile);
+			if(Server())
+				SendProjectileColorPacket(proj, projectile);
 		}
 
-		private static void applyPaintedFromProjectile(Projectile dest, Projectile src) {
+		private static void ApplyPaintedFromProjectile(Projectile dest, Projectile src) {
 			WoMDProjectile dProj = dest.GetGlobalProjectile<WoMDProjectile>();
 			WoMDProjectile sProj = src.GetGlobalProjectile<WoMDProjectile>();
 			if(dProj == null || sProj == null)
 				return;
 			dProj.painted = true;
-			dProj._paintData = sProj.paintData.clone();
+			dProj._paintData = sProj.PaintData.Clone();
 			dProj.npcOwner = sProj.npcOwner;
-			if(server())
-				sendProjectileColorPacket(dProj, dest);
+			if(Server())
+				SendProjectileColorPacket(dProj, dest);
 		}
 
-		public static void applyPainted(Projectile projectile, PaintData paintData) {
+		public static void ApplyPainted(Projectile projectile, PaintData paintData) {
 			WoMDProjectile proj = projectile.GetGlobalProjectile<WoMDProjectile>();
 			if(proj == null)
 				return;
 			proj.painted = true;
-			proj._paintData = paintData.clone();
-			if(server())
-				sendProjectileColorPacket(proj, projectile);
+			proj._paintData = paintData.Clone();
+			if(Server())
+				SendProjectileColorPacket(proj, projectile);
 		}
 
 		public override void PostAI(Projectile projectile) {
-			if((singlePlayer() || server()) && painted) {
+			if((SinglePlayer() || Server()) && painted) {
 				switch(projectile.type) {
 					case ProjectileID.SandnadoHostile:
 						if(projectile.timeLeft > 930 && Main.rand.NextFloat() < .25f) {
@@ -280,32 +280,32 @@ namespace WeaponsOfMassDecoration.Projectiles {
 								PaintingProjectile p = proj.ModProjectile as PaintingProjectile;
 								if(p != null) {
 									p.npcOwner = projectile.GetGlobalProjectile<WoMDProjectile>().npcOwner;
-									if(server())
-										PaintingProjectile.sendProjNPCOwnerPacket(p);
+									if(Server())
+										PaintingProjectile.SendProjNPCOwnerPacket(p);
 								}
 							}
 						}
 						break;
 					case ProjectileID.BulletDeadeye:
-						paint(projectile.Center, _paintData);
+						Paint(projectile.Center, _paintData);
 						break;
 					case ProjectileID.PaladinsHammerHostile:
 						if(true) {
-							Color c = getColor(_paintData);
+							Color c = GetColor(_paintData);
 							Lighting.AddLight(projectile.Center, c.ToVector3() * .5f);
-							NPC npc = getNPC(npcOwner);
+							NPC npc = GetNPC(npcOwner);
 							if(projectile.timeLeft % 30 == 0 && npc != null && projectile.timeLeft >= 3400) {
-								float dSquare = ((getNPC(npcOwner).Center - projectile.Center) / 16f).LengthSquared();
+								float dSquare = ((GetNPC(npcOwner).Center - projectile.Center) / 16f).LengthSquared();
 								//1600 is 40 blocks away from paladin
 								//2500 is 50 blocks away from paladin
 								if(dSquare >= 1600 && dSquare <= 2500) {
 									Vector2 hammerTop = projectile.Center + new Vector2(0, -16 * 9).RotatedBy(projectile.rotation);
 									List<Point> paintedTiles = new List<Point>();
-									paintBetweenPoints(projectile.Center, hammerTop, _paintData, paintedTiles: paintedTiles);
+									PaintBetweenPoints(projectile.Center, hammerTop, _paintData, paintedTiles: paintedTiles);
 									Vector2 shaftOffset = (projectile.Center - hammerTop).SafeNormalize(default);
 									Vector2 headOffset = shaftOffset.RotatedBy(Math.PI / 2f) * 64;
 									for(int i = 0; i <= 64; i += 8) {
-										paintBetweenPoints(hammerTop + (shaftOffset * i) + headOffset, hammerTop + (shaftOffset * i) - headOffset, _paintData, paintedTiles: paintedTiles);
+										PaintBetweenPoints(hammerTop + (shaftOffset * i) + headOffset, hammerTop + (shaftOffset * i) - headOffset, _paintData, paintedTiles: paintedTiles);
 									}
 									foreach(Point p in paintedTiles) {
 										Dust d = Dust.NewDustPerfect(p.ToWorldCoordinates(), DustType<PaintDust>(), new Vector2(0, 0), default, c, 2f);
@@ -324,7 +324,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 								for(byte j = 0; j <= 2; j++) {
 									Point p = new Point(bl.X + i, bl.Y - j);
 									if(j != 0 || WorldGen.SolidOrSlopedTile(p.X, p.Y))
-										paint(p, paintData, true);
+										Paint(p, PaintData, true);
 								}
 							}
 						}
@@ -338,10 +338,10 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			if(painted) {
 				switch(projectile.type) {
 					case ProjectileID.HappyBomb:
-						explode(projectile.Center, 100f, _paintData);
+						Explode(projectile.Center, 100f, _paintData);
 						break;
 					case ProjectileID.InfernoHostileBolt:
-						splatter(projectile.Center, 150f, 7, _paintData);
+						Splatter(projectile.Center, 150f, 7, _paintData);
 						break;
 				}
 			}
@@ -353,7 +353,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			if(proj.painted && GetInstance<WoMDConfig>().chaosModeEnabled) {
 				switch(projectile.type) {
 					case ProjectileID.RainNimbus:
-						paint(projectile.Bottom + new Vector2(0, 16), paintData);
+						Paint(projectile.Bottom + new Vector2(0, 16), PaintData);
 						break;
 				}
 			}
@@ -365,7 +365,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		/// </summary>
 		/// <param name="src"></param>
 		/// <param name="dest"></param>
-		protected static void cloneProperties(Projectile src, Projectile dest) {
+		protected static void CloneProperties(Projectile src, Projectile dest) {
 			PropertyInfo[] properties = dest.GetType().GetProperties();
 			foreach(PropertyInfo property in properties) {
 				switch(property.Name) {

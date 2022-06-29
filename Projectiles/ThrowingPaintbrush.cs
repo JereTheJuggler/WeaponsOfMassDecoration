@@ -40,16 +40,16 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override bool PreAI() {
 			base.PreAI();
-			if(canPaint()) {
-				PaintData data = getPaintData();
+			if(CanPaint()) {
+				PaintData data = GetPaintData();
 				Vector2 coords = Projectile.Center + new Vector2(0, 24).RotatedBy(Projectile.rotation + Math.PI);
-				paint(coords, data);
+				Paint(coords, data);
 				if(Math.Abs(Projectile.rotation - oldRotation) > Math.PI / 9) {
-					paint(Projectile.Center + new Vector2(0, 24).RotatedBy(Projectile.rotation + Math.PI + (Math.PI / 9)), data);
-					paint(Projectile.Center + new Vector2(0, 24).RotatedBy(Projectile.rotation + Math.PI - (Math.PI / 9)), data);
+					Paint(Projectile.Center + new Vector2(0, 24).RotatedBy(Projectile.rotation + Math.PI + (Math.PI / 9)), data);
+					Paint(Projectile.Center + new Vector2(0, 24).RotatedBy(Projectile.rotation + Math.PI - (Math.PI / 9)), data);
 				}
 				if(lastPaintCoord != null) {
-					paintBetweenPoints((Vector2)lastPaintCoord, coords, data);
+					PaintBetweenPoints((Vector2)lastPaintCoord, coords, data);
 				}
 				lastPaintCoord = coords;
 			}

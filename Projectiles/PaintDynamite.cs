@@ -82,14 +82,14 @@ namespace WeaponsOfMassDecoration.Projectiles {
 				Projectile.damage = 120;
 			} else {
 				if(Main.rand.NextBool(2)) {
-					Dust smoke = getDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Smoke, 0f, 0f, 100, default, 1f));
+					Dust smoke = GetDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Smoke, 0f, 0f, 100, default, 1f));
 					if(smoke != null) {
 						smoke.scale = .1f + Main.rand.Next(5) * .1f;
 						smoke.fadeIn = 1.5f + Main.rand.Next(5) * .1f;
 						smoke.noGravity = true;
 						smoke.position = Projectile.Center + new Vector2(0f, (-(float)Projectile.height / 2 - 12)).RotatedBy(rotation, default) * 1.1f;
 					}
-					Dust fire = getDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Torch, 0f, 0f, 100, default, 1f));
+					Dust fire = GetDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Torch, 0f, 0f, 100, default, 1f));
 					if(fire != null) {
 						fire.scale = 1f + Main.rand.Next(5) * .1f;
 						fire.noGravity = true;
@@ -104,18 +104,18 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			SoundEngine.PlaySound(SoundID.Item14, Projectile.position);
 			//smoke dust
 			for(int i = 0; i < 15; i++) {
-				Dust smoke = getDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Smoke, 0f, 0f, 100, default, 2f));
+				Dust smoke = GetDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Smoke, 0f, 0f, 100, default, 2f));
 				if(smoke != null)
 					smoke.velocity *= 1.4f;
 			}
 			//fire dust
 			for(int i = 0; i < 30; i++) {
-				Dust dust = getDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Grass, 0f, 0f, 100, default, 1f));
+				Dust dust = GetDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Grass, 0f, 0f, 100, default, 1f));
 				if(dust != null) {
 					dust.noGravity = true;
 					dust.velocity *= 2f;
 				}
-				Dust fire = getDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Torch, 0f, 0f, 100, default, 2f));
+				Dust fire = GetDust(Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Torch, 0f, 0f, 100, default, 2f));
 				if(fire != null)
 					fire.velocity *= 2f;
 			}
@@ -127,8 +127,8 @@ namespace WeaponsOfMassDecoration.Projectiles {
 			Projectile.position.X = Projectile.position.X - (Projectile.width / 2);
 			Projectile.position.Y = Projectile.position.Y - (Projectile.height / 2);
 
-			if(canPaint())
-				explode(Projectile.Center, explosionRadius * 16, getPaintData());
+			if(CanPaint())
+				Explode(Projectile.Center, explosionRadius * 16, GetPaintData());
 		}
 	}
 }

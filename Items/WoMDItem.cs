@@ -31,13 +31,13 @@ namespace WeaponsOfMassDecoration.Items {
 				case ItemID.SpectrePaintbrush:
 				case ItemID.PaintRoller:
 				case ItemID.SpectrePaintRoller:
-					Player p = getPlayer(item.playerIndexTheItemIsReservedFor);
+					Player p = GetPlayer(item.playerIndexTheItemIsReservedFor);
 					if(p == null)
 						return;
 					WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
 					if(player == null)
 						return;
-					tooltips.Add(new TooltipLine(player.Mod, "CurrentPaintColor", "Current Color: " + getPaintColorName(player.paintData)));
+					tooltips.Add(new TooltipLine(player.Mod, "CurrentPaintColor", "Current Color: " + GetPaintColorName(player.paintData)));
 					break;
 			}
 		}
@@ -65,23 +65,23 @@ namespace WeaponsOfMassDecoration.Items {
 				default:
 					return true;
 			}
-			Player p = getPlayer(item.playerIndexTheItemIsReservedFor);
+			Player p = GetPlayer(item.playerIndexTheItemIsReservedFor);
 			if(p == null)
 				return true;
 			WoMDPlayer player = p.GetModPlayer<WoMDPlayer>();
 			if(player == null)
 				return true;
 
-			Texture2D texture = getTexture(itemName, player);
+			Texture2D texture = GetTexture(itemName, player);
 			if(texture == null)
 				texture = TextureAssets.Item[item.type].Value;
 			MiscShaderData shader = null;
 
 			if(player.paintData.PaintColor != -1 || player.paintData.CustomPaint != null) {
-				PaintData d = player.paintData.clone();
+				PaintData d = player.paintData.Clone();
 				if(method != PaintMethods.None)
 					d.paintMethod = method;
-				shader = getShader(item.GetGlobalItem<WoMDItem>(), d);
+				shader = GetShader(item.GetGlobalItem<WoMDItem>(), d);
 			}
 
 			spriteBatch.End();
@@ -100,10 +100,10 @@ namespace WeaponsOfMassDecoration.Items {
 			return false;
 		}
 
-		protected Texture2D getTexture(string itemname, WoMDPlayer player) {
+		protected static Texture2D GetTexture(string itemname, WoMDPlayer player) {
 			if(player.paintData.PaintColor == -1 && player.paintData.CustomPaint == null)
 				return null;
-			return getExtraTexture(itemname + "Painted");
+			return GetExtraTexture(itemname + "Painted");
 		}
 
 		public override bool? UseItem(Item item, Player player)/* tModPorter Suggestion: Return null instead of false */ {
@@ -121,7 +121,7 @@ namespace WeaponsOfMassDecoration.Items {
 				case ItemID.SpectrePaintScraper:
 					method = PaintMethods.RemovePaint;
 					break;
-				default: return false;
+				default: return base.UseItem(item,player);
 			}
 			WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
 			if(p == null)
@@ -136,16 +136,16 @@ namespace WeaponsOfMassDecoration.Items {
 				int yOffset = coords.Y - playerPos.Y;
 				if(yOffset < 0)
 					yOffset--;
-				if(!isInRange(player, xOffset, yOffset, item))
+				if(!IsInRange(player, xOffset, yOffset, item))
 					return false;
 			}
-			PaintData data = p.paintData.clone();
+			PaintData data = p.paintData.Clone();
 			data.TimeScale = paintCyclingTimeScale;
 			data.paintMethod = method;
-			paint(coords.X, coords.Y, data, true);
+			Paint(coords.X, coords.Y, data, true);
 			return true;
 		}
 
-		public bool isInRange(Player player, int xOffset, int yOffset, Item item) => Math.Abs(xOffset) <= player.lastTileRangeX + item.tileBoost && Math.Abs(yOffset) <= player.lastTileRangeY + item.tileBoost;
+		public static bool IsInRange(Player player, int xOffset, int yOffset, Item item) => Math.Abs(xOffset) <= player.lastTileRangeX + item.tileBoost && Math.Abs(yOffset) <= player.lastTileRangeY + item.tileBoost;
 	}
 }

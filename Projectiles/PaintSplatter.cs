@@ -9,7 +9,7 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		public int startingTimeLeft = 25;
 
 		public PaintSplatter() : base() {
-			usesShader = true;
+			fullyShaded = true;
 
 			xFrameCount = 1;
 			yFrameCount = 1;
@@ -40,10 +40,10 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override bool PreAI() {
 			base.PreAI();
-			if(canPaint()) {
-				PaintData data = getPaintData();
+			if(CanPaint()) {
+				PaintData data = GetPaintData();
 				Point coords = Projectile.Center.ToTileCoordinates();
-				paint(coords.X, coords.Y, data);
+				Paint(coords.X, coords.Y, data);
 			}
 			return true;
 		}
@@ -54,16 +54,16 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		}
 
 		public override bool OnTileCollide(Vector2 oldVelocity) {
-			if(canPaint()) {
-				PaintData data = getPaintData();
-				paint(Projectile.Center, data);
+			if(CanPaint()) {
+				PaintData data = GetPaintData();
+				Paint(Projectile.Center, data);
 				oldVelocity.Normalize();
 				Vector2 center = Projectile.Center.ToWorldCoordinates(0, 0);
 				center = new Vector2(center.X / 16, center.Y / 16);
 				for(int i = 0; i < 64; i++) {
 					Point coords = new Point((int)Math.Floor((center.X + (oldVelocity.X * i)) / 16), (int)Math.Floor((center.Y + (oldVelocity.Y * i)) / 16));
 					if(coords.X > 0 && coords.Y > 0 && coords.X < Main.maxTilesX && coords.Y < Main.maxTilesY && WorldGen.SolidOrSlopedTile(coords.X, coords.Y)) {
-						paint(coords.X, coords.Y, data);
+						Paint(coords.X, coords.Y, data);
 						break;
 					}
 				}

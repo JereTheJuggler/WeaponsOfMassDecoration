@@ -28,10 +28,10 @@ namespace WeaponsOfMassDecoration.Items {
 			recipe.Register();
 		}
 
-		protected override Texture2D getTexture(WoMDPlayer player) {
+		protected override Texture2D GetTexture(WoMDPlayer player) {
 			if((player.paintData.PaintColor == -1 && player.paintData.CustomPaint == null) || player.paintData.paintMethod == PaintMethods.RemovePaint)
 				return null;
-			return getExtraTexture("InfinitePaintSolutionPainted");
+			return GetExtraTexture("InfinitePaintSolutionPainted");
 		}
 	}
 }

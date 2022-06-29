@@ -45,12 +45,12 @@ namespace WeaponsOfMassDecoration.Projectiles {
 
 		public override bool PreAI() {
 			base.PreAI();
-			if(canPaint()) {
+			if(CanPaint()) {
 				Point coords = new Point((int)Math.Floor(Projectile.Center.X / 16), (int)Math.Floor(Projectile.Center.Y / 16));
-				PaintData data = getPaintData();
-				paint(coords.X, coords.Y, data);
+				PaintData data = GetPaintData();
+				Paint(coords.X, coords.Y, data);
 				for(int d = 0; d < 2; d++) {
-					Dust dust = getDust(Dust.NewDust(Projectile.position, 0, 0, DustType<Dusts.PaintDust>(), 0, 0, 200, getColor(data), .75f));
+					Dust dust = GetDust(Dust.NewDust(Projectile.position, 0, 0, DustType<Dusts.PaintDust>(), 0, 0, 200, GetColor(data), .75f));
 					if(dust != null) {
 						dust.noGravity = true;
 						dust.velocity = new Vector2(1, 0).RotatedByRandom(Math.PI * 2);
