@@ -10,19 +10,21 @@ namespace WeaponsOfMassDecoration.Items {
 			DisplayName.SetDefault("Tempera Bouncer");
 		}
 
+		public override int TextureCount => 1;
+		public override bool UsesGSShader => false;
+
 		public override void SetDefaults() {
 			base.SetDefaults();
 			Item.CloneDefaults(ItemID.CursedFlames);
-			Item.RebuildTooltip();
 			Item.shoot = ProjectileType<Projectiles.TemperaBouncer>();
 			Item.rare = ItemRarityID.Green;
 			Item.damage = 60;
-			Item.useAmmo = -1;
 			Item.mana = 10;
 			Item.noMelee = true;
 			Item.value = Item.sellPrice(0, 0, 30, 0);
 			Item.UseSound = SoundID.Item21;
 			Item.shootSpeed = 15f;
+			Item.RebuildTooltip();
 		}
 
 		public override void AddRecipes() {

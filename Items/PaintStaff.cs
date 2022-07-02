@@ -14,6 +14,9 @@ namespace WeaponsOfMassDecoration.Items {
 			Item.staff[ItemType<PaintStaff>()] = true;
 		}
 
+		public override int TextureCount => 1;
+		public override bool UsesGSShader => false;
+
 		public override void SetDefaults() {
 			base.SetDefaults();
 			Item.CloneDefaults(ItemID.DiamondStaff);
@@ -22,7 +25,7 @@ namespace WeaponsOfMassDecoration.Items {
 			Item.damage = 20;
 			Item.width = 42;
 			Item.height = 30;
-			Item.useAmmo = -1;
+			Item.DamageType = DamageClass.Magic;
 			Item.useStyle = ItemUseStyleID.Shoot;
 			Item.noMelee = true;
 			Item.value = Item.sellPrice(0, 0, 30, 0);
@@ -52,7 +55,7 @@ namespace WeaponsOfMassDecoration.Items {
 			return base.PreDrawInWorld(spriteBatch, lightColor, alphaColor, ref rotation, ref scale, whoAmI);
 		}
 
-		public override bool? UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */ {
+		public override bool? UseItem(Player player){
 			return base.UseItem(player);
 		}
 

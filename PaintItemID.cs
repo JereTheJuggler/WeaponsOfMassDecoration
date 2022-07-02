@@ -33,6 +33,7 @@ namespace WeaponsOfMassDecoration {
 		public const short Brown = ItemID.BrownPaint;
 		public const short Shadow = ItemID.ShadowPaint;
 		public const short Negative = ItemID.NegativePaint;
+		public const short Illuminant = 4668;
 
 		public static readonly int[] list = new int[] {
 			0,
@@ -65,7 +66,8 @@ namespace WeaponsOfMassDecoration {
 			Gray,
 			Brown,
 			Shadow,
-			Negative
+			Negative,
+			Illuminant
 		};
 	}
 }

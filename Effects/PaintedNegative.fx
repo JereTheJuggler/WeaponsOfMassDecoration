@@ -2,6 +2,7 @@ sampler uImage0 : register(s0);
 sampler uImage1 : register(s1);
 sampler uImage2;
 sampler uImage3;
+float4 uShaderSpecificData;
 float3 uColor;
 float uOpacity;
 float3 uSecondaryColor;

@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
@@ -24,18 +25,22 @@ namespace WeaponsOfMassDecoration {
 		/// <summary>
 		/// Whether or not this item uses the "green screen" shader during rendering in the player's inventory
 		/// </summary>
-		public bool usesGSShader = false;
+		public abstract bool UsesGSShader {
+			get;
+		}
 		/// <summary>
 		/// The number of textures this item uses for rendering in the player's inventory
 		/// </summary>
-		public int textureCount = 1;
+		public abstract int TextureCount {
+			get;
+		}
 
 		public override void SetStaticDefaults() {
 			SetStaticDefaults("", "", true);
 		}
 
 		public virtual void SetStaticDefaults(string preToolTip, string postToolTip = "", bool dealsDamage = true) {
-			List<string> lines = new List<string>();
+			List<string> lines = new();
 
 			if(dealsDamage) {
 				lines.Add(halfDamageText);
@@ -50,7 +55,7 @@ namespace WeaponsOfMassDecoration {
 			if(postToolTip != "") {
 				lines.AddRange(postToolTip.Split('\n'));
 			}
-			if(!(this is CustomPaint)) {
+			if(this is not CustomPaint) {
 				lines.AddRange(new string[] {
 					"Current Tool: ",
 					"Current Paint: "
@@ -86,10 +91,22 @@ namespace WeaponsOfMassDecoration {
 			if(player == null)
 				return true;
 			MiscShaderData shader = GetShader(this, p);
-			if((usesGSShader || ((player.paintData.PaintColor == PaintID.NegativePaint || player.paintData.CustomPaint is NegativeSprayPaint) && !(this is CustomPaint)))) {
+			if (shader == null) 
+				return true;
+			if((UsesGSShader || ((player.paintData.PaintColor == PaintID.NegativePaint || player.paintData.CustomPaint is NegativeSprayPaint) && this is not CustomPaint))) {
 				if(shader != null) {
 					spriteBatch.End();
-					spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, (player.paintData.PaintColor == PaintID.NegativePaint || player.paintData.CustomPaint is NegativeSprayPaint) ? SamplerState.LinearClamp : SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
+					spriteBatch.Begin(
+						SpriteSortMode.Immediate, 
+						BlendState.AlphaBlend, 
+						(player.paintData.PaintColor == PaintID.NegativePaint || player.paintData.CustomPaint is NegativeSprayPaint) ? 
+							SamplerState.LinearClamp : //linear clamp works for the negative paint shader
+							SamplerState.PointClamp, //point clamp is needed for green screen shader because linear messes with the chroma keying
+						DepthStencilState.Default, 
+						RasterizerState.CullNone, 
+						null, 
+						Main.UIScaleMatrix
+					); // SpriteSortMode needs to be set to Immediate for shaders to work.
 
 					shader.Apply();
 				}
@@ -102,7 +119,15 @@ namespace WeaponsOfMassDecoration {
 
 				if(shader != null) {
 					spriteBatch.End();
-					spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix);
+					spriteBatch.Begin(
+						SpriteSortMode.Deferred, 
+						BlendState.AlphaBlend, 
+						SamplerState.LinearClamp, 
+						DepthStencilState.Default, 
+						RasterizerState.CullNone, 
+						null, 
+						Main.UIScaleMatrix
+					);
 				}
 				return false;
 			}
@@ -111,7 +136,7 @@ namespace WeaponsOfMassDecoration {
 
 		protected virtual Texture2D GetTexture(WoMDPlayer player) {
 			//default handling based on conventions with texture counts and texture names
-			switch(textureCount) {
+			switch(TextureCount) {
 				case 2: //expects a default version with no paint, and a version with paint
 					if((player.paintData.PaintColor == -1 && player.paintData.CustomPaint == null) || player.paintData.paintMethod == PaintMethods.RemovePaint)
 						return null;

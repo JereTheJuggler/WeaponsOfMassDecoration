@@ -1,5 +1,6 @@
 sampler uImage0 : register(s0); // The texture that you are currently drawing.
 sampler uImage1 : register(s1); // A secondary texture that you can use for various purposes. This is usually a noise map.
+float4 uShaderSpecificData;
 float3 uColor;
 float3 uSecondaryColor;
 float uOpacity;

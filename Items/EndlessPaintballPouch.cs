@@ -6,10 +6,8 @@ using static Terraria.ModLoader.ModContent;
 namespace WeaponsOfMassDecoration.Items {
 	public class EndlessPaintballPouch : Paintball {
 
-		public EndlessPaintballPouch() : base() {
-			textureCount = 1;
-			usesGSShader = false;
-		}
+		public override int TextureCount => 1;
+		public override bool UsesGSShader => false;
 
 		public override void SetStaticDefaults() {
 			base.SetStaticDefaults();

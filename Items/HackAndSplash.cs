@@ -12,6 +12,8 @@ namespace WeaponsOfMassDecoration.Items {
 			base.SetStaticDefaults();
 			DisplayName.SetDefault("Hack 'n Splash");
 		}
+		public override int TextureCount => 1;
+		public override bool UsesGSShader => false;
 
 		public override void SetDefaults() {
 			Item.damage = 20;
@@ -45,7 +47,7 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override bool? UseItem(Player player){
-			Vector2 vel = new Vector2(20f, 20f);
+			Vector2 vel = new(20f, 20f);
 			int type = ProjectileType<Projectiles.HackAndSplashBlob>();
 			Shoot(player, null, player.position, vel, type, Item.damage, Item.knockBack);
 			return base.UseItem(player);
@@ -56,18 +58,14 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback) {
-			position.Y -= 32;
+			position.Y -= 32f;
 
-			Item.shootSpeed = 15;
+			Item.shootSpeed = 15f;
 
 			Vector2 speed = Main.MouseWorld - position;
 			speed.Normalize();
 			speed *= Item.shootSpeed;
-
-			float speedX = speed.X;
-			float speedY = speed.Y;
-
-			return base.Shoot(player, source, position, new Vector2(speedX, speedY), type, damage, knockback);
+			return base.Shoot(player, source, position, speed, type, damage, knockback);
 		}
 
 	}

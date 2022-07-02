@@ -15,6 +15,7 @@ using WeaponsOfMassDecoration.Buffs;
 using WeaponsOfMassDecoration.Items;
 using WeaponsOfMassDecoration.NPCs;
 using WeaponsOfMassDecoration.Projectiles;
+using Microsoft.Xna.Framework;
 using static Mono.Cecil.Cil.OpCodes;
 
 namespace WeaponsOfMassDecoration {
@@ -50,7 +51,7 @@ namespace WeaponsOfMassDecoration {
 
 		public const int paintedBuffDuration = 60 * 60; //1 minute
 
-		protected static Dictionary<string, Texture2D> extraTextures;
+		internal static Dictionary<string, Texture2D> extraTextures;
 
 		public WeaponsOfMassDecoration() {
 			ContentAutoloadingEnabled = true;
@@ -201,11 +202,8 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="filename">The file location + name for the texture. Extension should not be provided</param>
 		/// <param name="name">The key to use for this texture's dictionary entry</param>
 		private static void LoadExtraTexture(string filename, string name) {
-			try {
-				Texture2D texture = ModContent.Request<Texture2D>("WeaponsOfMassDecoration/"+filename).Value;
-				extraTextures.Add(name, texture);
-			} catch {
-			}
+			Texture2D texture = ModContent.Request<Texture2D>("WeaponsOfMassDecoration/"+filename,AssetRequestMode.ImmediateLoad).Value;
+			extraTextures.Add(name, texture);
 		}
 
 

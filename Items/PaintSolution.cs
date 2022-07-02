@@ -4,10 +4,8 @@ using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
 	class PaintSolution : PaintingItem {
-		public PaintSolution() : base() {
-			usesGSShader = true;
-			textureCount = 2;
-		}
+		public override int TextureCount => 2;
+		public override bool UsesGSShader => true;
 
 		public override void SetStaticDefaults() {
 			SetStaticDefaults("Used by the Clentaminator", "", false);

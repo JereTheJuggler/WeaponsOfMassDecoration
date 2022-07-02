@@ -5,10 +5,8 @@ using static Terraria.ModLoader.ModContent;
 namespace WeaponsOfMassDecoration.Items {
 	public class Paintball : PaintingItem {
 
-		public Paintball() : base() {
-			usesGSShader = true;
-			textureCount = 2;
-		}
+		public override int TextureCount => 2;
+		public override bool UsesGSShader => true;
 
 		public override void SetStaticDefaults() {
 			base.SetStaticDefaults();

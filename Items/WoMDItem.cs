@@ -106,7 +106,7 @@ namespace WeaponsOfMassDecoration.Items {
 			return GetExtraTexture(itemname + "Painted");
 		}
 
-		public override bool? UseItem(Item item, Player player)/* tModPorter Suggestion: Return null instead of false */ {
+		public override bool? UseItem(Item item, Player player){
 			PaintMethods method;
 			switch(item.type) {
 				case ItemID.Paintbrush:

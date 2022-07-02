@@ -17,6 +17,9 @@ namespace WeaponsOfMassDecoration.Items {
 			Item.staff[ModContent.ItemType<PaintLaser>()] = true;
 		}
 
+		public override int TextureCount => 1;
+		public override bool UsesGSShader => false;
+
 		public override void SetDefaults() {
 			base.SetDefaults();
 			Item.shoot = ModContent.ProjectileType<Projectiles.PaintLaser>();
@@ -26,7 +29,6 @@ namespace WeaponsOfMassDecoration.Items {
 			Item.height = 30;
 			Item.useTime = 20;
 			Item.useAnimation = 20;
-			Item.useAmmo = -1;
 			Item.useStyle = ItemUseStyleID.Shoot;
 			Item.mana = 10;
 			Item.noMelee = true;

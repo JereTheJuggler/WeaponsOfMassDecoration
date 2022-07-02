@@ -12,14 +12,13 @@ using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 namespace WeaponsOfMassDecoration.Items {
 	public class PaintingMultiTool : PaintingItem {
 		public float rotation;
-		public int hitboxExtension = 0;
-		public int soundFrequency = 1;
 		public int soundTimer = 0;
 
-		public PaintingMultiTool() : base() {
-			textureCount = 2;
-			usesGSShader = true;
-		}
+		public virtual int HitboxExtension => 0;
+		public virtual int SoundFrequency => 1;
+
+		public override int TextureCount => 2;
+		public override bool UsesGSShader => true;
 
 		public override void SetStaticDefaults() {
 			DisplayName.SetDefault("Paint Multi-Tool");
@@ -30,7 +29,6 @@ namespace WeaponsOfMassDecoration.Items {
 			Item.CloneDefaults(ItemID.Paintbrush);
 			Item.holdStyle = 0;
 			Item.useAnimation = 30;
-			Item.RebuildTooltip();
 			Item.useStyle = ItemUseStyleID.Shoot;
 			Item.width = 29;
 			Item.height = 30;
@@ -55,10 +53,10 @@ namespace WeaponsOfMassDecoration.Items {
 
 		public override void UseItemHitbox(Player player, ref Rectangle hitbox, ref bool noHitbox) {
 			hitbox = new Rectangle(
-				(int)Math.Round(player.itemLocation.X) - hitboxExtension,
-				(int)Math.Round(player.itemLocation.Y) - (hitboxExtension / 2),
-				player.itemWidth + hitboxExtension * 2,
-				player.itemHeight + hitboxExtension
+				(int)Math.Round(player.itemLocation.X) - HitboxExtension,
+				(int)Math.Round(player.itemLocation.Y) - (HitboxExtension / 2),
+				player.itemWidth + HitboxExtension * 2,
+				player.itemHeight + HitboxExtension
 			);
 		}
 
@@ -76,14 +74,14 @@ namespace WeaponsOfMassDecoration.Items {
 			recipe.Register();
 		}
 
-		public override bool? UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */ {
+		public override bool? UseItem(Player player){
 			WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
 			if(p == null)
-				return false;
+				return null;
 			soundTimer--;
 			if(soundTimer <= 0) {
-				SoundEngine.PlaySound(SoundID.Item, player.position);
-				soundTimer = soundFrequency;
+				//SoundEngine.PlaySound(SoundID.Item, player.position);
+				soundTimer = SoundFrequency;
 			}
 			Point mousePosition = Main.MouseWorld.ToTileCoordinates();
 			Point playerPos = player.position.ToTileCoordinates();
@@ -113,10 +111,8 @@ namespace WeaponsOfMassDecoration.Items {
 	}
 
 	public class SpectrePaintingMultiTool : PaintingMultiTool {
-		public SpectrePaintingMultiTool() : base() {
-			hitboxExtension = 12;
-			soundFrequency = 7;
-		}
+		public override int HitboxExtension => 6;
+		public override int SoundFrequency => 7;
 
 		public override void SetStaticDefaults() {
 			base.SetStaticDefaults();
@@ -133,15 +129,12 @@ namespace WeaponsOfMassDecoration.Items {
 
 		public override void SetDefaults() {
 			base.SetDefaults();
-
 			Item.value = Item.buyPrice(0, 0, 0, 10);
 			Item.rare = ItemRarityID.Green;
 			Item.damage = 70;
 			Item.knockBack = 7f;
 			Item.tileBoost = 3;
 			Item.useTime = 3;
-			Item.useAnimation = 7;
-			hitboxExtension = 6;
 		}
 
 		public override void UseStyle(Player player, Rectangle heldItemFrame) {

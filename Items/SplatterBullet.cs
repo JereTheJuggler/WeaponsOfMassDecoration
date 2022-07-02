@@ -10,6 +10,9 @@ namespace WeaponsOfMassDecoration.Items {
 			DisplayName.SetDefault("Splatter Bullet");
 		}
 
+		public override int TextureCount => 1;
+		public override bool UsesGSShader => false;
+
 		public override void SetDefaults() {
 			Item.damage = 16;
 			Item.DamageType = DamageClass.Ranged;

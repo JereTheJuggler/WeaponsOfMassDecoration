@@ -11,6 +11,9 @@ namespace WeaponsOfMassDecoration.Items {
 			Item.staff[ItemType<SplatterStaff>()] = true;
 		}
 
+		public override int TextureCount => 1;
+		public override bool UsesGSShader => false;
+
 		public override void SetDefaults() {
 			base.SetDefaults();
 			Item.CloneDefaults(ItemID.DiamondStaff);
@@ -22,8 +25,8 @@ namespace WeaponsOfMassDecoration.Items {
 			Item.useTime = 10;
 			Item.useAnimation = 10;
 			Item.reuseDelay = 10;
-			Item.useAmmo = -1;
 			Item.useStyle = ItemUseStyleID.Shoot;
+			Item.DamageType = DamageClass.Magic;
 			Item.noMelee = true;
 			Item.value = Item.sellPrice(0, 0, 30, 0);
 			Item.UseSound = SoundID.Item21;

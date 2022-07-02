@@ -33,6 +33,7 @@ namespace WeaponsOfMassDecoration {
 		public static readonly Color Brown = new Color(151, 107, 75);
 		public static readonly Color Shadow = Color.Black;
 		public static readonly Color Negative = Color.Black;
+		public static readonly Color Illuminant = Color.White;
 
 		public static readonly Color[] list = new Color[] {
 			NoColor,
@@ -65,7 +66,8 @@ namespace WeaponsOfMassDecoration {
 			Gray,
 			Brown,
 			Shadow,
-			Negative
+			Negative,
+			Illuminant
 		};
 	}
 }

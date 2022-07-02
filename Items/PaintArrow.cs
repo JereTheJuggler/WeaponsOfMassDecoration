@@ -4,10 +4,8 @@ using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
 	public class PaintArrow : PaintingItem {
-		public PaintArrow() : base() {
-			usesGSShader = true;
-			textureCount = 3;
-		}
+		public override int TextureCount => 3;
+		public override bool UsesGSShader => true;
 		public override void SetStaticDefaults() {
 			base.SetStaticDefaults();
 			DisplayName.SetDefault("Paint Arrow");

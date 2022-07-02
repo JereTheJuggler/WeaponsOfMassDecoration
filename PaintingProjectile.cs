@@ -586,11 +586,24 @@ namespace WeaponsOfMassDecoration {
 					float opacity = Projectile.Opacity - (Projectile.Opacity / (trailLength + 1)) * i;
 					float lightness = 1f - (.75f / (trailLength + 1)) * i;
 
+					DrawData data = new DrawData(
+						texture,
+						drawPos,
+						sourceRectangle,
+						Color.Multiply(lightColor, lightness),
+						rotation,
+						origin,
+						scale,
+						SpriteEffects.None,
+						0
+					);
+
 					if(shader != null) {
-						shader.UseOpacity(opacity).Apply();
+						shader.UseOpacity(opacity);
+						shader.Apply();
 					}
 
-					Main.spriteBatch.Draw(texture, drawPos, sourceRectangle, Color.Multiply(lightColor, lightness), rotation, origin, scale, SpriteEffects.None, 0f);
+					Main.EntitySpriteDraw(data);
 
 					if(shader != null && i > 0) {
 						Main.spriteBatch.End();

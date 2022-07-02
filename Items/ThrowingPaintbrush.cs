@@ -4,10 +4,8 @@ using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
 	class ThrowingPaintbrush : PaintingItem {
-		public ThrowingPaintbrush() : base() {
-			usesGSShader = true;
-			textureCount = 3;
-		}
+		public override int TextureCount => 3;
+		public override bool UsesGSShader => true;
 
 		public override void SetStaticDefaults() {
 			DisplayName.SetDefault("Throwing Paintbrush");

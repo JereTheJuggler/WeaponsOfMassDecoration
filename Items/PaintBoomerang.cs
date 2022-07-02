@@ -5,10 +5,8 @@ using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
 	class PaintBoomerang : PaintingItem {
-		public PaintBoomerang() : base() {
-			usesGSShader = true;
-			textureCount = 3;
-		}
+		public override int TextureCount => 3;
+		public override bool UsesGSShader => true;
 
 		public override void SetStaticDefaults() {
 			DisplayName.SetDefault("Paint Boomerang");

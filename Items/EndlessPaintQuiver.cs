@@ -6,9 +6,8 @@ using static Terraria.ModLoader.ModContent;
 namespace WeaponsOfMassDecoration.Items {
 	public class EndlessPaintQuiver : PaintArrow {
 
-		public EndlessPaintQuiver() : base() {
-			textureCount = 1;
-		}
+		public override int TextureCount => 1;
+		public override bool UsesGSShader => false;
 
 		public override void SetStaticDefaults() {
 			base.SetStaticDefaults();

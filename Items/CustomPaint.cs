@@ -22,6 +22,9 @@ namespace WeaponsOfMassDecoration.Items {
 	public interface ICyclingPaint { }
 
 	public abstract class CustomPaint : PaintingItem {
+		public override int TextureCount => 1;
+		public override bool UsesGSShader => false;
+
 		/// <summary>
 		/// The value assigned to item.paint for every instance of a CustomPaint
 		/// </summary>
