@@ -47,6 +47,13 @@ namespace WeaponsOfMassDecoration.NPCs {
 		/// </summary>
 		public bool accRewardsProgram = false;
 
+		public bool accBuffRed = false;
+		public bool accBuffYellow = false;
+		public bool accBuffLime = false;
+		public bool accBuffGreen = false;
+		public bool accBuffCyan = false;
+		public bool accBuffPurple = false;
+
 		protected const int fartDelay = 60 * 10; //10 seconds
 		protected uint mountUnicornTime = 0;
 		protected uint lastFartTime = 0;
@@ -63,7 +70,13 @@ namespace WeaponsOfMassDecoration.NPCs {
 			buffPainted = false;
 			accPalette = false;
 			accRewardsProgram = false;
-		}
+			accBuffRed = false;
+			accBuffYellow = false;
+			accBuffLime = false;
+			accBuffGreen = false;
+			accBuffCyan = false;
+			accBuffPurple = false;
+	}
 
 		public override void UpdateDead() {
 			buffPainted = false;
@@ -77,7 +90,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 
 		public override void PostUpdateBuffs() {
 			base.PostUpdateBuffs();
-			if(ChaosMode() && Player.whoAmI == Main.myPlayer) {
+			if(ChaosMode && Player.whoAmI == Main.myPlayer) {
 				if(Player.HasBuff(BuffID.UnicornMount)) {
 					if(mountUnicornTime == 0)
 						mountUnicornTime = Main.GameUpdateCount;
@@ -96,10 +109,10 @@ namespace WeaponsOfMassDecoration.NPCs {
 								d.fadeIn = 1.5f;
 							}
 
-							GetWorld().AddAnimation(new PaintAnimation(heights.Length - 1, 3, index => {
+							World.AddAnimation(new PaintAnimation(heights.Length - 1, 3, index => {
 								int height = heights[index];
 								for(int i = 0; i < height; i++) {
-									Point coords = new Point(
+									Point coords = new(
 										fartPosition.X + (index * fartDirection),
 										fartPosition.Y + (((height - 1) / -2) + i)
 									);
@@ -197,7 +210,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 									maxLength = length;
 							}
 
-							GetWorld().AddAnimation(new PaintAnimation(maxLength, 1, index => {
+							World.AddAnimation(new PaintAnimation(maxLength, 1, index => {
 								for(byte i = 0; i < dirs.Length; i++) {
 									if(index <= lengths[i]) {
 										Vector2 disp = dirs[i] * 16f * (float)index;
@@ -282,7 +295,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 			if(data.paintMethod == PaintMethods.RemovePaint)
 				return;
 			if(_currentPaintIndex >= 0) {
-				if(_paintData.CustomPaint != null && _paintData.CustomPaint.paintConsumptionChance < 1f && Main.rand.NextFloat() <= _paintData.CustomPaint.paintConsumptionChance)
+				if(_paintData.CustomPaint != null && _paintData.CustomPaint.PaintConsumptionChance < 1f && Main.rand.NextFloat() <= _paintData.CustomPaint.PaintConsumptionChance)
 					return;
 				Item item = Player.inventory[_currentPaintIndex];
 				if(item.stack > 0)

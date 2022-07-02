@@ -26,7 +26,7 @@ namespace WeaponsOfMassDecoration.Buffs {
 
 		public override void Update(NPC npc, ref int buffIndex) {
 			WoMDNPC gNpc = npc.GetGlobalNPC<WoMDNPC>();
-			gNpc.painted = true;
+			gNpc.RefreshPainted();
 			/* not sure I actually like this
 			if(GetInstance<WoMDConfig>().paintStatusEffects) {
 				PaintData data = gNpc.paintData;
@@ -84,6 +84,61 @@ namespace WeaponsOfMassDecoration.Buffs {
 				}
 			}
 			*/
+		}
+	}
+
+	/// <summary>
+	/// Applied with green paint
+	/// </summary>
+	class PoisonPainted : Painted {
+		public override void Update(NPC npc, ref int buffIndex) {
+			base.Update(npc, ref buffIndex);
+			npc.AddBuff(BuffID.Poisoned, 2, true);
+		}
+	}
+	/// <summary>
+	/// Applied with purple paint
+	/// </summary>
+	class VenomPainted : Painted {
+		public override void Update(NPC npc, ref int buffIndex) {
+			base.Update(npc, ref buffIndex);
+			npc.AddBuff(BuffID.Venom, 2, true);
+		}
+	}
+	/// <summary>
+	/// Applied with red paint
+	/// </summary>
+	class FirePainted : Painted {
+		public override void Update(NPC npc, ref int buffIndex) {
+			base.Update(npc, ref buffIndex);
+			npc.AddBuff(BuffID.OnFire, 2, true);
+		}
+	}
+	/// <summary>
+	/// Applied with lime paint
+	/// </summary>
+	class CursedFlamePainted : Painted {
+		public override void Update(NPC npc, ref int buffIndex) {
+			base.Update(npc, ref buffIndex);
+			npc.AddBuff(BuffID.CursedInferno, 2, true);
+		}
+	}
+	/// <summary>
+	/// Applied with yellow paint
+	/// </summary>
+	class IchorPainted : Painted {
+		public override void Update(NPC npc, ref int buffIndex) {
+			base.Update(npc, ref buffIndex);
+			npc.AddBuff(BuffID.Ichor, 2, true);
+		}
+	}
+	/// <summary>
+	/// Applied with cyan paint
+	/// </summary>
+	class FrostburnPainted : Painted {
+		public override void Update(NPC npc, ref int buffIndex) {
+			base.Update(npc, ref buffIndex);
+			npc.AddBuff(BuffID.Frostburn, 2, true);
 		}
 	}
 }

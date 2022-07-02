@@ -72,7 +72,7 @@ namespace WeaponsOfMassDecoration {
 					} else if(_paintColor != -1) {
 						_renderColor = PaintColors.list[_paintColor];
 					} else {
-						_renderColor = _customPaint.getColor(this);
+						_renderColor = _customPaint.GetColor(this);
 					}
 				}
 				return (Color)_renderColor;
@@ -86,7 +86,7 @@ namespace WeaponsOfMassDecoration {
 					if(_customPaint == null) {
 						_customPaintColor = -1;
 					} else {
-						_customPaintColor = _customPaint.getPaintID(this);
+						_customPaintColor = _customPaint.GetPaintID(this);
 					}
 				}
 				return (int)_customPaintColor;
@@ -140,20 +140,29 @@ namespace WeaponsOfMassDecoration {
 					this(timeScale, -1, null, timeOffset: timeOffset) { }
 
 		public PaintData Clone() {
-			PaintData data = new PaintData();
-			data._paintColor = _paintColor;
-			data._customPaint = _customPaint;
-			data._renderColor = _renderColor;
-			data._customPaintColor = _customPaintColor;
-			data._timeScale = _timeScale;
-			data._timeOffset = _timeOffset;
-			data.player = player;
-			data.paintMethod = paintMethod;
-			data.blocksAllowed = blocksAllowed;
-			data.wallsAllowed = wallsAllowed;
-			data.consumePaint = consumePaint;
-			data.sprayPaint = sprayPaint;
-			return data;
+			return new PaintData() {
+				_paintColor = _paintColor,
+				_customPaint = _customPaint,
+				_renderColor = _renderColor,
+				_customPaintColor = _customPaintColor,
+				_timeScale = _timeScale,
+				_timeOffset = _timeOffset,
+				player = player,
+				paintMethod = paintMethod,
+				blocksAllowed = blocksAllowed,
+				wallsAllowed = wallsAllowed,
+				consumePaint = consumePaint,
+				sprayPaint = sprayPaint
+			};
+		}
+
+		public bool Equals(PaintData other) {
+			if (other == null) return false;
+			if (other.PaintColor != PaintColor) return false;
+			if ((other.CustomPaint == null) != (CustomPaint == null)) return false;
+			if (CustomPaint != null && other.CustomPaint.Name != CustomPaint.Name) return false;
+			if (other.sprayPaint != sprayPaint) return false;
+			return true;
 		}
 	}
 }

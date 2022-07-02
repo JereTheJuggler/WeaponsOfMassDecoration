@@ -287,7 +287,7 @@ namespace WeaponsOfMassDecoration {
 					if(player != null)
 						player.ConsumePaint(data);
 				}
-				if(Server() || Multiplayer())
+				if(Server || Multiplayer)
 					SendTileFrame(x, y);
 			}
 			return updated;

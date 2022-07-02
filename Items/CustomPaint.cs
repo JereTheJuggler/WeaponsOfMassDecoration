@@ -33,32 +33,32 @@ namespace WeaponsOfMassDecoration.Items {
 		/// <summary>
 		/// The chance that this paint will be consumed when used
 		/// </summary>
-		public virtual float paintConsumptionChance => 1f;
+		public virtual float PaintConsumptionChance => 1f;
 		/// <summary>
 		/// Whether or not the paint can be crafted from the items in paintItemIds
 		/// </summary>
-		protected virtual bool _includeVanillaRecipes => true;
+		protected virtual bool _IncludeVanillaRecipes => true;
 
 		/// <summary>
 		/// The number of different colors a custom paint can produce. This is preferable to using paintItemIds.Length because it will not go through the process of converting base paint item ids to deep paint item ids first
 		/// </summary>
-		public int colorCount => _paintItemIds.Length;
+		public int ColorCount => _PaintItemIds.Length;
 		/// <summary>
 		/// The item ids of the paints that the custom paint will use
 		/// </summary>
-		protected abstract int[] _paintItemIds { get; }
+		protected abstract int[] _PaintItemIds { get; }
 		/// <summary>
 		/// The item ids of the paints that the custom paint will use
 		/// </summary>
-		public int[] paintItemIds {
+		public int[] PaintItemIds {
 			get {
 				if(this is IDeepPaint) {
-					int[] deepIds = new int[_paintItemIds.Length];
+					int[] deepIds = new int[_PaintItemIds.Length];
 					for(int i = 0; i < deepIds.Length; i++)
-						deepIds[i] = getDeepItemId(_paintItemIds[i]);
+						deepIds[i] = GetDeepItemId(_PaintItemIds[i]);
 					return deepIds;
 				} else {
-					return (int[])_paintItemIds.Clone();
+					return (int[])_PaintItemIds.Clone();
 				}
 			}
 		}
@@ -67,7 +67,7 @@ namespace WeaponsOfMassDecoration.Items {
 		/// </summary>
 		/// <param name="type"></param>
 		/// <returns></returns>
-		protected static int getDeepItemId(int type) {
+		protected static int GetDeepItemId(int type) {
 			int index = Array.IndexOf(PaintItemID.list, type);
 			if(index == -1)
 				return type;
@@ -79,13 +79,13 @@ namespace WeaponsOfMassDecoration.Items {
 		/// <summary>
 		/// The base color name for the custom paint. Additional keywords for Spray, Deep, and Paint will automatically be added in the public CustomPaint.displayName
 		/// </summary>
-		protected abstract string _colorName { get; }
+		protected abstract string _ColorName { get; }
 		/// <summary>
 		/// The display name to use for the custom paint
 		/// </summary>
 		public string displayName {
 			get {
-				string name = _colorName;
+				string name = _ColorName;
 				if(this is ISprayPaint)
 					name += " Spray";
 				name += " Paint";
@@ -108,15 +108,15 @@ namespace WeaponsOfMassDecoration.Items {
 		public override void SetDefaults() {
 			Item.maxStack = 999;
 			Item.paint = paintValue;
-			Item.value = colorCount * 10;
+			Item.value = ColorCount * 10;
 			if(this is IDeepPaint)
 				Item.value *= 2;
 		}
 		public override void SetStaticDefaults() {
 			DisplayName.SetDefault(displayName);
 			string paintConsumptionText = "";
-			if(paintConsumptionChance < 1)
-				paintConsumptionText = Math.Round(100 * (1f - paintConsumptionChance)).ToString() + "% chance to not be consumed";
+			if(PaintConsumptionChance < 1)
+				paintConsumptionText = Math.Round(100 * (1f - PaintConsumptionChance)).ToString() + "% chance to not be consumed";
 			SetStaticDefaults(paintConsumptionText, "", false);
 		}
 
@@ -154,16 +154,18 @@ namespace WeaponsOfMassDecoration.Items {
 		* - (3) using 2 of the base cycling spray paint to create 1 item.							Ex: 2 flame spray paint = 1 deep flame spray paint
 		*/
 		public override void AddRecipes() {
-			//any paint type that has _includeVanillaRecipes set to false should ignore recipes that use paintItemIds (public or protected)
-			if(_paintItemIds.Length > 0) {
+			if (this is ISprayPaint)
+				return;
+			//any paint type that has _IncludeVanillaRecipes set to false should ignore recipes that use paintItemIds (public or protected)
+			if(_PaintItemIds.Length > 0) {
 				//case (1)
 				//using 1 of each base/deep item to create 1 * the number of items used.
 				//matches all paints
-				if(_includeVanillaRecipes) {
+				if(_IncludeVanillaRecipes) {
 					//using the public paintItemIds so base custom paints use base items and deep custom paints use deep items
-					Recipe recipe = CreateRecipe(colorCount);
-					int[] itemIds = paintItemIds; //store it so it doesn't need to convert multiple times
-					for(int p = 0; p < colorCount; p++)
+					Recipe recipe = CreateRecipe(ColorCount);
+					int[] itemIds = PaintItemIds; //store it so it doesn't need to convert multiple times
+					for(int p = 0; p < ColorCount; p++)
 						recipe.AddIngredient(itemIds[p], 1);
 					recipe.AddTile(TileID.DyeVat);
 					recipe.Register();
@@ -172,11 +174,11 @@ namespace WeaponsOfMassDecoration.Items {
 				//case (2)
 				//using 2 of each base item to create .5 * the number of items used.
 				//matchs all deep paints
-				if(_includeVanillaRecipes && this is IDeepPaint) {
-					//using the protected _paintItemIds so only base items are used
-					Recipe recipe = CreateRecipe(colorCount);
-					for(int p = 0; p < _paintItemIds.Length; p++)
-						recipe.AddIngredient(_paintItemIds[p], 2);
+				if(_IncludeVanillaRecipes && this is IDeepPaint) {
+					//using the protected _PaintItemIds so only base items are used
+					Recipe recipe = CreateRecipe(ColorCount);
+					for(int p = 0; p < _PaintItemIds.Length; p++)
+						recipe.AddIngredient(_PaintItemIds[p], 2);
 					recipe.AddTile(TileID.DyeVat);
 					recipe.Register();
 				}
@@ -207,10 +209,10 @@ namespace WeaponsOfMassDecoration.Items {
 				//case (5)
 				//using 1 of each base/deep spray paint to create 1 * the number of items used
 				//matches cycling spray paints and deep cycling spray paints
-				if(_includeVanillaRecipes && this is ISprayPaint && this is ICyclingPaint) {
-					Recipe recipe = CreateRecipe(colorCount);
-					int[] itemIds = paintItemIds; //store it so it doesn't need to convert multiple times for deep paints
-					for(int p = 0; p < colorCount; p++)
+				if(_IncludeVanillaRecipes && this is ISprayPaint && this is ICyclingPaint) {
+					Recipe recipe = CreateRecipe(ColorCount);
+					int[] itemIds = PaintItemIds; //store it so it doesn't need to convert multiple times for deep paints
+					for(int p = 0; p < ColorCount; p++)
 						recipe.AddIngredient(Mod.Find<ModItem>(ColorNames.list[Array.IndexOf(PaintItemID.list, itemIds[p])].Replace(" ", "") + "SprayPaint").Type, 1);
 					recipe.AddTile(TileID.DyeVat);
 					recipe.Register();
@@ -238,11 +240,11 @@ namespace WeaponsOfMassDecoration.Items {
 
 					//case (6c)
 					//using 2 of the base spray paints to create .5 * the number of items used
-					//using protected _paintItemIds to get only base paints
-					if(_includeVanillaRecipes) {
-						Recipe recipeC = CreateRecipe(colorCount);
-						for(int p = 0; p < colorCount; p++)
-							recipeC.AddIngredient(Mod.Find<ModItem>("Deep" + ColorNames.list[Array.IndexOf(PaintItemID.list, _paintItemIds[p])].Replace(" ", "") + "SprayPaint").Type, 2);
+					//using protected _PaintItemIds to get only base paints
+					if(_IncludeVanillaRecipes) {
+						Recipe recipeC = CreateRecipe(ColorCount);
+						for(int p = 0; p < ColorCount; p++)
+							recipeC.AddIngredient(Mod.Find<ModItem>("Deep" + ColorNames.list[Array.IndexOf(PaintItemID.list, _PaintItemIds[p])].Replace(" ", "") + "SprayPaint").Type, 2);
 						recipeC.AddTile(TileID.DyeVat);
 						recipeC.Register();
 					}
@@ -255,49 +257,49 @@ namespace WeaponsOfMassDecoration.Items {
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		public Color getColor(PaintData data) {
-			if(colorCount == 1)
-				return getColorFromIndex(0);
-			int index1 = getPaintIndex(data);
-			int index2 = getPaintIndex(data, 1);
+		public Color GetColor(PaintData data) {
+			if(ColorCount == 1)
+				return GetColorFromIndex(0);
+			int index1 = GetPaintIndex(data);
+			int index2 = GetPaintIndex(data, 1);
 			if(index1 == index2)
-				return getColorFromIndex(index1);
+				return GetColorFromIndex(index1);
 			float lerpAmount = ((Main.GlobalTimeWrappedHourly - data.TimeOffset) / data.TimeScale) % 1;
-			return Color.Lerp(getColorFromIndex(index1), getColorFromIndex(index2), lerpAmount);
+			return Color.Lerp(GetColorFromIndex(index1), GetColorFromIndex(index2), lerpAmount);
 		}
 		/// <summary>
 		/// Gets the PaintID for painting tiles based on the data provided.
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		public byte getPaintID(PaintData data) {
-			if(colorCount == 1)
-				return getPaintIDFromIndex(0);
-			return getPaintIDFromIndex(getPaintIndex(data));
+		public byte GetPaintID(PaintData data) {
+			if(ColorCount == 1)
+				return GetPaintIDFromIndex(0);
+			return GetPaintIDFromIndex(GetPaintIndex(data));
 		}
 
-		protected Color getColorFromIndex(int index) => PaintColors.list[getPaintIDFromIndex(index)];
-		protected byte getPaintIDFromIndex(int index) => (byte)Array.IndexOf(PaintItemID.list, paintItemIds[index]);
+		protected Color GetColorFromIndex(int index) => PaintColors.list[GetPaintIDFromIndex(index)];
+		protected byte GetPaintIDFromIndex(int index) => (byte)Array.IndexOf(PaintItemID.list, PaintItemIds[index]);
 		/// <summary>
 		/// Gets the index of the paint item id that the custom paint is currently using. Base implementation is dependant on Main.global time with a time scale and offset factored in
 		/// </summary>
 		/// <param name="data"></param>
 		/// <param name="offset">This can be used to offset the result. For example, to get the next index the paint will use the offset should be 1. This is useful for interpolating between the current and next color for the custom paint</param>
 		/// <returns></returns>
-		protected virtual int getPaintIndex(PaintData data, int offset = 0) {
+		protected virtual int GetPaintIndex(PaintData data, int offset = 0) {
 			int index;
 			if(cycleLoops) {
-				index = ((int)Math.Floor((Main.GlobalTimeWrappedHourly - data.TimeOffset) / data.TimeScale) + offset) % colorCount;
+				index = ((int)Math.Floor((Main.GlobalTimeWrappedHourly - data.TimeOffset) / data.TimeScale) + offset) % ColorCount;
 				if(index < 0)
-					index += colorCount;
+					index += ColorCount;
 			} else {
-				index = ((int)Math.Floor((Main.GlobalTimeWrappedHourly - data.TimeOffset) / data.TimeScale) + offset) % (colorCount * 2 - 2);
+				index = ((int)Math.Floor((Main.GlobalTimeWrappedHourly - data.TimeOffset) / data.TimeScale) + offset) % (ColorCount * 2 - 2);
 				if(index < 0)
 					index *= -1;
-				if(index >= colorCount)
-					index = colorCount * 2 - 2 - index;
+				if(index >= ColorCount)
+					index = ColorCount * 2 - 2 - index;
 			}
-			if(index < 0 || index >= colorCount) {
+			if(index < 0 || index >= ColorCount) {
 				throw new Exception("Error getting paint index for custom paint");
 			}
 			return index;
@@ -309,15 +311,15 @@ namespace WeaponsOfMassDecoration.Items {
 		/// <param name="paintColor">If the custom paint converts itself to a vanilla paint, this will be the color's PaintID. Will be -1 if the paint is not converted</param>
 		/// <param name="customPaint">If the custom paint is not converted, this will just be the same custom paint object</param>
 		/// <param name="data"></param>
-		public virtual void modifyPaintDataForNpc(ref PaintData data) { }
+		public virtual void ModifyPaintDataForNpc(ref PaintData data) { }
 	}
 
 	public class RainbowPaint : CustomPaint, ICyclingPaint {
-		public override float paintConsumptionChance => .5f;
+		public override float PaintConsumptionChance => .5f;
 		public RainbowPaint() : base() {
 			cycleLoops = true;
 		}
-		protected override int[] _paintItemIds => new int[] {
+		protected override int[] _PaintItemIds => new int[] {
 			ItemID.RedPaint,
 			ItemID.OrangePaint,
 			ItemID.YellowPaint,
@@ -331,182 +333,182 @@ namespace WeaponsOfMassDecoration.Items {
 			ItemID.VioletPaint,
 			ItemID.PinkPaint
 		};
-		protected override string _colorName => "Rainbow";
+		protected override string _ColorName => "Rainbow";
 	}
 	public class DeepRainbowPaint : RainbowPaint, IDeepPaint { }
-	public class RainbowSprayPaint : RainbowPaint, ISprayPaint { }
-	public class DeepRainbowSprayPaint : RainbowSprayPaint, IDeepPaint { }
+	/*public class RainbowSprayPaint : RainbowPaint, ISprayPaint { }
+	public class DeepRainbowSprayPaint : RainbowSprayPaint, IDeepPaint { }*/
 
 	public class FlamePaint : CustomPaint, ICyclingPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.RedPaint, ItemID.OrangePaint, ItemID.YellowPaint };
-		protected override string _colorName => "Flame";
+		protected override int[] _PaintItemIds => new int[] { ItemID.RedPaint, ItemID.OrangePaint, ItemID.YellowPaint };
+		protected override string _ColorName => "Flame";
 	}
 	public class DeepFlamePaint : FlamePaint, IDeepPaint { }
-	public class FlameSprayPaint : FlamePaint, ISprayPaint { }
-	public class DeepFlameSprayPaint : FlameSprayPaint, IDeepPaint { }
+	/*public class FlameSprayPaint : FlamePaint, ISprayPaint { }
+	public class DeepFlameSprayPaint : FlameSprayPaint, IDeepPaint { }*/
 
 	public class GreenFlamePaint : CustomPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.GreenPaint, ItemID.LimePaint, ItemID.YellowPaint };
-		protected override string _colorName => "Green Flame";
+		protected override int[] _PaintItemIds => new int[] { ItemID.GreenPaint, ItemID.LimePaint, ItemID.YellowPaint };
+		protected override string _ColorName => "Green Flame";
 	}
 	public class DeepGreenFlamePaint : GreenFlamePaint, IDeepPaint { }
-	public class GreenFlameSprayPaint : GreenFlamePaint, ISprayPaint { }
-	public class DeepGreenFlameSprayPaint : GreenFlameSprayPaint, IDeepPaint { }
+	/*public class GreenFlameSprayPaint : GreenFlamePaint, ISprayPaint { }
+	public class DeepGreenFlameSprayPaint : GreenFlameSprayPaint, IDeepPaint { }*/
 
 	public class BlueFlamePaint : CustomPaint, ICyclingPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.BluePaint, ItemID.SkyBluePaint, ItemID.CyanPaint };
-		protected override string _colorName => "Blue Flame";
+		protected override int[] _PaintItemIds => new int[] { ItemID.BluePaint, ItemID.SkyBluePaint, ItemID.CyanPaint };
+		protected override string _ColorName => "Blue Flame";
 	}
 	public class DeepBlueFlamePaint : BlueFlamePaint, IDeepPaint { }
-	public class BlueFlameSprayPaint : BlueFlamePaint, ISprayPaint { }
-	public class DeepBlueFlameSprayPaint : BlueFlameSprayPaint, IDeepPaint { }
+	/*public class BlueFlameSprayPaint : BlueFlamePaint, ISprayPaint { }
+	public class DeepBlueFlameSprayPaint : BlueFlameSprayPaint, IDeepPaint { }*/
 
 	public class YellowGradientPaint : CustomPaint, ICyclingPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.LimePaint, ItemID.YellowPaint, ItemID.OrangePaint };
-		protected override string _colorName => "Yellow Gradient";
+		protected override int[] _PaintItemIds => new int[] { ItemID.LimePaint, ItemID.YellowPaint, ItemID.OrangePaint };
+		protected override string _ColorName => "Yellow Gradient";
 	}
 	public class DeepYellowGradientPaint : YellowGradientPaint, IDeepPaint { }
-	public class YellowGradientSprayPaint : YellowGradientPaint, ISprayPaint { }
-	public class DeepYellowGradientSprayPaint : YellowGradientSprayPaint, IDeepPaint { }
+	/*public class YellowGradientSprayPaint : YellowGradientPaint, ISprayPaint { }
+	public class DeepYellowGradientSprayPaint : YellowGradientSprayPaint, IDeepPaint { }*/
 
 	public class CyanGradientPaint : CustomPaint, ICyclingPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.TealPaint, ItemID.CyanPaint, ItemID.SkyBluePaint };
-		protected override string _colorName => "Cyan Gradient";
+		protected override int[] _PaintItemIds => new int[] { ItemID.TealPaint, ItemID.CyanPaint, ItemID.SkyBluePaint };
+		protected override string _ColorName => "Cyan Gradient";
 	}
 	public class DeepCyanGradientPaint : CyanGradientPaint, IDeepPaint { }
-	public class CyanGradientSprayPaint : CyanGradientPaint, ISprayPaint { }
-	public class DeepCyanGradientSprayPaint : CyanGradientSprayPaint, IDeepPaint { }
+	/*public class CyanGradientSprayPaint : CyanGradientPaint, ISprayPaint { }
+	public class DeepCyanGradientSprayPaint : CyanGradientSprayPaint, IDeepPaint { }*/
 
 	public class VioletGradientPaint : CustomPaint, ICyclingPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.PinkPaint, ItemID.VioletPaint, ItemID.PurplePaint };
-		protected override string _colorName => "Violet Gradient";
+		protected override int[] _PaintItemIds => new int[] { ItemID.PinkPaint, ItemID.VioletPaint, ItemID.PurplePaint };
+		protected override string _ColorName => "Violet Gradient";
 	}
 	public class DeepVioletGradientPaint : VioletGradientPaint, IDeepPaint { }
-	public class VioletGradientSprayPaint : VioletGradientPaint, ISprayPaint { }
-	public class DeepVioletGradientSprayPaint : VioletGradientSprayPaint, IDeepPaint { }
+	/*public class VioletGradientSprayPaint : VioletGradientPaint, ISprayPaint { }
+	public class DeepVioletGradientSprayPaint : VioletGradientSprayPaint, IDeepPaint { }*/
 
 	public class GrayscalePaint : CustomPaint, ICyclingPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.ShadowPaint, ItemID.BlackPaint, ItemID.GrayPaint, ItemID.WhitePaint };
-		protected override string _colorName => "Grayscale";
+		protected override int[] _PaintItemIds => new int[] { ItemID.ShadowPaint, ItemID.BlackPaint, ItemID.GrayPaint, ItemID.WhitePaint };
+		protected override string _ColorName => "Grayscale";
 	}
-	public class GrayscaleSprayPaint : GrayscalePaint, ISprayPaint { }
+	/*public class GrayscaleSprayPaint : GrayscalePaint, ISprayPaint { }*/
 
-	public class RedSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.RedPaint };
-		protected override string _colorName => "Red";
+	/*public class RedSprayPaint : CustomPaint, ISprayPaint {
+		protected override int[] _PaintItemIds => new int[] { ItemID.RedPaint };
+		protected override string _ColorName => "Red";
 	}
 	public class DeepRedSprayPaint : RedSprayPaint, IDeepPaint { }
 
 	public class OrangeSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.OrangePaint };
-		protected override string _colorName => "Orange";
+		protected override int[] _PaintItemIds => new int[] { ItemID.OrangePaint };
+		protected override string _ColorName => "Orange";
 	}
 	public class DeepOrangeSprayPaint : OrangeSprayPaint, IDeepPaint { }
 
 	public class YellowSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.YellowPaint };
-		protected override string _colorName => "Yellow";
+		protected override int[] _PaintItemIds => new int[] { ItemID.YellowPaint };
+		protected override string _ColorName => "Yellow";
 	}
 	public class DeepYellowSprayPaint : YellowSprayPaint, IDeepPaint { }
 
 	public class LimeSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.LimePaint };
-		protected override string _colorName => "Lime";
+		protected override int[] _PaintItemIds => new int[] { ItemID.LimePaint };
+		protected override string _ColorName => "Lime";
 	}
 	public class DeepLimeSprayPaint : LimeSprayPaint, IDeepPaint { }
 
 	public class GreenSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.GreenPaint };
-		protected override string _colorName => "Green";
+		protected override int[] _PaintItemIds => new int[] { ItemID.GreenPaint };
+		protected override string _ColorName => "Green";
 	}
 	public class DeepGreenSprayPaint : GreenSprayPaint, IDeepPaint { }
 
 	public class TealSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.TealPaint };
-		protected override string _colorName => "Teal";
+		protected override int[] _PaintItemIds => new int[] { ItemID.TealPaint };
+		protected override string _ColorName => "Teal";
 	}
 	public class DeepTealSprayPaint : TealSprayPaint, IDeepPaint { }
 
 	public class CyanSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.CyanPaint };
-		protected override string _colorName => "Cyan";
+		protected override int[] _PaintItemIds => new int[] { ItemID.CyanPaint };
+		protected override string _ColorName => "Cyan";
 	}
 	public class DeepCyanSprayPaint : CyanSprayPaint, IDeepPaint { }
 
 	public class SkyBlueSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.SkyBluePaint };
-		protected override string _colorName => "Sky Blue";
+		protected override int[] _PaintItemIds => new int[] { ItemID.SkyBluePaint };
+		protected override string _ColorName => "Sky Blue";
 	}
 	public class DeepSkyBlueSprayPaint : SkyBlueSprayPaint, IDeepPaint { }
 
 	public class BlueSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.BluePaint };
-		protected override string _colorName => "Blue";
+		protected override int[] _PaintItemIds => new int[] { ItemID.BluePaint };
+		protected override string _ColorName => "Blue";
 	}
 	public class DeepBlueSprayPaint : BlueSprayPaint, IDeepPaint { }
 
 	public class PurpleSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.PurplePaint };
-		protected override string _colorName => "Purple";
+		protected override int[] _PaintItemIds => new int[] { ItemID.PurplePaint };
+		protected override string _ColorName => "Purple";
 	}
 	public class DeepPurpleSprayPaint : PurpleSprayPaint, IDeepPaint { }
 
 	public class VioletSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.VioletPaint };
-		protected override string _colorName => "Violet";
+		protected override int[] _PaintItemIds => new int[] { ItemID.VioletPaint };
+		protected override string _ColorName => "Violet";
 	}
 	public class DeepVioletSprayPaint : VioletSprayPaint, IDeepPaint { }
 
 	public class PinkSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.PinkPaint };
-		protected override string _colorName => "Pink";
+		protected override int[] _PaintItemIds => new int[] { ItemID.PinkPaint };
+		protected override string _ColorName => "Pink";
 	}
 	public class DeepPinkSprayPaint : PinkSprayPaint, IDeepPaint { }
 
 	public class WhiteSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.WhitePaint };
-		protected override string _colorName => "White";
+		protected override int[] _PaintItemIds => new int[] { ItemID.WhitePaint };
+		protected override string _ColorName => "White";
 	}
 	public class GraySprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.GrayPaint };
-		protected override string _colorName => "Gray";
+		protected override int[] _PaintItemIds => new int[] { ItemID.GrayPaint };
+		protected override string _ColorName => "Gray";
 	}
 	public class BlackSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.BlackPaint };
-		protected override string _colorName => "Black";
+		protected override int[] _PaintItemIds => new int[] { ItemID.BlackPaint };
+		protected override string _ColorName => "Black";
 	}
 	public class ShadowSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.ShadowPaint };
-		protected override string _colorName => "Shadow";
+		protected override int[] _PaintItemIds => new int[] { ItemID.ShadowPaint };
+		protected override string _ColorName => "Shadow";
 	}
 	public class BrownSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.BrownPaint };
-		protected override string _colorName => "Brown";
-	}
+		protected override int[] _PaintItemIds => new int[] { ItemID.BrownPaint };
+		protected override string _ColorName => "Brown";
+	}*/
 	public class NegativeSprayPaint : CustomPaint, ISprayPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.NegativePaint };
-		protected override string _colorName => "Negative";
+		protected override int[] _PaintItemIds => new int[] { ItemID.NegativePaint };
+		protected override string _ColorName => "Negative";
 	}
 
 	public class TeamPaint : CustomPaint, ICyclingPaint {
-		protected override int[] _paintItemIds => new int[] { ItemID.WhitePaint, ItemID.RedPaint, ItemID.GreenPaint, ItemID.BluePaint, ItemID.YellowPaint, ItemID.PinkPaint };
-		protected override string _colorName => "Team";
-		protected override bool _includeVanillaRecipes => false;
+		protected override int[] _PaintItemIds => new int[] { ItemID.WhitePaint, ItemID.RedPaint, ItemID.GreenPaint, ItemID.BluePaint, ItemID.YellowPaint, ItemID.PinkPaint };
+		protected override string _ColorName => "Team";
+		protected override bool _IncludeVanillaRecipes => false;
 
-		protected override int getPaintIndex(PaintData data, int offset = 0) {
+		protected override int GetPaintIndex(PaintData data, int offset = 0) {
 			if(data.player == null)
 				return 0;
 			int team = data.player.team;
 			return team;
 		}
 
-		public override void modifyPaintDataForNpc(ref PaintData data) {
+		public override void ModifyPaintDataForNpc(ref PaintData data) {
 			data.CustomPaint = null;
-			data.PaintColor = getPaintIDFromIndex(getPaintIndex(data));
+			data.PaintColor = GetPaintIDFromIndex(GetPaintIndex(data));
 			data.sprayPaint = this is ISprayPaint;
 		}
 	}
 	public class DeepTeamPaint : TeamPaint, IDeepPaint { }
-	public class TeamSprayPaint : TeamPaint, ISprayPaint { }
-	public class DeepTeamSprayPaint : TeamSprayPaint, IDeepPaint { }
+	/*public class TeamSprayPaint : TeamPaint, ISprayPaint { }
+	public class DeepTeamSprayPaint : TeamSprayPaint, IDeepPaint { }*/
 }

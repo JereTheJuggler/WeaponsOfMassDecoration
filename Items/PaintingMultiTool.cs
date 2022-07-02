@@ -11,7 +11,7 @@ using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.Items {
 	public class PaintingMultiTool : PaintingItem {
-		public float rotation;
+		protected static float rotation = 0;
 		public int soundTimer = 0;
 
 		public virtual int HitboxExtension => 0;
@@ -45,7 +45,7 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 
 		public override Vector2? HoldoutOffset() {
-			return new Vector2(-26, 2).RotatedBy(rotation);
+			return new Vector2(-26, 2);//.RotatedBy(rotation);
 		}
 		public override void HoldStyle(Player player, Rectangle heldItemFrame) {
 			rotation = 0;
@@ -80,7 +80,8 @@ namespace WeaponsOfMassDecoration.Items {
 				return null;
 			soundTimer--;
 			if(soundTimer <= 0) {
-				//SoundEngine.PlaySound(SoundID.Item, player.position);
+				//TODO get this sound working again
+				SoundEngine.PlaySound(SoundID.Item1, player.position);
 				soundTimer = SoundFrequency;
 			}
 			Point mousePosition = Main.MouseWorld.ToTileCoordinates();
@@ -110,6 +111,7 @@ namespace WeaponsOfMassDecoration.Items {
 		public override PaintMethods OverridePaintMethod(WoMDPlayer player) => PaintMethods.BlocksAndWalls;
 	}
 
+	//TODO get the animation for spinning to work again
 	public class SpectrePaintingMultiTool : PaintingMultiTool {
 		public override int HitboxExtension => 6;
 		public override int SoundFrequency => 7;
@@ -137,9 +139,9 @@ namespace WeaponsOfMassDecoration.Items {
 			Item.useTime = 3;
 		}
 
-		public override void UseStyle(Player player, Rectangle heldItemFrame) {
+		/*public override void UseStyle(Player player, Rectangle heldItemFrame) {
 			rotation += .05f;
 			base.UseStyle(player,heldItemFrame);
-		}
+		}*/
 	}
 }

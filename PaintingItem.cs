@@ -171,10 +171,7 @@ namespace WeaponsOfMassDecoration {
 				PaintMethods method = OverridePaintMethod(player);
 				if(method != PaintMethods.None) {
 					if(method == PaintMethods.RemovePaint) {
-						npc.painted = false;
-						int index = target.FindBuffIndex(BuffType<Painted>());
-						if(index >= 0)
-							target.DelBuff(index);
+						ApplyPaintedToNPC(target, null);
 					} else {
 						ApplyPaintedToNPC(target, new PaintData(npcCyclingTimeScale, player.paintData.PaintColor, player.paintData.CustomPaint, player.paintData.CustomPaint is ISprayPaint, Main.GlobalTimeWrappedHourly, player: player.Player));
 					}

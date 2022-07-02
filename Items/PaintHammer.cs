@@ -14,7 +14,7 @@ namespace WeaponsOfMassDecoration.Items {
 
 		public override void SetStaticDefaults() {
 			base.SetStaticDefaults();
-			DisplayName.SetDefault("Paint Hammer");
+			displayName.SetDefault("Paint Hammer");
 		}
 
 		public override void SetDefaults() {

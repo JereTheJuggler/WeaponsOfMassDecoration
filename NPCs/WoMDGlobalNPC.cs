@@ -17,11 +17,17 @@ using static WeaponsOfMassDecoration.ShaderUtils;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration.NPCs {
-	public class WoMDNPC : GlobalNPC {
+	public class WoMDNPC : GlobalNPC, IPaintable{
 		/// <summary>
 		/// Whether or not the NPC is currently painted
 		/// </summary>
-		public bool painted = false;
+		protected bool _painted = false;
+		public bool Painted => _painted;
+
+		/// <summary>
+		/// This is for the Painted buff's Update function
+		/// </summary>
+		public void RefreshPainted() { _painted = true; }
 
 		/// <summary>
 		/// The paint data that is currently used for rendering this npc
@@ -30,7 +36,12 @@ namespace WeaponsOfMassDecoration.NPCs {
 		/// <summary>
 		/// The paint data that is currently used for rendering this npc
 		/// </summary>
-		public PaintData PaintData => !painted ? new PaintData(npcCyclingTimeScale, -1, null) : _paintData;
+		public PaintData PaintData => !_painted ? new PaintData(npcCyclingTimeScale, -1, null) : _paintData;
+
+		public void RemovePaint() {
+			_painted = false;
+			_paintData = null;
+		}
 
 		//Each entity needs their own set of the above variables
 		public override bool InstancePerEntity => true;
@@ -38,7 +49,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 		protected override bool CloneNewInstances => false;
 
 		public override void ResetEffects(NPC npc) {
-			painted = false;
+			_painted = false;
 		}
 
 		/// <summary>
@@ -47,9 +58,14 @@ namespace WeaponsOfMassDecoration.NPCs {
 		/// <param name="npc"></param>
 		/// <param name="data"></param>
 		public void SetPaintData(NPC npc, PaintData data) {
-			_paintData = data;
-			painted = true;
-			if(Multiplayer()) {
+			if (data == null) {
+				_paintData = null;
+				_painted = false;
+			} else {
+				_paintData = data;
+				_painted = true;
+			}
+			if(Multiplayer) {
 				SendColorPacket(this, npc);
 			}
 		}
@@ -62,18 +78,21 @@ namespace WeaponsOfMassDecoration.NPCs {
 		/// <param name="toClient"></param>
 		/// <param name="ignoreClient"></param>
 		public static void SendColorPacket(WoMDNPC gNpc, NPC npc, int toClient = -1, int ignoreClient = -1) {
-			if(!gNpc.painted)
+			if(!gNpc.Painted)
 				return;
 			PaintData data = gNpc.PaintData;
-			if(Server() || Multiplayer()) {
+			if(Server || Multiplayer) {
 				ModPacket packet = gNpc.Mod.GetPacket();
 				packet.Write(WoMDMessageTypes.SetNPCColors);
 				packet.Write(npc.whoAmI);
 				packet.Write(npc.type);
-				packet.Write(data.PaintColor);
-				packet.Write(data.CustomPaint == null ? "null" : data.CustomPaint.GetType().Name);
-				packet.Write(data.sprayPaint);
-				packet.Write((double)data.TimeOffset);
+				packet.Write(gNpc.Painted);
+				if (gNpc.Painted) {
+					packet.Write(data.PaintColor);
+					packet.Write(data.CustomPaint == null ? "null" : data.CustomPaint.GetType().Name);
+					packet.Write(data.sprayPaint);
+					packet.Write((double)data.TimeOffset);
+				}
 				packet.Send(toClient, ignoreClient);
 			}
 		}
@@ -89,30 +108,37 @@ namespace WeaponsOfMassDecoration.NPCs {
 			int npcType = reader.ReadInt32();
 			npc = GetNPC(npcId);
 			gNpc = npc.GetGlobalNPC<WoMDNPC>();
-			int paintColor = reader.ReadInt32();
-			string customPaintName = reader.ReadString();
-			bool sprayPainted = reader.ReadBoolean();
-			float paintedTime = (float)reader.ReadDouble();
-			if(npc != null && npc.type == npcType && gNpc != null && npc.active) {
-				gNpc.painted = true;
-				PaintData data = new PaintData();
-				data.PaintColor = paintColor;
-				if(customPaintName == "null") {
-					data.CustomPaint = null;
-				} else {
-					data.CustomPaint = (CustomPaint)Activator.CreateInstance(Type.GetType("WeaponsOfMassDecoration.Items." + customPaintName));
-					data.TimeScale = npcCyclingTimeScale;
+			bool painted = reader.ReadBoolean();
+			if (painted) {
+				int paintColor = reader.ReadInt32();
+				string customPaintName = reader.ReadString();
+				bool sprayPainted = reader.ReadBoolean();
+				float paintedTime = (float)reader.ReadDouble();
+				if (npc != null && npc.type == npcType && gNpc != null && npc.active) {
+					gNpc._painted = true;
+					PaintData data = new() {
+						PaintColor = paintColor
+					};
+					if (customPaintName == "null") {
+						data.CustomPaint = null;
+					} else {
+						data.CustomPaint = (CustomPaint)Activator.CreateInstance(Type.GetType("WeaponsOfMassDecoration.Items." + customPaintName));
+						data.TimeScale = npcCyclingTimeScale;
+					}
+					data.sprayPaint = sprayPainted;
+					data.TimeOffset = paintedTime;
 				}
-				data.sprayPaint = sprayPainted;
-				data.TimeOffset = paintedTime;
+			} else {
+				gNpc._painted = false;
+				gNpc._paintData = null;
 			}
 		}
 
 		//This is used for controlling certain Chaos Mode functionality
 		public override void PostAI(NPC npc) {
 			base.PostAI(npc);
-			if((Main.netMode == NetmodeID.SinglePlayer || Main.netMode == NetmodeID.Server) && ChaosMode()) {
-				if(painted) {
+			if((SinglePlayer || Server) && ChaosMode) {
+				if(Painted) {
 					switch(npc.aiStyle) {
 						case 1: //slime
 							if(npc.oldVelocity.Y > 2 && npc.velocity.Y == 0 && Main.rand.NextFloat() < .5f) {
@@ -182,7 +208,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 										PaintingProjectile proj = p.ModProjectile as PaintingProjectile;
 										if(proj != null) {
 											proj.npcOwner = npc.whoAmI;
-											if(Server())
+											if(Server)
 												PaintingProjectile.SendProjNPCOwnerPacket(proj);
 										}
 									}
@@ -197,8 +223,8 @@ namespace WeaponsOfMassDecoration.NPCs {
 		//This is used for controlling certain Chaos Mode functionality
 		public override void OnKill(NPC npc) {
 			base.OnKill(npc);
-			if(ChaosMode()) {
-				if(painted) {
+			if(ChaosMode) {
+				if(Painted) {
 					switch(npc.type) {
 						case NPCID.EyeofCthulhu:
 						case NPCID.Spazmatism:
@@ -240,7 +266,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 									if(p2 != null)
 										projectiles.Add(p2);
 								}
-								if(SinglePlayer()) {
+								if(SinglePlayer) {
 									for(int i = 0; i < 20; i++) {
 										Dust d = Dust.NewDustDirect(npc.Center - npc.Size / 4f, npc.width / 2, npc.height / 2, DustType<PaintDust>(), 0, 0, 0, GetColor(_paintData), 2);
 										if(d != null) {
@@ -251,7 +277,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 										}
 									}
 								}
-								if(Server())
+								if(Server)
 									PaintingProjectile.SendMultiProjNPCOwnerPacket(projectiles);
 							}
 							break;
@@ -265,7 +291,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 							Dust.NewDust(npc.Center - npc.Size / 4f, npc.width / 2, npc.height / 2, DustID.Confetti + Main.rand.Next(0,4), vel.X, vel.Y, 0);
 						}
 					} else {
-						PaintData data = new PaintData(PaintID.DeepRedPaint);
+						PaintData data = new(PaintID.DeepRedPaint);
 						Splatter(npc.Center, 100f, 8, data, true);
 					}
 				}
@@ -302,7 +328,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 
 		//This is where the shaders are applied to the NPCs to make them appear painted
 		public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) {
-			if(painted && !Server()) {
+			if(Painted && !Server) {
 				resetBatchInPost = true;
 
 				spriteBatch.End();
@@ -320,7 +346,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 				spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
 				resetBatchInPost = false;
 			}
-			if(painted) {
+			if(Painted) {
 				switch(npc.type) {
 					case NPCID.Paladin:
 						Lighting.AddLight(npc.Center, GetColor(_paintData).ToVector3() * .5f);
@@ -371,7 +397,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 					}
 					break;
 				case NPCID.Painter:
-					if(Multiplayer() && ShouldSellPaintingStuff()) {
+					if(Multiplayer && ShouldSellPaintingStuff()) {
 						shop.item[nextSlot].SetDefaults(ItemType<TeamPaint>());
 						nextSlot++;
 					}
@@ -409,6 +435,26 @@ namespace WeaponsOfMassDecoration.NPCs {
 				}
 			}
 			return false;
+		}
+
+		public override void OnSpawn(NPC npc, IEntitySource source) {
+			base.OnSpawn(npc, source);
+			if (SinglePlayer || Server) {
+				if (source is EntitySource_Parent parent) {
+					Entity entity = parent.Entity;
+					if (entity != null) {
+						if (entity is NPC n) {
+							WoMDNPC globalNpc = n.GetGlobalNPC<WoMDNPC>();
+							if (globalNpc.Painted)
+								ApplyPaintedToNPC(npc, globalNpc.PaintData);
+						} else if (entity is Projectile proj) {
+							WoMDProjectile globalProj = proj.GetGlobalProjectile<WoMDProjectile>();
+							if (globalProj.Painted)
+								ApplyPaintedToNPC(npc, globalProj.PaintData);
+						}
+					}
+				}
+			}
 		}
 	}
 }

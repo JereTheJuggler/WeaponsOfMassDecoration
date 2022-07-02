@@ -63,7 +63,7 @@ namespace WeaponsOfMassDecoration {
 		public static MiscShaderData GetShader(WoMDProjectile gProjectile, PaintData data) {
 			if(gProjectile == null)
 				return null;
-			if(!gProjectile.painted)
+			if(!gProjectile.Painted)
 				return null;
 			if(data.PaintColor == PaintID.NegativePaint || data.CustomPaint is NegativeSprayPaint)
 				return GetNegativeShader();
@@ -80,7 +80,7 @@ namespace WeaponsOfMassDecoration {
 			needsDrawData = false;
 			if(globalNpc == null)
 				return null;
-			if(!globalNpc.painted)
+			if(!globalNpc.Painted)
 				return null;
 			if(data.PaintColor == -1 && data.CustomPaint == null)
 				return null;

@@ -63,29 +63,29 @@ namespace WeaponsOfMassDecoration {
 		public override void HandlePacket(BinaryReader reader, int whoAmI) {
 			switch(reader.ReadByte()) {
 				case WoMDMessageTypes.SetNPCColors:
-					if(Multiplayer() || Server()) {
+					if(Multiplayer || Server) {
 						WoMDNPC.ReadColorPacket(reader, out WoMDNPC gNpc, out NPC npc);
-						if(Server()) {
+						if(Server) {
 							WoMDNPC.SendColorPacket(gNpc, npc);
 						}
 					}
 					break;
 				case WoMDMessageTypes.SetProjectileColor:
-					if(Multiplayer())
+					if(Multiplayer)
 						WoMDProjectile.ReadProjectileColorPacket(reader, out _, out _);
 					break;
 				case WoMDMessageTypes.SetProjNPCOwner:
-					if(Multiplayer())
+					if(Multiplayer)
 						PaintingProjectile.ReadProjNPCOwnerPacket(reader);
 					break;
 				case WoMDMessageTypes.SetMultiProjNPCOwner:
-					if(Multiplayer())
+					if(Multiplayer)
 						PaintingProjectile.ReadMultiProjNPCOwnerPacket(reader);
 					break;
 				case WoMDMessageTypes.SetPPOverrideData:
-					if(Multiplayer() || Server()) {
+					if(Multiplayer || Server) {
 						PaintingProjectile.ReadPPOverrideDataPacket(reader, out PaintingProjectile proj);
-						if(Server() && proj != null) {
+						if(Server && proj != null) {
 							PaintingProjectile.SendPPOverrideDataPacket(proj);
 						}
 					}
@@ -157,7 +157,7 @@ namespace WeaponsOfMassDecoration {
 			var label = il.DefineLabel();
 
 			c.Emit(Ldarg_0);
-			c.Emit(OpCodes.Call, ((shouldInterruptPlaceThingDelegate)shouldInterruptPlaceThing).Method);
+			c.Emit(OpCodes.Call, ((shouldInterruptPlaceThingDelegate)ShouldInterruptPlaceThing).Method);
 			c.Emit(Brfalse_S, label);
 
 			c.Emit(Ret);
@@ -165,7 +165,7 @@ namespace WeaponsOfMassDecoration {
 			c.MarkLabel(label);
 		}
 		private delegate bool shouldInterruptPlaceThingDelegate(object player);
-		private static bool shouldInterruptPlaceThing(object player) {
+		private static bool ShouldInterruptPlaceThing(object player) {
 			Player p = player as Player;
 			if(p == null)
 				return false;
@@ -206,6 +206,10 @@ namespace WeaponsOfMassDecoration {
 			extraTextures.Add(name, texture);
 		}
 
+		internal static void LoadItemTexture(string filename, string name) {
+			Texture2D texture = ModContent.Request<Texture2D>("WeaponsOfMassDecoration/Items/Assets/" + filename, AssetRequestMode.ImmediateLoad).Value;
+			extraTextures.Add(name, texture);
+		}
 
 		public override void AddRecipeGroups() {
 			RecipeGroup hmBarGroup1 = new RecipeGroup(() => Language.GetTextValue("LegacyMisc.37") + " Cobalt Bar", new int[]{
@@ -343,29 +347,29 @@ namespace WeaponsOfMassDecoration {
 		/// Gets an instance of WoMDWorld
 		/// </summary>
 		/// <returns></returns>
-		public static WoMDWorld GetWorld() => ModContent.GetInstance<WoMDWorld>();
+		public static WoMDWorld World => ModContent.GetInstance<WoMDWorld>();
 
 		/// <summary>
 		/// Returns whether or not Chaos Mode is enabled
 		/// </summary>
 		/// <returns></returns>
-		public static bool ChaosMode() => ModContent.GetInstance<WoMDConfig>().chaosModeEnabled;
+		public static bool ChaosMode => ModContent.GetInstance<WoMDConfig>().chaosModeEnabled;
 
 		/// <summary>
 		/// A shortcut for Main.netMode == NetmodeID.SinglePlayer
 		/// </summary>
 		/// <returns></returns>
-		public static bool SinglePlayer() => Main.netMode == NetmodeID.SinglePlayer;
+		public static bool SinglePlayer => Main.netMode == NetmodeID.SinglePlayer;
 		/// <summary>
 		/// A shortcut for Main.netMode == NetmodeID.MultiplayerClient
 		/// </summary>
 		/// <returns></returns>
-		public static bool Multiplayer() => Main.netMode == NetmodeID.MultiplayerClient;
+		public static bool Multiplayer => Main.netMode == NetmodeID.MultiplayerClient;
 		/// <summary>
 		/// A shortcut for Main.netMode == NetmodeID.Server
 		/// </summary>
 		/// <returns></returns>
-		public static bool Server() => Main.netMode == NetmodeID.Server;
+		public static bool Server => Main.netMode == NetmodeID.Server;
 
 		/// <summary>
 		/// Checks if the provided item is either a vanilla paint, or a CustomPaint
@@ -435,12 +439,10 @@ namespace WeaponsOfMassDecoration {
 			return "None";
 		}
 		
-
 		/// <summary>
 		/// Gets the name for a type of paint, provided a paintColor and customPaint
 		/// </summary>
-		/// <param name="paintColor">Specifies a value from PaintID. -1 for custom paints</param>
-		/// <param name="customPaint">Specifies an instance of CustomPaint to use. null for vanilla paints</param>
+		/// <param name="paintData"></param>
 		/// <returns></returns>
 		public static string GetPaintColorName(PaintData paintData) {
 			//TODO: Make this get the display names from the vanilla paints instead of hardcoded values. Maybe add in translations for custom paints
@@ -457,11 +459,10 @@ namespace WeaponsOfMassDecoration {
 		#endregion
 
 		/// <summary>
-		/// Applies the painted buff to the provided npc, based on the paintColor and customPaint provided
+		/// Applies or removes the painted buff to the provided npc, based on the paintColor and customPaint provided
 		/// </summary>
 		/// <param name="npc">The npc to apply the buff to</param>
-		/// <param name="paintColor">The PaintID to use for painting the npc. Should be -1 when using a CustomPaint</param>
-		/// <param name="customPaint">The CustomPaint to use for painting the npc. Should be null when using a vanilla paint</param>
+		/// <param name="data">The PaintData to use for painting the npc. Will remove the painted buff if null</param>
 		/// <param name="handledNpcs">Should not be provided</param>
 		/// <param name="preventRecursion">Should not be provided</param>
 		public static void ApplyPaintedToNPC(NPC npc, PaintData data, List<NPC> handledNpcs = null, bool preventRecursion = false) {
@@ -508,25 +509,28 @@ namespace WeaponsOfMassDecoration {
 			if(preventRecursion)
 				return;
 
+			if(data == null) {
+				int index = npc.FindBuffIndex(ModContent.BuffType<Painted>());
+				if (index >= 0)
+					npc.DelBuff(index);
+			}
+
 			npc.AddBuff(ModContent.BuffType<Painted>(), paintedBuffDuration);
 
 			WoMDNPC globalNpc = npc.GetGlobalNPC<WoMDNPC>();
 
 			if(data.CustomPaint != null)
-				data.CustomPaint.modifyPaintDataForNpc(ref data);
+				data.CustomPaint.ModifyPaintDataForNpc(ref data);
 
-			if(globalNpc.painted) {
+			if(globalNpc.Painted && data != null) {
 				PaintData existingData = globalNpc.PaintData;
-				if(existingData.PaintColor == data.PaintColor &&
-				   (existingData.CustomPaint == null) == (data.CustomPaint == null) && //either both or neither are null
-				   existingData.CustomPaint.GetType().Equals(data.CustomPaint.GetType()) &&
-				   existingData.sprayPaint == data.sprayPaint)
-					return; //nothing needs to be updated
+				if (data.Equals(existingData))
+					return;
 			}
 
 			globalNpc.SetPaintData(npc, data);
 
-			if(SinglePlayer()) {
+			if(SinglePlayer) {
 				//TODO: do this whole section better
 				if(handledNpcs == null)
 					handledNpcs = new List<NPC>();

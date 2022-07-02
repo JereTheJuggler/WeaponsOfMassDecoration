@@ -7,7 +7,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace WeaponsOfMassDecoration.Items {
-	class PaintLaser : PaintingItem {
+	/*class PaintLaser : PaintingItem {
 
 		//please don't look at this... there's probably a much better way to do it.
 
@@ -89,7 +89,7 @@ namespace WeaponsOfMassDecoration.Items {
 
 			return false;
 			}*/
-			Vector2 dir = velocity.SafeNormalize(new Vector2(0, 1));
+			/*Vector2 dir = velocity.SafeNormalize(new Vector2(0, 1));
 			int maxDistancePerIteration = 16;
 			int maxIterations = 600;
 			int maxDistanceBetweenSpawns = 16;
@@ -558,7 +558,7 @@ namespace WeaponsOfMassDecoration.Items {
             return false;
         }//*/
 
-		public void reflectAgainstY(ref Vector2 dir) {
+		/*public void reflectAgainstY(ref Vector2 dir) {
 			dir = new Vector2(-1 * dir.X, dir.Y);
 		}
 		public void reflectAgainstX(ref Vector2 dir) {
@@ -861,5 +861,5 @@ namespace WeaponsOfMassDecoration.Items {
 				slope = (byte)tile.Slope;
 			}
 		}
-	}
+	}*/
 }

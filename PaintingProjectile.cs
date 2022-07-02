@@ -147,7 +147,7 @@ namespace WeaponsOfMassDecoration {
 		protected PaintData _overridePaintData = null;
 		public void SetOverridePaintData(PaintData data) {
 			_overridePaintData = data;
-			if(Multiplayer())
+			if(Multiplayer)
 				SendPPOverrideDataPacket(this);
 		}
 
@@ -173,7 +173,7 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="toClient"></param>
 		/// <param name="ignoreClient"></param>
 		public static void SendProjNPCOwnerPacket(PaintingProjectile p, int toClient = -1, int ignoreClient = -1) {
-			if(Server() || Multiplayer()) {
+			if(Server || Multiplayer) {
 				ModPacket packet = p.Mod.GetPacket();
 				packet.Write(WoMDMessageTypes.SetProjNPCOwner);
 				packet.Write(p.Projectile.whoAmI);
@@ -207,9 +207,9 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="toClient"></param>
 		/// <param name="ignoreClient"></param>
 		public static void SendMultiProjNPCOwnerPacket(IEnumerable<PaintingProjectile> projectiles, int toClient = -1, int ignoreClient = -1) {
-			if(projectiles.Count() == 0)
+			if(!projectiles.Any())
 				return;
-			if(Server() || Multiplayer()) {
+			if(Server || Multiplayer) {
 				ModPacket packet = ModLoader.GetMod("WeaponsOfMassDecoration").GetPacket();
 				packet.Write(projectiles.First().npcOwner);
 				packet.Write(WoMDMessageTypes.SetMultiProjNPCOwner);
@@ -242,7 +242,7 @@ namespace WeaponsOfMassDecoration {
 		}
 
 		public static void SendPPOverrideDataPacket(PaintingProjectile p, int toClient = -1, int ignoreClient = -1) {
-			if(Server() || Multiplayer()) {
+			if(Server || Multiplayer) {
 				ModPacket packet = p.Mod.GetPacket();
 				packet.Write(WoMDMessageTypes.SetPPOverrideData);
 				packet.Write(p.Projectile.whoAmI);
@@ -324,10 +324,7 @@ namespace WeaponsOfMassDecoration {
 				PaintMethods method = player.paintData.paintMethod;
 				if(method != PaintMethods.None) {
 					if(method == PaintMethods.RemovePaint) {
-						npc.painted = false;
-						int index = target.FindBuffIndex(BuffType<Painted>());
-						if(index >= 0)
-							target.DelBuff(index);
+						ApplyPaintedToNPC(target, null);
 					} else {
 						ApplyPaintedToNPC(target, new PaintData(npcCyclingTimeScale, player.paintData.PaintColor, player.paintData.CustomPaint, player.paintData.CustomPaint is ISprayPaint, Main.GlobalTimeWrappedHourly, player: player.Player));
 					}
@@ -400,7 +397,7 @@ namespace WeaponsOfMassDecoration {
 		}
 
 		public override bool PreKill(int timeLeft) {
-			if(Server() || SinglePlayer() || (Multiplayer() && Projectile.owner == Main.myPlayer)) {
+			if(Server || SinglePlayer || (Multiplayer && Projectile.owner == Main.myPlayer)) {
 				if(dropsOnDeath)
 					CreateDrops(Projectile.GetSource_FromThis(), dropCount, Projectile.Center, Projectile.oldVelocity * -1, dropCone, dropVelocity);
 				if(explodesOnDeath) {
@@ -463,7 +460,7 @@ namespace WeaponsOfMassDecoration {
 					else if(player.paintData.CustomPaint == null)
 						colorFrame = (byte)player.paintData.PaintColor;
 					else
-						colorFrame = player.paintData.CustomPaint.getPaintID(player.paintData);
+						colorFrame = player.paintData.CustomPaint.GetPaintID(player.paintData);
 				}
 			} else {
 				NPC npc = GetNPC(npcOwner);
@@ -481,7 +478,7 @@ namespace WeaponsOfMassDecoration {
 					else if(data.CustomPaint == null)
 						colorFrame = (byte)data.PaintColor;
 					else
-						colorFrame = data.CustomPaint.getPaintID(data);
+						colorFrame = data.CustomPaint.GetPaintID(data);
 				}
 			}
 			UpdateFrame(method);
@@ -552,7 +549,7 @@ namespace WeaponsOfMassDecoration {
 
 		
 		public override bool PreDraw(ref Color lightColor) {
-			if(Server())
+			if(Server)
 				return false;
 			if(!hasGraphics)
 				return false;
