@@ -27,118 +27,37 @@ namespace WeaponsOfMassDecoration.Buffs {
 		public override void Update(NPC npc, ref int buffIndex) {
 			WoMDNPC gNpc = npc.GetGlobalNPC<WoMDNPC>();
 			gNpc.RefreshPainted();
-			/* not sure I actually like this
-			if(GetInstance<WoMDConfig>().paintStatusEffects) {
-				PaintData data = gNpc.paintData;
-				byte paintColor = data.TruePaintColor;
-				if(paintColor == 0)
-					return;
-				switch(paintColor) {
+			PaintData data = gNpc.PaintData;
+			if (data == null) return;
+			byte trueColor = PaintUtils.GetBasePaintID(data.TruePaintColor);
+			if (data.buffConfig.IsColorEnabled(trueColor)) {
+				switch (trueColor) {
 					case PaintID.RedPaint:
-					case PaintID.DeepRedPaint:
-						//fire
-						npc.AddBuff(BuffID.OnFire, 2);
-						//buffIndex++;
+						npc.AddBuff(BuffID.OnFire, 2, true);
 						break;
 					case PaintID.YellowPaint:
-						if(npc.defense <= 0)
-							break;
-						if(npc.defense <= 5)
-							npc.defense = 0;
-						else
-							npc.defense -= 5;
+						npc.AddBuff(BuffID.Ichor, 2, true);
 						break;
-					case PaintID.DeepYellowPaint:
-						if(npc.defense <= 0)
-							break;
-						if(npc.defense <= 10)
-							npc.defense = 0;
-						else
-							npc.defense -= 10;
+					case PaintID.LimePaint:
+						npc.AddBuff(BuffID.CursedInferno, 2, true);
 						break;
 					case PaintID.GreenPaint:
-					case PaintID.DeepGreenPaint:
-						//poison
-						break;
-					case PaintID.PurplePaint:
-					case PaintID.DeepPurplePaint:
-						//venom
+						npc.AddBuff(BuffID.Poisoned, 2, true);
 						break;
 					case PaintID.CyanPaint:
-					case PaintID.DeepCyanPaint:
-						//frozen
-						npc.AddBuff(BuffID.Frostburn, 2);
-						buffIndex++;
+						npc.AddBuff(BuffID.Frostburn, 2, true);
 						break;
-					case PaintID.BlackPaint:
-						//darkness
+					case PaintID.PurplePaint:
+						npc.AddBuff(BuffID.Venom, 2, true);
 						break;
-					case PaintID.ShadowPaint:
-						//blackout
+					case PaintID.PinkPaint:
+						npc.AddBuff(BuffType<Confetti>(), 2, true);
 						break;
 					case PaintID.NegativePaint:
-						//confused
-						npc.AddBuff(BuffID.Confused, 2);
-						buffIndex++;
+						npc.AddBuff(BuffID.Confused, 2, true);
 						break;
 				}
 			}
-			*/
-		}
-	}
-
-	/// <summary>
-	/// Applied with green paint
-	/// </summary>
-	class PoisonPainted : Painted {
-		public override void Update(NPC npc, ref int buffIndex) {
-			base.Update(npc, ref buffIndex);
-			npc.AddBuff(BuffID.Poisoned, 2, true);
-		}
-	}
-	/// <summary>
-	/// Applied with purple paint
-	/// </summary>
-	class VenomPainted : Painted {
-		public override void Update(NPC npc, ref int buffIndex) {
-			base.Update(npc, ref buffIndex);
-			npc.AddBuff(BuffID.Venom, 2, true);
-		}
-	}
-	/// <summary>
-	/// Applied with red paint
-	/// </summary>
-	class FirePainted : Painted {
-		public override void Update(NPC npc, ref int buffIndex) {
-			base.Update(npc, ref buffIndex);
-			npc.AddBuff(BuffID.OnFire, 2, true);
-		}
-	}
-	/// <summary>
-	/// Applied with lime paint
-	/// </summary>
-	class CursedFlamePainted : Painted {
-		public override void Update(NPC npc, ref int buffIndex) {
-			base.Update(npc, ref buffIndex);
-			npc.AddBuff(BuffID.CursedInferno, 2, true);
-		}
-	}
-	/// <summary>
-	/// Applied with yellow paint
-	/// </summary>
-	class IchorPainted : Painted {
-		public override void Update(NPC npc, ref int buffIndex) {
-			base.Update(npc, ref buffIndex);
-			npc.AddBuff(BuffID.Ichor, 2, true);
-		}
-	}
-	/// <summary>
-	/// Applied with cyan paint
-	/// </summary>
-	class FrostburnPainted : Painted {
-		public override void Update(NPC npc, ref int buffIndex) {
-			base.Update(npc, ref buffIndex);
-			npc.AddBuff(BuffID.Frostburn, 2, true);
 		}
 	}
 }

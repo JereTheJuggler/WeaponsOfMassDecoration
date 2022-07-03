@@ -48,10 +48,12 @@ namespace WeaponsOfMassDecoration {
 			if(preToolTip != "") {
 				lines.AddRange(preToolTip.Split('\n'));
 			}
-			lines.AddRange(new string[] {
-				"Paints blocks and walls!",
-				"The first paint and tool found in your inventory will be used"
-			});
+			if (this is not CustomPaint) {
+				lines.AddRange(new string[] {
+					"Paints blocks and walls!",
+					"The first paint and tool found in your inventory will be used"
+				});
+			}
 			if(postToolTip != "") {
 				lines.AddRange(postToolTip.Split('\n'));
 			}
@@ -91,8 +93,6 @@ namespace WeaponsOfMassDecoration {
 			if(player == null)
 				return true;
 			MiscShaderData shader = GetShader(this, p);
-			if (shader == null) 
-				return true;
 			if((UsesGSShader || ((player.paintData.PaintColor == PaintID.NegativePaint || player.paintData.CustomPaint is NegativeSprayPaint) && this is not CustomPaint))) {
 				if(shader != null) {
 					spriteBatch.End();

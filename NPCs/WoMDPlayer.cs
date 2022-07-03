@@ -5,6 +5,7 @@ using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
+using WeaponsOfMassDecoration.Buffs;
 using WeaponsOfMassDecoration.Items;
 using WeaponsOfMassDecoration.Projectiles;
 using static Terraria.ModLoader.ModContent;
@@ -47,12 +48,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 		/// </summary>
 		public bool accRewardsProgram = false;
 
-		public bool accBuffRed = false;
-		public bool accBuffYellow = false;
-		public bool accBuffLime = false;
-		public bool accBuffGreen = false;
-		public bool accBuffCyan = false;
-		public bool accBuffPurple = false;
+		public PaintBuffConfig buffConfig = new();
 
 		protected const int fartDelay = 60 * 10; //10 seconds
 		protected uint mountUnicornTime = 0;
@@ -70,12 +66,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 			buffPainted = false;
 			accPalette = false;
 			accRewardsProgram = false;
-			accBuffRed = false;
-			accBuffYellow = false;
-			accBuffLime = false;
-			accBuffGreen = false;
-			accBuffCyan = false;
-			accBuffPurple = false;
+			buffConfig = new PaintBuffConfig();
 	}
 
 		public override void UpdateDead() {
@@ -178,7 +169,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 								Projectile proj = Projectile.NewProjectileDirect(
 									null,
 									Player.Center, 
-									new Vector2(0, 1).RotatedBy(((PI * 2f) / 8f) * i) * Main.rand.NextFloat(3,4), 
+									new Vector2(0, 1).RotatedBy((((float)Math.PI * 2f) / 8f) * i) * Main.rand.NextFloat(3,4), 
 									ProjectileType<PaintSplatter>(),
 									0,
 									0
@@ -203,7 +194,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 							int[] lengths = new int[7];
 							int maxLength = 0;
 							for(byte i = 0; i < dirs.Length; i++) {
-								dirs[i] = dir.RotatedBy(Main.rand.NextFloat(PI / -5, PI / 5));
+								dirs[i] = dir.RotatedBy(Main.rand.NextFloat((float)Math.PI / -5, (float)Math.PI / 5));
 								int length = Main.rand.Next(7, 13);
 								lengths[i] = length;
 								if(length > maxLength)

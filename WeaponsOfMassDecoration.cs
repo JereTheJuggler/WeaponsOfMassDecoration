@@ -17,6 +17,7 @@ using WeaponsOfMassDecoration.NPCs;
 using WeaponsOfMassDecoration.Projectiles;
 using Microsoft.Xna.Framework;
 using static Mono.Cecil.Cil.OpCodes;
+using Terraria.Utilities;
 
 namespace WeaponsOfMassDecoration {
 
@@ -47,9 +48,7 @@ namespace WeaponsOfMassDecoration {
 	}
 
 	public class WeaponsOfMassDecoration : Mod {
-		public const float PI = 3.14159265f;
-
-		public const int paintedBuffDuration = 60 * 60; //1 minute
+		public const int paintedBuffDuration = 60 * 30; //30 seconds
 
 		internal static Dictionary<string, Texture2D> extraTextures;
 
@@ -519,13 +518,14 @@ namespace WeaponsOfMassDecoration {
 
 			WoMDNPC globalNpc = npc.GetGlobalNPC<WoMDNPC>();
 
-			if(data.CustomPaint != null)
+			if(data != null && data.CustomPaint != null)
 				data.CustomPaint.ModifyPaintDataForNpc(ref data);
 
 			if(globalNpc.Painted && data != null) {
 				PaintData existingData = globalNpc.PaintData;
-				if (data.Equals(existingData))
+				if (data.Equals(existingData)) {
 					return;
+				}
 			}
 
 			globalNpc.SetPaintData(npc, data);
@@ -623,6 +623,19 @@ namespace WeaponsOfMassDecoration {
 						break;
 				}
 			}
+		}
+
+		public static readonly UnifiedRandom rand = new();
+
+		public static readonly short[] confettiIds = new short[]{
+			DustID.Confetti_Blue,
+			DustID.Confetti_Green,
+			DustID.Confetti_Pink,
+			DustID.Confetti_Yellow
+		};
+		public static void SpawnConfetti(Vector2 pos, int radius = 16) {
+			Vector2 speed = new Vector2(rand.NextFloat(.5f, 2f)).RotatedByRandom(7);
+			Dust.NewDustDirect(pos, radius, radius, rand.NextFromList(confettiIds), speed.X, speed.Y);
 		}
 
 		//Hamstar's Mod Helpers Integration

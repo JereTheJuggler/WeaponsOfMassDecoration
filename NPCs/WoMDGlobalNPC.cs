@@ -8,6 +8,7 @@ using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
+using WeaponsOfMassDecoration.Buffs;
 using WeaponsOfMassDecoration.Dusts;
 using WeaponsOfMassDecoration.Items;
 using WeaponsOfMassDecoration.Projectiles;
@@ -48,8 +49,11 @@ namespace WeaponsOfMassDecoration.NPCs {
 		//Don't want instances to be cloned
 		protected override bool CloneNewInstances => false;
 
+		public bool buffConfetti = false;
+
 		public override void ResetEffects(NPC npc) {
 			_painted = false;
+			buffConfetti = false;
 		}
 
 		/// <summary>
@@ -92,6 +96,10 @@ namespace WeaponsOfMassDecoration.NPCs {
 					packet.Write(data.CustomPaint == null ? "null" : data.CustomPaint.GetType().Name);
 					packet.Write(data.sprayPaint);
 					packet.Write((double)data.TimeOffset);
+					byte[] enabledBuffs = data.buffConfig.GetEnabledColors();
+					packet.Write((byte)enabledBuffs.Length);
+					foreach (byte b in enabledBuffs)
+						packet.Write(b);
 				}
 				packet.Send(toClient, ignoreClient);
 			}
@@ -114,10 +122,17 @@ namespace WeaponsOfMassDecoration.NPCs {
 				string customPaintName = reader.ReadString();
 				bool sprayPainted = reader.ReadBoolean();
 				float paintedTime = (float)reader.ReadDouble();
+				byte buffCount = reader.ReadByte();
+				List<byte> enabledBuffs = new();
+				for (byte i = 0; i < buffCount; i++)
+					enabledBuffs.Add(reader.ReadByte());
+				PaintBuffConfig buffConfig = new();
+				buffConfig.LoadEnabledColors(enabledBuffs);
 				if (npc != null && npc.type == npcType && gNpc != null && npc.active) {
 					gNpc._painted = true;
 					PaintData data = new() {
-						PaintColor = paintColor
+						PaintColor = paintColor,
+						buffConfig = buffConfig
 					};
 					if (customPaintName == "null") {
 						data.CustomPaint = null;
@@ -127,6 +142,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 					}
 					data.sprayPaint = sprayPainted;
 					data.TimeOffset = paintedTime;
+					gNpc._paintData = data;
 				}
 			} else {
 				gNpc._painted = false;
@@ -137,6 +153,10 @@ namespace WeaponsOfMassDecoration.NPCs {
 		//This is used for controlling certain Chaos Mode functionality
 		public override void PostAI(NPC npc) {
 			base.PostAI(npc);
+			if (buffConfetti) {
+				if (WeaponsOfMassDecoration.rand.NextBool(30))
+					SpawnConfetti(npc.Center);
+			}
 			if((SinglePlayer || Server) && ChaosMode) {
 				if(Painted) {
 					switch(npc.aiStyle) {
@@ -180,12 +200,12 @@ namespace WeaponsOfMassDecoration.NPCs {
 							if(npc.ai[0] == 1 && npc.ai[1] >= 20 && npc.ai[1] % 2 == 0) {
 								//the eye stops spinning when ai[1] > 99 (ai[1] never == 100. it is immediately reset back to 0)
 								int count = npc.ai[1] >= 40 && npc.ai[1] <= 60 ? 2 : 1;
-								Vector2 dir = new Vector2(1, 0).RotatedBy(Main.rand.NextFloat(0, PI * 2));
+								Vector2 dir = new Vector2(1, 0).RotatedBy(Main.rand.NextFloat(0, (float)Math.PI * 2f));
 								Vector2 offset = dir * ((npc.width / 2f) * npc.scale);
 								float initialSpeed = ((float)Math.Pow(30 - Math.Abs(50 - npc.ai[1]), 2) / 900f) * 4f + 3f;
 								for(int i = 0; i < count; i++) {
 									if(i == 1) {
-										dir = dir.RotatedBy(PI);
+										dir = dir.RotatedBy(Math.PI);
 										offset *= -1;
 									}
 									float speed = initialSpeed;
@@ -193,7 +213,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 										speed += 2;
 									else if(dir.Y < 0 && dir.X < 0)
 										speed += 1;
-									Vector2 vel = dir.RotatedBy(PI / 2f) * speed;
+									Vector2 vel = dir.RotatedBy((float)Math.PI / 2f) * speed;
 									Projectile p = Projectile.NewProjectileDirect(
 										npc.GetSource_FromAI(),
 										npc.Center + offset, 
@@ -257,11 +277,11 @@ namespace WeaponsOfMassDecoration.NPCs {
 								Vector2 dir = new Vector2(1, 0);
 								List<PaintingProjectile> projectiles = new List<PaintingProjectile>();
 								for(int i = 0; i < 8; i++) {
-									Vector2 rotatedDir = dir.RotatedBy((PI / 4f) * i);
+									Vector2 rotatedDir = dir.RotatedBy((Math.PI / 4f) * i);
 									PaintSplatter p = CreatePaintSplatter(npc.whoAmI, npc.Center + rotatedDir * 48, rotatedDir * 10, 100, .5f, 2f);
 									if(p != null)
 										projectiles.Add(p);
-									rotatedDir = rotatedDir.RotatedBy(PI / 8f);
+									rotatedDir = rotatedDir.RotatedBy(Math.PI / 8f);
 									PaintSplatter p2 = CreatePaintSplatter(npc.whoAmI, npc.Center + rotatedDir * 32, rotatedDir * 6, 100);
 									if(p2 != null)
 										projectiles.Add(p2);
@@ -287,7 +307,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 					if(npc.type == NPCID.PartyGirl) {
 						SplatterColored(npc.Center, 8, new byte[] { PaintID.DeepRedPaint, PaintID.DeepRedPaint, PaintID.DeepOrangePaint, PaintID.DeepYellowPaint, PaintID.DeepGreenPaint, PaintID.DeepBluePaint, PaintID.DeepPurplePaint }, new PaintData(1, PaintMethods.BlocksAndWalls), true);
 						for(int i = 0; i < 10; i++) {
-							Vector2 vel = new Vector2(Main.rand.NextFloat(2, 3), 0).RotatedBy(Main.rand.NextFloat(PI * 2));
+							Vector2 vel = new Vector2(Main.rand.NextFloat(2, 3), 0).RotatedBy(Main.rand.NextFloat((float)Math.PI * 2));
 							Dust.NewDust(npc.Center - npc.Size / 4f, npc.width / 2, npc.height / 2, DustID.Confetti + Main.rand.Next(0,4), vel.X, vel.Y, 0);
 						}
 					} else {
@@ -363,39 +383,6 @@ namespace WeaponsOfMassDecoration.NPCs {
 				rewardsProgram = player.accRewardsProgram;
 			
 			switch(type) {
-				case NPCID.Steampunker:
-					if(ShouldSellPaintingStuff()) {
-						shop.item[nextSlot].SetDefaults(ItemType<Items.PaintSolution>());
-						nextSlot++;
-					}
-					break;
-				case NPCID.Merchant:
-					if(ShouldSellPaintingStuff()) {
-						shop.item[nextSlot].SetDefaults(ItemType<Items.PaintArrow>());
-						nextSlot++;
-
-						shop.item[nextSlot].SetDefaults(ItemType<Items.ThrowingPaintbrush>());
-						nextSlot++;
-
-						shop.item[nextSlot].SetDefaults(ItemType<Items.PaintShuriken>());
-						nextSlot++;
-					}
-					break;
-				case NPCID.Demolitionist:
-					if(ShouldSellPaintingStuff()) {
-						shop.item[nextSlot].SetDefaults(ItemType<Items.PaintBomb>());
-						nextSlot++;
-
-						shop.item[nextSlot].SetDefaults(ItemType<Items.PaintDynamite>());
-						nextSlot++;
-					}
-					break;
-				case NPCID.ArmsDealer:
-					if(ShouldSellPaintingStuff()) {
-						shop.item[nextSlot].SetDefaults(ItemType<Items.Paintball>());
-						nextSlot++;
-					}
-					break;
 				case NPCID.Painter:
 					if(Multiplayer && ShouldSellPaintingStuff()) {
 						shop.item[nextSlot].SetDefaults(ItemType<TeamPaint>());
@@ -403,11 +390,13 @@ namespace WeaponsOfMassDecoration.NPCs {
 					}
 					break;
 			}
+
 			if(rewardsProgram) {
 				for(int i = 0; i < shop.item.Length; i++) {
 					Item item = shop.item[i];
-					if(IsPaint(item) || IsPaintingTool(item) || IsPaintingItem(item))
-						item.value = (int)Math.Ceiling((float)item.value * .8);
+					if (!item.active)
+						continue;
+					RewardsProgram.ModifyPrice(ref item);
 				}
 			}
 		}

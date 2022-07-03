@@ -15,12 +15,33 @@ using WeaponsOfMassDecoration.Buffs;
 using WeaponsOfMassDecoration.Items;
 using WeaponsOfMassDecoration.NPCs;
 using WeaponsOfMassDecoration.Projectiles;
+using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Items {
+
+	public class BuffAccBase : ModItem, IRewardsProgramItem {
+		public override void SetStaticDefaults() {
+			DisplayName.SetDefault("Blank Emblem");
+		}
+
+		public override void SetDefaults() {
+			Item.material = true;
+			Item.noMelee = true;
+			Item.damage = 0;
+			Item.noUseGraphic = true;
+			Item.value = Item.buyPrice(gold: 4);
+		}
+	}
+
 	public abstract class BuffAccessory : ModItem {
+		public virtual byte PaintColor { get; }
+		public virtual string DebuffName { get; }
+
 		public override void SetStaticDefaults() {
 			base.SetStaticDefaults();
 		}
+
+		protected virtual string GetTooltip() => "Inflicts enemies painted " + ColorNames.list[PaintColor] + " with " + DebuffName;
 
 		public override void SetDefaults() {
 			Item.maxStack = 1;
@@ -28,76 +49,96 @@ namespace WeaponsOfMassDecoration.Items {
 			Item.noMelee = true;
 			Item.noUseGraphic = true;
 			Item.rare = ItemRarityID.Green;
+			if(Tooltip != null)
+				Tooltip.SetDefault(GetTooltip());	
+			if(DisplayName != null)
+				DisplayName.SetDefault(ColorNames.list[PaintColor] + " Emblem");
 		}
 
 		public override void AddRecipes() {
-			//Recipe recipe = CreateRecipe();
-			
+			Recipe recipe = CreateRecipe();
+			recipe.AddIngredient(ItemType<BuffAccBase>());
+			recipe.AddIngredient(PaintItemID.list[PaintColor], 10);
+			AddSpecialIngredients(ref recipe);
+			recipe.AddTile(TileID.TinkerersWorkbench);
+			recipe.Register();
 		}
 
 		protected abstract void AddSpecialIngredients(ref Recipe recipe);
+
+		public override void UpdateAccessory(Player player, bool hideVisual) {
+			WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
+			p.buffConfig.SetColorEnabled(PaintColor, true);
+		}
 	}
 
 	public class BuffAccRed : BuffAccessory {
-		public override void UpdateAccessory(Player player, bool hideVisual) {
-			WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
-			p.accBuffRed = true;
-		}
+		public override byte PaintColor => PaintID.RedPaint;
+		public override string DebuffName => "Fire";
 
 		protected override void AddSpecialIngredients(ref Recipe recipe) {
-			recipe.AddIngredient(ItemID.RedPaint, 10);
-			recipe.AddIngredient(ItemID.Hellstone, 15);
+			recipe.AddIngredient(ItemID.Torch, 15);
 		}
 	}
 	public class BuffAccYellow : BuffAccessory {
-		public override void UpdateAccessory(Player player, bool hideVisual) {
-			WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
-			p.accBuffYellow = true;
-		}
+		public override byte PaintColor => PaintID.YellowPaint;
+		public override string DebuffName => "Ichor";
+
 		protected override void AddSpecialIngredients(ref Recipe recipe) {
-			recipe.AddIngredient(ItemID.YellowPaint, 10);
 			recipe.AddIngredient(ItemID.Ichor, 15);
 		}
 	}
 	public class BuffAccLime : BuffAccessory {
-		public override void UpdateAccessory(Player player, bool hideVisual) {
-			WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
-			p.accBuffLime = true;
-		}
+		public override byte PaintColor => PaintID.LimePaint;
+		public override string DebuffName => "Cursed Flames";
+
 		protected override void AddSpecialIngredients(ref Recipe recipe) {
-			recipe.AddIngredient(ItemID.LimePaint, 10);
 			recipe.AddIngredient(ItemID.CursedFlame, 15);
 		}
 	}
 	public class BuffAccGreen : BuffAccessory {
-		public override void UpdateAccessory(Player player, bool hideVisual) {
-			WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
-			p.accBuffGreen = true;
-		}
+		public override byte PaintColor => PaintID.GreenPaint;
+		public override string DebuffName => "Poison";
 
 		protected override void AddSpecialIngredients(ref Recipe recipe) {
-			recipe.AddIngredient(ItemID.GreenPaint, 10);
+			recipe.AddIngredient(ItemID.Stinger, 10);
 		}
 	}
 	public class BuffAccCyan : BuffAccessory {
-		public override void UpdateAccessory(Player player, bool hideVisual) {
-			WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
-			p.accBuffCyan = true;
-		}
+		public override byte PaintColor => PaintID.CyanPaint;
+		public override string DebuffName => "Frostburn";
 
 		protected override void AddSpecialIngredients(ref Recipe recipe) {
-			recipe.AddIngredient(ItemID.CyanPaint, 10);
 			recipe.AddIngredient(ItemID.FrostCore, 1);
 		}
 	}
 	public class BuffAccPurple : BuffAccessory {
-		public override void UpdateAccessory(Player player, bool hideVisual) {
-			WoMDPlayer p = player.GetModPlayer<WoMDPlayer>();
-			p.accBuffPurple = true;
-		}
+		public override byte PaintColor => PaintID.PurplePaint;
+		public override string DebuffName => "Venom";
+
 		protected override void AddSpecialIngredients(ref Recipe recipe) {
-			recipe.AddIngredient(ItemID.PurplePaint, 10);
 			recipe.AddIngredient(ItemID.SpiderFang, 15);
+			recipe.AddIngredient(ItemID.VialofVenom, 10);
+		}
+	}
+	public class BuffAccPink : BuffAccessory{
+		public override byte PaintColor => PaintID.PinkPaint;
+		public override string DebuffName => "Party";
+
+		protected override string GetTooltip() => "Enemies painted " + ColorNames.list[PaintColor] + " will drop confetti";
+
+		protected override void AddSpecialIngredients(ref Recipe recipe) {
+			recipe.AddIngredient(ItemID.Confetti, 15);
+		}
+	}
+	public class BuffAccNegative : BuffAccessory {
+		public override byte PaintColor => PaintID.NegativePaint;
+		public override string DebuffName => "Confusion";
+		protected override void AddSpecialIngredients(ref Recipe recipe) {
+			recipe.AddIngredient(ItemID.LightShard, 1);
+			recipe.AddIngredient(ItemID.DarkShard, 1);
+			recipe.AddIngredient(ItemID.SoulofLight, 3);
+			recipe.AddIngredient(ItemID.SoulofNight, 3);
 		}
 	}
 }

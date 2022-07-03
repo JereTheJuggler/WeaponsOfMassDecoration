@@ -301,5 +301,23 @@ namespace WeaponsOfMassDecoration {
 		public static void SendTileFrame(int x, int y) {
 			NetMessage.SendTileSquare(-1, x, y, 1);
 		}
+
+		public static byte GetBasePaintID(byte id) {
+			return id switch {
+				PaintID.DeepRedPaint => PaintID.RedPaint,
+				PaintID.DeepOrangePaint => PaintID.OrangePaint,
+				PaintID.DeepYellowPaint => PaintID.YellowPaint,
+				PaintID.DeepLimePaint => PaintID.LimePaint,
+				PaintID.DeepGreenPaint => PaintID.GreenPaint,
+				PaintID.DeepTealPaint => PaintID.TealPaint,
+				PaintID.DeepCyanPaint => PaintID.CyanPaint,
+				PaintID.DeepSkyBluePaint => PaintID.SkyBluePaint,
+				PaintID.DeepBluePaint => PaintID.BluePaint,
+				PaintID.DeepPurplePaint => PaintID.PurplePaint,
+				PaintID.DeepVioletPaint => PaintID.VioletPaint,
+				PaintID.DeepPinkPaint => PaintID.PinkPaint,
+				_ => id,
+			};
+		}
 	}
 }

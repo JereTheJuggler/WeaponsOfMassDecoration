@@ -24,8 +24,8 @@ float4 sprayPaintedColor(float4 sampleColor : COLOR0, float2 coords : TEXCOORD0)
 	noiseCoords[1] /= uSourceRect[3];
 	
 	//float2 noiseCoords = {0,0};
-	noiseCoords[0] = ((noiseCoords[0]*uSourceRect[2]) % scale) / scale;
-	noiseCoords[1] = ((noiseCoords[1]*uSourceRect[3]) % scale) / scale;
+	//noiseCoords[0] = ((noiseCoords[0]*uSourceRect[2]) % scale) / scale;
+	//noiseCoords[1] = ((noiseCoords[1]*uSourceRect[3]) % scale) / scale;
 	
 	float4 noise = tex2D(uImage1, noiseCoords);
 	

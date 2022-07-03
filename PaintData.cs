@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Terraria;
+using WeaponsOfMassDecoration.Buffs;
 using WeaponsOfMassDecoration.Items;
+using System.Linq;
 using static WeaponsOfMassDecoration.WeaponsOfMassDecoration;
 
 namespace WeaponsOfMassDecoration {
@@ -62,6 +64,9 @@ namespace WeaponsOfMassDecoration {
 		public bool wallsAllowed = true;
 		public bool consumePaint = true;
 		public bool sprayPaint = false;
+
+		public PaintBuffConfig buffConfig;
+
 		private Color? _renderColor;
 		public Color RenderColor {
 			get {
@@ -115,7 +120,7 @@ namespace WeaponsOfMassDecoration {
 			}
 		}
 
-		public PaintData(float timeScale = 1f, int paintColor = -1, CustomPaint customPaint = null, bool sprayPaint = false, float timeOffset = 0, PaintMethods paintMethod = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, Player player = null, bool consumePaint = true) {
+		public PaintData(float timeScale = 1f, int paintColor = -1, CustomPaint customPaint = null, bool sprayPaint = false, float timeOffset = 0, PaintMethods paintMethod = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, Player player = null, bool consumePaint = true, PaintBuffConfig paintBuffConfig = null) {
 			_paintColor = paintColor;
 			_customPaint = customPaint;
 			_timeOffset = timeOffset;
@@ -128,10 +133,13 @@ namespace WeaponsOfMassDecoration {
 			this.sprayPaint = sprayPaint;
 			_renderColor = null;
 			_customPaintColor = null;
+			buffConfig = paintBuffConfig;
+			if(buffConfig == null)
+				buffConfig = new PaintBuffConfig();
 		}
 
 		public PaintData(int paintColor, PaintMethods paintMethod = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, Player player = null, bool consumePaint = true) :
-					this(1f, paintColor, paintMethod: paintMethod, blocksAllowed: blocksAllowed, wallsAllowed: wallsAllowed, player: player, consumePaint: consumePaint) { }
+					this(1f, paintColor, paintMethod: paintMethod, blocksAllowed: blocksAllowed, wallsAllowed: wallsAllowed, player: player, consumePaint: consumePaint, paintBuffConfig: new PaintBuffConfig()) { }
 
 		public PaintData(float timeScale, float timeOffset, CustomPaint customPaint, PaintMethods paintMethod = PaintMethods.BlocksAndWalls, bool blocksAllowed = true, bool wallsAllowed = true, Player player = null, bool consumePaint = true) :
 					this(timeScale, default, customPaint, customPaint is ISprayPaint, timeOffset, paintMethod, blocksAllowed, wallsAllowed, player, consumePaint) { }
@@ -152,7 +160,8 @@ namespace WeaponsOfMassDecoration {
 				blocksAllowed = blocksAllowed,
 				wallsAllowed = wallsAllowed,
 				consumePaint = consumePaint,
-				sprayPaint = sprayPaint
+				sprayPaint = sprayPaint,
+				buffConfig = new PaintBuffConfig(buffConfig.GetEnabledColors())
 			};
 		}
 
@@ -162,6 +171,7 @@ namespace WeaponsOfMassDecoration {
 			if ((other.CustomPaint == null) != (CustomPaint == null)) return false;
 			if (CustomPaint != null && other.CustomPaint.Name != CustomPaint.Name) return false;
 			if (other.sprayPaint != sprayPaint) return false;
+			if (!buffConfig.GetEnabledColors().SequenceEqual(other.buffConfig.GetEnabledColors())) return false;
 			return true;
 		}
 	}

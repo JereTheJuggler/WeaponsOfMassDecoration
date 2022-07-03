@@ -224,9 +224,9 @@ namespace WeaponsOfMassDecoration.Items {
 				if(this is IDeepPaint && this is ICyclingPaint && this is ISprayPaint) {
 					//case (6a)
 					//using 2 of the base cycling paint to create 1 deep cycling spray paint
-					Recipe recipeA = CreateRecipe(1);
 					Type sprayType = GetType().BaseType;
 					Type t = sprayType.BaseType;
+					Recipe recipeA = CreateRecipe(1);
 					recipeA.AddIngredient(Mod.Find<ModItem>(t.Name).Type, 2);
 					recipeA.AddTile(TileID.DyeVat);
 					recipeA.Register();
@@ -336,64 +336,64 @@ namespace WeaponsOfMassDecoration.Items {
 		protected override string _ColorName => "Rainbow";
 	}
 	public class DeepRainbowPaint : RainbowPaint, IDeepPaint { }
-	/*public class RainbowSprayPaint : RainbowPaint, ISprayPaint { }
-	public class DeepRainbowSprayPaint : RainbowSprayPaint, IDeepPaint { }*/
+	public class RainbowSprayPaint : RainbowPaint, ISprayPaint { }
+	public class DeepRainbowSprayPaint : RainbowSprayPaint, IDeepPaint { }
 
 	public class FlamePaint : CustomPaint, ICyclingPaint {
 		protected override int[] _PaintItemIds => new int[] { ItemID.RedPaint, ItemID.OrangePaint, ItemID.YellowPaint };
 		protected override string _ColorName => "Flame";
 	}
 	public class DeepFlamePaint : FlamePaint, IDeepPaint { }
-	/*public class FlameSprayPaint : FlamePaint, ISprayPaint { }
-	public class DeepFlameSprayPaint : FlameSprayPaint, IDeepPaint { }*/
+	public class FlameSprayPaint : FlamePaint, ISprayPaint { }
+	public class DeepFlameSprayPaint : FlameSprayPaint, IDeepPaint { }
 
 	public class GreenFlamePaint : CustomPaint {
 		protected override int[] _PaintItemIds => new int[] { ItemID.GreenPaint, ItemID.LimePaint, ItemID.YellowPaint };
 		protected override string _ColorName => "Green Flame";
 	}
 	public class DeepGreenFlamePaint : GreenFlamePaint, IDeepPaint { }
-	/*public class GreenFlameSprayPaint : GreenFlamePaint, ISprayPaint { }
-	public class DeepGreenFlameSprayPaint : GreenFlameSprayPaint, IDeepPaint { }*/
+	public class GreenFlameSprayPaint : GreenFlamePaint, ISprayPaint { }
+	public class DeepGreenFlameSprayPaint : GreenFlameSprayPaint, IDeepPaint { }
 
 	public class BlueFlamePaint : CustomPaint, ICyclingPaint {
 		protected override int[] _PaintItemIds => new int[] { ItemID.BluePaint, ItemID.SkyBluePaint, ItemID.CyanPaint };
 		protected override string _ColorName => "Blue Flame";
 	}
 	public class DeepBlueFlamePaint : BlueFlamePaint, IDeepPaint { }
-	/*public class BlueFlameSprayPaint : BlueFlamePaint, ISprayPaint { }
-	public class DeepBlueFlameSprayPaint : BlueFlameSprayPaint, IDeepPaint { }*/
+	public class BlueFlameSprayPaint : BlueFlamePaint, ISprayPaint { }
+	public class DeepBlueFlameSprayPaint : BlueFlameSprayPaint, IDeepPaint { }
 
 	public class YellowGradientPaint : CustomPaint, ICyclingPaint {
 		protected override int[] _PaintItemIds => new int[] { ItemID.LimePaint, ItemID.YellowPaint, ItemID.OrangePaint };
 		protected override string _ColorName => "Yellow Gradient";
 	}
 	public class DeepYellowGradientPaint : YellowGradientPaint, IDeepPaint { }
-	/*public class YellowGradientSprayPaint : YellowGradientPaint, ISprayPaint { }
-	public class DeepYellowGradientSprayPaint : YellowGradientSprayPaint, IDeepPaint { }*/
+	public class YellowGradientSprayPaint : YellowGradientPaint, ISprayPaint { }
+	public class DeepYellowGradientSprayPaint : YellowGradientSprayPaint, IDeepPaint { }
 
 	public class CyanGradientPaint : CustomPaint, ICyclingPaint {
 		protected override int[] _PaintItemIds => new int[] { ItemID.TealPaint, ItemID.CyanPaint, ItemID.SkyBluePaint };
 		protected override string _ColorName => "Cyan Gradient";
 	}
 	public class DeepCyanGradientPaint : CyanGradientPaint, IDeepPaint { }
-	/*public class CyanGradientSprayPaint : CyanGradientPaint, ISprayPaint { }
-	public class DeepCyanGradientSprayPaint : CyanGradientSprayPaint, IDeepPaint { }*/
+	public class CyanGradientSprayPaint : CyanGradientPaint, ISprayPaint { }
+	public class DeepCyanGradientSprayPaint : CyanGradientSprayPaint, IDeepPaint { }
 
 	public class VioletGradientPaint : CustomPaint, ICyclingPaint {
 		protected override int[] _PaintItemIds => new int[] { ItemID.PinkPaint, ItemID.VioletPaint, ItemID.PurplePaint };
 		protected override string _ColorName => "Violet Gradient";
 	}
 	public class DeepVioletGradientPaint : VioletGradientPaint, IDeepPaint { }
-	/*public class VioletGradientSprayPaint : VioletGradientPaint, ISprayPaint { }
-	public class DeepVioletGradientSprayPaint : VioletGradientSprayPaint, IDeepPaint { }*/
+	public class VioletGradientSprayPaint : VioletGradientPaint, ISprayPaint { }
+	public class DeepVioletGradientSprayPaint : VioletGradientSprayPaint, IDeepPaint { }
 
 	public class GrayscalePaint : CustomPaint, ICyclingPaint {
 		protected override int[] _PaintItemIds => new int[] { ItemID.ShadowPaint, ItemID.BlackPaint, ItemID.GrayPaint, ItemID.WhitePaint };
 		protected override string _ColorName => "Grayscale";
 	}
-	/*public class GrayscaleSprayPaint : GrayscalePaint, ISprayPaint { }*/
+	public class GrayscaleSprayPaint : GrayscalePaint, ISprayPaint { }
 
-	/*public class RedSprayPaint : CustomPaint, ISprayPaint {
+	public class RedSprayPaint : CustomPaint, ISprayPaint {
 		protected override int[] _PaintItemIds => new int[] { ItemID.RedPaint };
 		protected override string _ColorName => "Red";
 	}
@@ -484,7 +484,7 @@ namespace WeaponsOfMassDecoration.Items {
 	public class BrownSprayPaint : CustomPaint, ISprayPaint {
 		protected override int[] _PaintItemIds => new int[] { ItemID.BrownPaint };
 		protected override string _ColorName => "Brown";
-	}*/
+	}
 	public class NegativeSprayPaint : CustomPaint, ISprayPaint {
 		protected override int[] _PaintItemIds => new int[] { ItemID.NegativePaint };
 		protected override string _ColorName => "Negative";
@@ -509,6 +509,6 @@ namespace WeaponsOfMassDecoration.Items {
 		}
 	}
 	public class DeepTeamPaint : TeamPaint, IDeepPaint { }
-	/*public class TeamSprayPaint : TeamPaint, ISprayPaint { }
-	public class DeepTeamSprayPaint : TeamSprayPaint, IDeepPaint { }*/
+	public class TeamSprayPaint : TeamPaint, ISprayPaint { }
+	public class DeepTeamSprayPaint : TeamSprayPaint, IDeepPaint { }
 }

@@ -23,7 +23,7 @@ namespace WeaponsOfMassDecoration.Items {
 		public override void SetStaticDefaults() {
 			DisplayName.SetDefault("Rewards Program");
 			Tooltip.SetDefault(string.Join("\n", new string[]{
-				"20% off on paints and painting tools!"
+				"20% off on paint related items!"
 			}));
 		}
 
@@ -35,12 +35,28 @@ namespace WeaponsOfMassDecoration.Items {
 			Item.rare = ItemRarityID.Green;
 			Item.width = 38;
 			Item.height = 24;
-			Item.value = Item.buyPrice(gold: 20);
+			Item.value = Item.buyPrice(1);
 		}
 
 		public override void UpdateAccessory(Player player, bool hideVisual) {
 			base.UpdateAccessory(player, hideVisual);
 			player.GetModPlayer<WoMDPlayer>().accRewardsProgram = true;
 		}
+
+		public static void ModifyPrice(ref Item item) {
+			if (ShouldModifyPrice(item))
+				item.value = (int)Math.Ceiling((float)item.value * .8f);
+		}
+
+		protected static bool ShouldModifyPrice(Item item) {
+			if (IsPaint(item) || IsPaintingTool(item) || IsPaintingItem(item))
+				return true;
+			ModItem i = item.ModItem;
+			if (i != null && i is IRewardsProgramItem)
+				return true;
+			return false;
+		}
 	}
+
+	interface IRewardsProgramItem { }
 }

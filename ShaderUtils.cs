@@ -82,6 +82,8 @@ namespace WeaponsOfMassDecoration {
 				return null;
 			if(!globalNpc.Painted)
 				return null;
+			if (data == null)
+				return null;
 			if(data.PaintColor == -1 && data.CustomPaint == null)
 				return null;
 			if(data.PaintColor == PaintID.NegativePaint || data.CustomPaint is NegativeSprayPaint)
@@ -166,7 +168,10 @@ namespace WeaponsOfMassDecoration {
 		/// <param name="drawData"></param>
 		/// <returns></returns>
 		private static MiscShaderData GetSprayPaintedShader(Color color) {
-			MiscShaderData data = GameShaders.Misc["SprayPainted"].UseColor(color).UseImage0("Images/Misc/noise").UseOpacity(1f);
+			MiscShaderData data = GameShaders.Misc["SprayPainted"];
+			data.UseColor(color);
+			data.UseOpacity(1f);
+			data.UseImage1("Images/Misc/noise");
 			return data;
 		}
 		/// <summary>

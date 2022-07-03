@@ -31,7 +31,8 @@
 			"Gray",
 			"Brown",
 			"Shadow",
-			"Negative"
+			"Negative",
+			"Illuminant"
 		};
 	}
 }

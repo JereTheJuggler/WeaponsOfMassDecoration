@@ -88,14 +88,14 @@ namespace WeaponsOfMassDecoration.Items {
 			spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, shader != null ? SamplerState.PointClamp : SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix); // SpriteSortMode needs to be set to Immediate for shaders to work.
 
 			if(shader != null) {
-				//shader.Apply();
+				shader.Apply();
 			}
 
 			spriteBatch.Draw(texture, position, frame, drawColor, 0, new Vector2(0, 0), scale, SpriteEffects.None, 0);
 
 			if(shader != null) {
-				//spriteBatch.End();
-				//spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix);
+				spriteBatch.End();
+				spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix);
 			}
 			return false;
 		}

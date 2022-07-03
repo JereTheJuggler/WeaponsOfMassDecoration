@@ -326,7 +326,7 @@ namespace WeaponsOfMassDecoration {
 					if(method == PaintMethods.RemovePaint) {
 						ApplyPaintedToNPC(target, null);
 					} else {
-						ApplyPaintedToNPC(target, new PaintData(npcCyclingTimeScale, player.paintData.PaintColor, player.paintData.CustomPaint, player.paintData.CustomPaint is ISprayPaint, Main.GlobalTimeWrappedHourly, player: player.Player));
+						ApplyPaintedToNPC(target, new PaintData(npcCyclingTimeScale, player.paintData.PaintColor, player.paintData.CustomPaint, player.paintData.CustomPaint is ISprayPaint, Main.GlobalTimeWrappedHourly, player: player.Player, paintBuffConfig: player.buffConfig));
 					}
 				}
 			}

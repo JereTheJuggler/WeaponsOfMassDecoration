@@ -2,6 +2,7 @@
 using System;
 using Terraria;
 using Terraria.Audio;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 using static WeaponsOfMassDecoration.PaintUtils;
@@ -59,6 +60,11 @@ namespace WeaponsOfMassDecoration.Projectiles {
 		public override bool OnTileCollide(Vector2 oldVelocity) {
 			SoundEngine.PlaySound(SoundID.Dig, Projectile.Center);
 			return true;
+		}
+
+		public override void OnSpawn(IEntitySource source) {
+			//TODO assign random paint data when thrown by the artist npc
+			base.OnSpawn(source);
 		}
 	}
 }

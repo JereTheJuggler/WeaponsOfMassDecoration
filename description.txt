@@ -6,4 +6,9 @@ In addition to the weapons, there are custom paints, including rainbow, flame, b
 
 Ever wondered what a purple Eye of Cthulhu, a negative Zombie, or a rainbow Duke Fishron would look like? Well now you do! And this mod will let you find out! Enemies that you hit with painting weapons will also become painting in whatever color of paint you're using!
 
+You can also clean up any mess you make by using the same weapons with a paint scraper in your inventory!
+
 There's even an additional Chaos Mode that adds in many zany new features that will help spread paint far and wide! (Note: this is turned off by default and needs to be enabled in the mod's config)
+
+Check out my post on the Terraria Community Forums for more information:
+https://forums.terraria.org/index.php?threads/weapons-of-mass-decoration.64331/#post-2066576
