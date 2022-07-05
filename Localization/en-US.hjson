@@ -1,0 +1,22 @@
+Mods:{
+	WeaponsOfMassDecoration:{
+		TownNPCMood:{
+			Artist:{
+				Content: I feel pretty fine right now.
+				NoHome: I would very much like a house.
+				LoveSpace: I love how much room I have to hang up all of my work!
+				FarFromHome: Could you please get me back to my house?
+				DislikeCrowded: There are too many people here! How can I create true art without being able to focus?
+				HateCrowded: "This is ridiculous! I can't work with so many prying eyes constantly bothering me!"
+				LikeBiome: "The {BiomeName} is such a fantastical place! It's a jackpot for artistic inspiration!"
+				LoveBiome: "I love {BiomeName}."
+				DislikeBiome: "It's way too cold in {BiomeName}, I'm freezing!"
+				HateBiome: "I hate the {BiomeName}. Do you know how hard it is to keep the sand away from my work?"
+				LikeNPC: "{NPCName} might be even better at mixing colors than I am. I might be able to learn a thing or two from them."
+				LoveNPC: "So many rainbows and glitter! {NPCName} is quite inspiring!"
+				DislikeNPC: "All {NPCName} does is paint houses! Does he just lack artistic vision?"
+				HateNPC: "My art was made for beauty, not for {NPCName}'s money laundering! Despicable!"
+			}
+		}
+	}
+}

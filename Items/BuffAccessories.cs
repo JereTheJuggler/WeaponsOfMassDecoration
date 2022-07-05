@@ -37,10 +37,6 @@ namespace WeaponsOfMassDecoration.Items {
 		public virtual byte PaintColor { get; }
 		public virtual string DebuffName { get; }
 
-		public override void SetStaticDefaults() {
-			base.SetStaticDefaults();
-		}
-
 		protected virtual string GetTooltip() => "Inflicts enemies painted " + ColorNames.list[PaintColor] + " with " + DebuffName;
 
 		public override void SetDefaults() {
@@ -76,6 +72,8 @@ namespace WeaponsOfMassDecoration.Items {
 		public override byte PaintColor => PaintID.RedPaint;
 		public override string DebuffName => "Fire";
 
+		public static int DebuffID => BuffID.OnFire;
+
 		protected override void AddSpecialIngredients(ref Recipe recipe) {
 			recipe.AddIngredient(ItemID.Torch, 15);
 		}
@@ -83,6 +81,8 @@ namespace WeaponsOfMassDecoration.Items {
 	public class BuffAccYellow : BuffAccessory {
 		public override byte PaintColor => PaintID.YellowPaint;
 		public override string DebuffName => "Ichor";
+
+		public static int DebuffID => BuffID.Ichor;
 
 		protected override void AddSpecialIngredients(ref Recipe recipe) {
 			recipe.AddIngredient(ItemID.Ichor, 15);
@@ -92,6 +92,8 @@ namespace WeaponsOfMassDecoration.Items {
 		public override byte PaintColor => PaintID.LimePaint;
 		public override string DebuffName => "Cursed Flames";
 
+		public static int DebuffID => BuffID.CursedInferno;
+
 		protected override void AddSpecialIngredients(ref Recipe recipe) {
 			recipe.AddIngredient(ItemID.CursedFlame, 15);
 		}
@@ -99,6 +101,7 @@ namespace WeaponsOfMassDecoration.Items {
 	public class BuffAccGreen : BuffAccessory {
 		public override byte PaintColor => PaintID.GreenPaint;
 		public override string DebuffName => "Poison";
+		public static int DebuffID => BuffID.Poisoned; 
 
 		protected override void AddSpecialIngredients(ref Recipe recipe) {
 			recipe.AddIngredient(ItemID.Stinger, 10);
@@ -107,6 +110,7 @@ namespace WeaponsOfMassDecoration.Items {
 	public class BuffAccCyan : BuffAccessory {
 		public override byte PaintColor => PaintID.CyanPaint;
 		public override string DebuffName => "Frostburn";
+		public static int DebuffID => BuffID.Frostburn;
 
 		protected override void AddSpecialIngredients(ref Recipe recipe) {
 			recipe.AddIngredient(ItemID.FrostCore, 1);
@@ -114,7 +118,8 @@ namespace WeaponsOfMassDecoration.Items {
 	}
 	public class BuffAccPurple : BuffAccessory {
 		public override byte PaintColor => PaintID.PurplePaint;
-		public override string DebuffName => "Venom";
+		public override string DebuffName => "Venom";		
+		public static int DebuffID => BuffID.Venom;
 
 		protected override void AddSpecialIngredients(ref Recipe recipe) {
 			recipe.AddIngredient(ItemID.SpiderFang, 15);
@@ -124,6 +129,7 @@ namespace WeaponsOfMassDecoration.Items {
 	public class BuffAccPink : BuffAccessory{
 		public override byte PaintColor => PaintID.PinkPaint;
 		public override string DebuffName => "Party";
+		public static int DebuffID => BuffType<Confetti>();
 
 		protected override string GetTooltip() => "Enemies painted " + ColorNames.list[PaintColor] + " will drop confetti";
 
@@ -133,7 +139,9 @@ namespace WeaponsOfMassDecoration.Items {
 	}
 	public class BuffAccNegative : BuffAccessory {
 		public override byte PaintColor => PaintID.NegativePaint;
-		public override string DebuffName => "Confusion";
+		public override string DebuffName => "Confusion";		
+		public static int DebuffID => BuffID.Confused;
+
 		protected override void AddSpecialIngredients(ref Recipe recipe) {
 			recipe.AddIngredient(ItemID.LightShard, 1);
 			recipe.AddIngredient(ItemID.DarkShard, 1);

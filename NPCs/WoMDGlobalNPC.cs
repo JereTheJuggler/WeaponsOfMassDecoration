@@ -6,6 +6,7 @@ using System.IO;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.GameContent;
+using Terraria.GameContent.Personalities;
 using Terraria.ID;
 using Terraria.ModLoader;
 using WeaponsOfMassDecoration.Buffs;
@@ -48,6 +49,11 @@ namespace WeaponsOfMassDecoration.NPCs {
 		public override bool InstancePerEntity => true;
 		//Don't want instances to be cloned
 		protected override bool CloneNewInstances => false;
+
+		public override void SetStaticDefaults() {
+			int artistType = NPCType<Artist>();
+			NPCHappiness.Get(NPCID.Painter).SetNPCAffection(artistType, AffectionLevel.Dislike);
+		}
 
 		public bool buffConfetti = false;
 
@@ -154,7 +160,7 @@ namespace WeaponsOfMassDecoration.NPCs {
 		public override void PostAI(NPC npc) {
 			base.PostAI(npc);
 			if (buffConfetti) {
-				if (WeaponsOfMassDecoration.rand.NextBool(30))
+				if (Main.rand.NextBool(30))
 					SpawnConfetti(npc.Center);
 			}
 			if((SinglePlayer || Server) && ChaosMode) {

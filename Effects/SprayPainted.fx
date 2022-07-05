@@ -17,15 +17,18 @@ float2 uImageSize1;
 float4 sprayPaintedColor(float4 sampleColor : COLOR0, float2 coords : TEXCOORD0) : COLOR0{
 	float4 color = tex2D(uImage0, coords);
 	
+	if(color.a == 0)
+		return color;
+
 	float scale = 200;
-	
+
     float2 noiseCoords = (coords * uImageSize0 - uSourceRect.xy);
 	noiseCoords[0] /= uSourceRect[2];
 	noiseCoords[1] /= uSourceRect[3];
 	
 	//float2 noiseCoords = {0,0};
-	//noiseCoords[0] = ((noiseCoords[0]*uSourceRect[2]) % scale) / scale;
-	//noiseCoords[1] = ((noiseCoords[1]*uSourceRect[3]) % scale) / scale;
+	noiseCoords[0] = ((noiseCoords[0]*uSourceRect[2]) % scale) / scale;
+	noiseCoords[1] = ((noiseCoords[1]*uSourceRect[3]) % scale) / scale;
 	
 	float4 noise = tex2D(uImage1, noiseCoords);
 	

@@ -38,25 +38,22 @@ namespace WeaponsOfMassDecoration.NPCs {
 
 			// Influences how the NPC looks in the Bestiary
 			NPCID.Sets.NPCBestiaryDrawModifiers drawModifiers = new NPCID.Sets.NPCBestiaryDrawModifiers(0) {
-				Velocity = 1f, // Draws the NPC in the bestiary as if its walking +1 tiles in the x direction
-				Direction = 1 // -1 is left and 1 is right. NPCs are drawn facing the left by default but ExamplePerson will be drawn facing the right
-							  // Rotation = MathHelper.ToRadians(180) // You can also change the rotation of an NPC. Rotation is measured in radians
-							  // If you want to see an example of manually modifying these when the NPC is drawn, see PreDraw
+				Velocity = -1f, // Draws the NPC in the bestiary as if its walking -1 tiles in the x direction
+				Direction = -1
 			};
 
 			NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, drawModifiers);
 
-			// Set Example Person's biome and neighbor preferences with the NPCHappiness hook. You can add happiness text and remarks with localization (See an example in ExampleMod/Localization/en-US.lang).
-			// NOTE: The following code uses chaining - a style that works due to the fact that the SetXAffection methods return the same NPCHappiness instance they're called on.
 			NPC.Happiness
-				.SetBiomeAffection<ForestBiome>(AffectionLevel.Like) // Example Person prefers the forest.
-				.SetBiomeAffection<SnowBiome>(AffectionLevel.Dislike) // Example Person dislikes the snow.
-				.SetNPCAffection(NPCID.Dryad, AffectionLevel.Love) // Loves living near the dryad.
-				.SetNPCAffection(NPCID.Demolitionist, AffectionLevel.Like) // Likes living near the demolitionist.
-				.SetNPCAffection(NPCID.Merchant, AffectionLevel.Dislike) // Dislikes living near the merchant.
-				.SetNPCAffection(NPCID.Painter, AffectionLevel.Hate) // Hates living near the painter.
-			; // < Mind the semicolon!
+				.SetBiomeAffection<HallowBiome>(AffectionLevel.Like)
+				.SetBiomeAffection<DesertBiome>(AffectionLevel.Hate)
+				.SetNPCAffection(NPCID.PartyGirl, AffectionLevel.Love)
+				.SetNPCAffection(NPCID.DyeTrader, AffectionLevel.Like)
+				.SetNPCAffection(NPCID.Painter, AffectionLevel.Dislike)
+				.SetNPCAffection(NPCID.TaxCollector, AffectionLevel.Hate)
+			;
 		}
+
 		public override void SetDefaults() {
 			NPC.townNPC = true; // Sets NPC to be a Town NPC
 			NPC.friendly = true; // NPC Will not attack player
@@ -137,19 +134,18 @@ namespace WeaponsOfMassDecoration.NPCs {
 			};
 		}
 		public override string GetChat() {
-			WeightedRandom<string> chat = new WeightedRandom<string>();
+			WeightedRandom<string> chat = new();
 
-			int painter = NPC.FindFirstNPC(NPCID.Painter);
-			if (painter >= 0 && Main.rand.NextBool(4)) {
-				chat.Add("Ugh. I can't stand " + Main.npc[painter].GivenName + ". All he does is paint houses! Does he just lack creativity?");
-			}
+			int cyborg = NPC.FindFirstNPC(NPCID.Cyborg);
+			if (cyborg >= 0 && Main.rand.NextBool(4))
+				chat.Add(Main.npc[cyborg].GivenName+" keeps telling me about these digital art things called NFTs. It just sounds like a scam to me.");
+			
 			int demo = NPC.FindFirstNPC(NPCID.Demolitionist);
-			if(demo >= 0 && Main.rand.NextBool(4)) {
+			if(demo >= 0 && Main.rand.NextBool(4))
 				chat.Add("I spoke with " + Main.npc[demo].GivenName + " earlier. It inspired me to make something that I'm sure will blow you away!");
-			}
-			// These are things that the NPC has a chance of telling you when you talk to it.
+			
 			chat.Add("What's your favorite color? Mine? Oh, I love them all!");
-			return chat; // chat is implicitly cast to a string.
+			return chat;
 		}
 
 		public override void SetChatButtons(ref string button, ref string button2) { // What the chat buttons are when you open up the chat UI
@@ -225,10 +221,12 @@ namespace WeaponsOfMassDecoration.NPCs {
 			knockback = 4f;
 		}
 
+		/*
 		public override void TownNPCAttackProj(ref int projType, ref int attackDelay) {
 			projType = ProjectileType<Projectiles.ThrowingPaintbrush>();
 			attackDelay = 1;
 		}
+		*/
 
 		public override void TownNPCAttackCooldown(ref int cooldown, ref int randExtraCooldown) {
 			cooldown = 30;

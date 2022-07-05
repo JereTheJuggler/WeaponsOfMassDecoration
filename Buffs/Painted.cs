@@ -2,6 +2,7 @@
 using Terraria.ID;
 using Terraria.ModLoader;
 using WeaponsOfMassDecoration.NPCs;
+using WeaponsOfMassDecoration.Items;
 using static Terraria.ModLoader.ModContent;
 
 namespace WeaponsOfMassDecoration.Buffs {
@@ -33,28 +34,28 @@ namespace WeaponsOfMassDecoration.Buffs {
 			if (data.buffConfig.IsColorEnabled(trueColor)) {
 				switch (trueColor) {
 					case PaintID.RedPaint:
-						npc.AddBuff(BuffID.OnFire, 2, true);
+						npc.AddBuff(BuffAccRed.DebuffID, 2, true);
 						break;
 					case PaintID.YellowPaint:
-						npc.AddBuff(BuffID.Ichor, 2, true);
+						npc.AddBuff(BuffAccYellow.DebuffID, 2, true);
 						break;
 					case PaintID.LimePaint:
-						npc.AddBuff(BuffID.CursedInferno, 2, true);
+						npc.AddBuff(BuffAccLime.DebuffID, 2, true);
 						break;
 					case PaintID.GreenPaint:
-						npc.AddBuff(BuffID.Poisoned, 2, true);
+						npc.AddBuff(BuffAccGreen.DebuffID, 2, true);
 						break;
 					case PaintID.CyanPaint:
-						npc.AddBuff(BuffID.Frostburn, 2, true);
+						npc.AddBuff(BuffAccCyan.DebuffID, 2, true);
 						break;
 					case PaintID.PurplePaint:
-						npc.AddBuff(BuffID.Venom, 2, true);
+						npc.AddBuff(BuffAccPurple.DebuffID, 2, true);
 						break;
 					case PaintID.PinkPaint:
-						npc.AddBuff(BuffType<Confetti>(), 2, true);
+						npc.AddBuff(BuffAccPink.DebuffID, 2, true);
 						break;
 					case PaintID.NegativePaint:
-						npc.AddBuff(BuffID.Confused, 2, true);
+						npc.AddBuff(BuffAccNegative.DebuffID, 2, true);
 						break;
 				}
 			}

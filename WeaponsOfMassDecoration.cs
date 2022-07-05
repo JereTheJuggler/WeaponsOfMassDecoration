@@ -106,7 +106,7 @@ namespace WeaponsOfMassDecoration {
 				GameShaders.Misc["PaintedNegative"] = new MiscShaderData(paintedNegativeRef, "paintedNegativeColor");
 
 				Ref<Effect> sprayPaintedRef = new Ref<Effect>(ModContent.Request<Effect>("WeaponsOfMassDecoration/Effects/SprayPainted", AssetRequestMode.ImmediateLoad).Value);
-				GameShaders.Misc["SprayPainted"] = new MiscShaderData(sprayPaintedRef, "sprayPaintedColor").UseImage0("Images/Misc/noise");
+				GameShaders.Misc["SprayPainted"] = new MiscShaderData(sprayPaintedRef, "sprayPaintedColor").UseImage1("Images/Misc/noise");
 				#endregion
 
 				#region load extra textures
@@ -625,8 +625,6 @@ namespace WeaponsOfMassDecoration {
 			}
 		}
 
-		public static readonly UnifiedRandom rand = new();
-
 		public static readonly short[] confettiIds = new short[]{
 			DustID.Confetti_Blue,
 			DustID.Confetti_Green,
@@ -634,8 +632,8 @@ namespace WeaponsOfMassDecoration {
 			DustID.Confetti_Yellow
 		};
 		public static void SpawnConfetti(Vector2 pos, int radius = 16) {
-			Vector2 speed = new Vector2(rand.NextFloat(.5f, 2f)).RotatedByRandom(7);
-			Dust.NewDustDirect(pos, radius, radius, rand.NextFromList(confettiIds), speed.X, speed.Y);
+			Vector2 speed = new Vector2(Main.rand.NextFloat(.5f, 2f)).RotatedByRandom(7);
+			Dust.NewDustDirect(pos, radius, radius, Main.rand.NextFromList(confettiIds), speed.X, speed.Y);
 		}
 
 		//Hamstar's Mod Helpers Integration
